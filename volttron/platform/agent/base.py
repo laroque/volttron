@@ -47,8 +47,6 @@ import time as time_mod
 import zmq
 from zmq import POLLIN, POLLOUT
 
-import monotonic as clock
-
 from . import sched
 from .matching import iter_match_tests
 from .. import messaging
@@ -284,7 +282,7 @@ class BaseAgent(AgentBase):
         potentially causing the wait time to slip a bit.
         '''
         elapsed = 0.0
-        mono_time = clock.monotonic()
+        mono_time = time_mod.monotonic()
         while True:
             wall_time = time_mod.time()
             self._mono.execute(mono_time)
@@ -296,7 +294,7 @@ class BaseAgent(AgentBase):
             events = self.reactor.poll(delay)
             if events:
                 return events
-            last_time, mono_time = mono_time, clock.monotonic()
+            last_time, mono_time = mono_time, time_mod.monotonic()
             elapsed += mono_time - last_time
             if timeout is not None and elapsed >= timeout:
                 return []
@@ -428,7 +426,7 @@ class BaseAgent(AgentBase):
         parameters or to cancel using the cancel() method.
         '''
         timer = sched.Event(function, args, kwargs)
-        self._mono.schedule(clock.monotonic() + interval, timer)
+        self._mono.schedule(time_mod.monotonic() + interval, timer)
         return timer
 
     def periodic_timer(self, period, function, *args, **kwargs):
@@ -438,7 +436,7 @@ class BaseAgent(AgentBase):
         rearmed after the function completes.
         '''
         timer = sched.RecurringEvent(period, function, args, kwargs)
-        self._mono.schedule(clock.monotonic() + period, timer)
+        self._mono.schedule(time_mod.monotonic() + period, timer)
         return timer
 
 
@@ -467,7 +465,7 @@ class PublishMixin(AgentBase):
 
     def ping_back(self, callback, timeout=None, period=1):
         if timeout is not None:
-            start = clock.monotonic()
+            start = time_mod.monotonic()
         ping = topics.AGENT_PING(cookie=random_cookie())
         state = {}
         def finish(success):
@@ -476,7 +474,7 @@ class PublishMixin(AgentBase):
             callback(success)
         def send_ping():
             if timeout is not None:
-                if (clock.monotonic() - start) >= timeout:
+                if (time_mod.monotonic() - start) >= timeout:
                     finish(False)
             self.publish(ping, {})
         def on_ping(topic, headers, msg, match):
