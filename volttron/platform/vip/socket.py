@@ -48,7 +48,7 @@ defined in green.py.
 '''
 
 
-from __future__ import absolute_import
+
 
 import base64
 import binascii
@@ -56,8 +56,8 @@ from contextlib import contextmanager
 import logging
 import re
 import sys
-import urllib
-import urlparse
+import urllib.request, urllib.parse, urllib.error
+import urllib.parse
 import uuid
 
 from zmq import (SNDMORE, RCVMORE, NOBLOCK, POLLOUT, DEALER, ROUTER,
@@ -135,10 +135,10 @@ class Address(object):
     def __init__(self, address, **defaults):
         for name in self._KEYS:
             setattr(self, name, None)
-        for name, value in defaults.iteritems():
+        for name, value in defaults.items():
             setattr(self, name, value)
 
-        url = urlparse.urlparse(address, 'tcp')
+        url = urllib.parse.urlparse(address, 'tcp')
 
         # Old versions of python don't correctly parse queries for unknown
         # schemes. This can cause ipc failures on outdated installations.
@@ -156,7 +156,7 @@ class Address(object):
             self.identity = defaults.get('identity')
         if url.scheme not in ['tcp', 'ipc', 'inproc']:
             raise ValueError('unknown address scheme: %s' % url.scheme)
-        for name, value in urlparse.parse_qsl(url.query, True):
+        for name, value in urllib.parse.parse_qsl(url.query, True):
             name = name.lower()
             if name in self._KEYS:
                 if value and name.endswith('key'):
@@ -174,7 +174,7 @@ class Address(object):
     @property
     def qs(self):
         params = ((name, getattr(self, name)) for name in self._KEYS)
-        return urllib.urlencode(
+        return urllib.parse.urlencode(
             {name: ('XXXXX' if name in self._MASK_KEYS and value else value)
              for name, value in params if value is not None})
 
@@ -184,7 +184,7 @@ class Address(object):
         if qs:
             parts.extend(['?', qs])
         if self.identity is not None:
-            parts.extend(['#', urllib.quote(self.identity)])
+            parts.extend(['#', urllib.parse.quote(self.identity)])
         return ''.join(parts)
 
     def __repr__(self):
@@ -269,7 +269,7 @@ class Message(object):
             name, [bytes(x) for x in value]
             if isinstance(value, (list, tuple))
             else bytes(value)) for name, value in
-                self.__dict__.iteritems())
+                self.__dict__.items())
         return '%s(**{%s})' % (self.__class__.__name__, attrs)
 
 
@@ -418,7 +418,7 @@ class _Socket(object):
             self.send_multipart([peer, user, msg_id, subsystem],
                                 flags=flags|more, copy=copy, track=track)
             if args:
-                send = (self.send if isinstance(args, basestring)
+                send = (self.send if isinstance(args, str)
                         else self.send_multipart)
                 send(args, flags=flags, copy=copy, track=track)
 

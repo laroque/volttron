@@ -108,7 +108,7 @@ def json_error(ident, code, message, **data):
     return {'jsonrpc': '2.0', 'id': ident, 'error': error}
 
 
-class ParseError(StandardError):
+class ParseError(Exception):
     pass
 
 

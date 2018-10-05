@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import print_function, absolute_import
+
 
 import logging
 import logging.config
@@ -132,14 +132,14 @@ class PubSubService(object):
         :type dict
         """
         #self._logger.debug("SYNC before: {0}, {1}".format(peer, items))
-        items = {(platform, bus, prefix) for platform, buses in items.iteritems()
-                                            for bus, topics in buses.iteritems()
-                                                for prefix in topics}
+        items = {(platform, bus, prefix) for platform, buses in items.items()
+                                         for bus, topics in buses.items()
+                                         for prefix in topics}
         #self._logger.debug("SYNC after: {}".format(items))
         remove = []
-        for platform, bus_subscriptions in self._peer_subscriptions.iteritems():
-            for bus, subscriptions in bus_subscriptions.iteritems():
-                for prefix, subscribers in subscriptions.iteritems():
+        for platform, bus_subscriptions in self._peer_subscriptions.items():
+            for bus, subscriptions in bus_subscriptions.items():
+                for prefix, subscribers in subscriptions.items():
                     item = platform, bus, prefix
                     try:
                         items.remove(item)
@@ -256,7 +256,7 @@ class PubSubService(object):
                 subscriptions = self._peer_subscriptions[platform][bus]
                 if prefix is None:
                     remove = []
-                    for topic, subscribers in subscriptions.iteritems():
+                    for topic, subscribers in subscriptions.items():
                         subscribers.discard(peer)
                         if not subscribers:
                             remove.append(topic)
@@ -339,7 +339,7 @@ class PubSubService(object):
                 platform = 'all'
 
             if bus is None:
-                buses = self._peer_subscriptions[platform].iteritems()
+                buses = self._peer_subscriptions[platform].items()
             else:
                 buses = [(bus, self._peer_subscriptions[platform][bus])]
             if reverse:
@@ -347,7 +347,7 @@ class PubSubService(object):
             else:
                 test = lambda t: t.startswith(prefix)
             for bus, subscriptions in buses:
-                for topic, subscribers in subscriptions.iteritems():
+                for topic, subscribers in subscriptions.items():
                     if test(topic):
                         member = peer in subscribers
                         if not subscribed or member:
@@ -435,7 +435,7 @@ class PubSubService(object):
         subs.update(subscriptions)
         subscribers = set()
         # Check for local subscribers
-        for prefix, subscription in subs.iteritems():
+        for prefix, subscription in subs.items():
             if subscription and topic.startswith(prefix):
                 subscribers |= subscription
         if subscribers:
@@ -804,7 +804,7 @@ class ProtectedPubSubTopics(object):
         self._re_list = []
 
     def add(self, topic, capabilities):
-        if isinstance(capabilities, basestring):
+        if isinstance(capabilities, str):
             capabilities = [capabilities]
         if len(topic) > 1 and topic[0] == topic[-1] == '/':
             regex = re.compile('^' + topic[1:-1] + '$')

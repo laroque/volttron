@@ -60,7 +60,7 @@ def normtopic(topic):
             comps.pop()
         else:
             comps.append(comp)
-    return (u'/' if isinstance(topic, unicode) else '/').join(comps)
+    return '/'.join(comps)
 
 
 class TopicFormatter(Formatter):
@@ -140,7 +140,7 @@ class TopicFormatter(Formatter):
                 raise ValueError('unused keyword argument: {}'.format(name))
 
 
-class Topic(unicode):
+class Topic(str):
 
     def __init__(self, format_string):
         '''Perform minimal validation of names used in format fields.'''
@@ -148,7 +148,7 @@ class Topic(unicode):
             if name is None:
                 continue
             name, _ = name._formatter_field_name_split()
-            if isinstance(name, (int, long)) or not name:
+            if isinstance(name, int) or not name:
                 raise ValueError('positional format fields are not supported;'
                                  ' use named format fields only')
             if name[:1].isdigit():

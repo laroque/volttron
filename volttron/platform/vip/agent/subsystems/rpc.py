@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import
+
 
 import inspect
 import logging
@@ -135,7 +135,7 @@ class Dispatcher(jsonrpc.Dispatcher):
             method = self.methods[name]
         except KeyError:
             if name == 'inspect':
-                return {'methods': self.methods.keys()}
+                return {'methods': list(self.methods)}
             elif name.endswith('.inspect'):
                 try:
                     method = self.methods[name[:-8]]
@@ -319,7 +319,7 @@ class RPC(SubsystemBase):
 
     @export.classmethod
     def export(cls, name=None):   # pylint: disable=no-self-argument
-        if not isinstance(name, basestring):
+        if not isinstance(name, str):
             method, name = name, name.__name__
             annotate(method, set, 'rpc.exports', name)
             return method
@@ -428,7 +428,7 @@ class RPC(SubsystemBase):
 
     @dualmethod
     def allow(self, method, capabilities):
-        if isinstance(capabilities, basestring):
+        if isinstance(capabilities, str):
             cap = set([capabilities])
         else:
             cap = set(capabilities)
@@ -455,7 +455,7 @@ class RPC(SubsystemBase):
 
         """
         def decorate(method):
-            if isinstance(capabilities, basestring):
+            if isinstance(capabilities, str):
                 annotate(method, set, 'rpc.allow_capabilities', capabilities)
             else:
                 for cap in capabilities:

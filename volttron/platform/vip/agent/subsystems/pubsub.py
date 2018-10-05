@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import
+
 
 from base64 import b64encode, b64decode
 import inspect
@@ -151,7 +151,7 @@ class PubSub(SubsystemBase):
             buses = self._my_subscriptions[platform]
             if bus in buses:
                 subscriptions = buses[bus]
-                for prefix, callbacks in subscriptions.iteritems():
+                for prefix, callbacks in subscriptions.items():
                     if topic.startswith(prefix):
                         handled += 1
                         for callback in callbacks:
@@ -173,11 +173,11 @@ class PubSub(SubsystemBase):
         self._sync(peer, {})
 
     def _sync(self, peer, items):
-        items = {(bus, prefix) for bus, topics in items.iteritems()
+        items = {(bus, prefix) for bus, topics in items.items()
                  for prefix in topics}
         remove = []
-        for bus, subscriptions in self._peer_subscriptions.iteritems():
-            for prefix, subscribers in subscriptions.iteritems():
+        for bus, subscriptions in self._peer_subscriptions.items():
+            for prefix, subscribers in subscriptions.items():
                 item = bus, prefix
                 try:
                     items.remove(item)
@@ -222,7 +222,7 @@ class PubSub(SubsystemBase):
             return
         if prefix is None:
             remove = []
-            for topic, subscribers in subscriptions.iteritems():
+            for topic, subscribers in subscriptions.items():
                 subscribers.discard(peer)
                 if not subscribers:
                     remove.append(topic)
@@ -238,7 +238,7 @@ class PubSub(SubsystemBase):
     def _peer_list(self, prefix='', bus='', subscribed=True, reverse=False):
         peer = bytes(self.rpc().context.vip_message.peer)
         if bus is None:
-            buses = self._peer_subscriptions.iteritems()
+            buses = iter(self._peer_subscriptions.items())
         else:
             buses = [(bus, self._peer_subscriptions[bus])]
         if reverse:
@@ -247,7 +247,7 @@ class PubSub(SubsystemBase):
             test = lambda t: t.startswith(prefix)
         results = []
         for bus, subscriptions in buses:
-            for topic, subscribers in subscriptions.iteritems():
+            for topic, subscribers in subscriptions.items():
                 if test(topic):
                     member = peer in subscribers
                     if not subscribed or member:
@@ -265,7 +265,7 @@ class PubSub(SubsystemBase):
         except KeyError:
             subscriptions = dict()
         subscribers = set()
-        for prefix, subscription in subscriptions.iteritems():
+        for prefix, subscription in subscriptions.items():
             if subscription and topic.startswith(prefix):
                 subscribers |= subscription
         if subscribers:
@@ -292,23 +292,21 @@ class PubSub(SubsystemBase):
         """Synchronize local subscriptions with the PubSubService.
         """
         result = next(self._results)
-        items = [{platform: {bus: subscriptions.keys()} for platform, bus_subscriptions in self._my_subscriptions.items()
-                  for bus, subscriptions in bus_subscriptions.items()}]
-        for subscriptions in items:
-            sync_msg = jsonapi.dumps(
-                        dict(subscriptions=subscriptions)
-                        )
-            frames = [b'synchronize', b'connected', sync_msg]
-            # For backward compatibility with old pubsub
-            if self._send_via_rpc:
-                delay = random.random()
-                self.core().spawn_later(delay, self.rpc().notify, 'pubsub', 'pubsub.sync', subscriptions)
-            else:
-                # Parameters are stored initially, in case remote agent/platform is using old pubsub
-                if self._parameters_needed:
-                    kwargs = dict(op='synchronize', subscriptions=subscriptions)
-                    self._save_parameters(result.ident, **kwargs)
-                self.vip_socket.send_vip(b'', 'pubsub', frames, result.ident, copy=False)
+        subscriptions = {platform: {bus: list(subscriptions.keys())}
+                         for platform, bus_subscriptions in self._my_subscriptions.items()
+                         for bus, subscriptions in bus_subscriptions.items()}
+        sync_msg = jsonapi.dumps(dict(subscriptions=subscriptions))
+        frames = [b'synchronize', b'connected', sync_msg]
+        # For backward compatibility with old pubsub
+        if self._send_via_rpc:
+            delay = random.random()
+            self.core().spawn_later(delay, self.rpc().notify, 'pubsub', 'pubsub.sync', subscriptions)
+        else:
+            # Parameters are stored initially, in case remote agent/platform is using old pubsub
+            if self._parameters_needed:
+                kwargs = dict(op='synchronize', subscriptions=subscriptions)
+                self._save_parameters(result.ident, **kwargs)
+            self.vip_socket.send_vip(b'', 'pubsub', frames, result.ident, copy=False)
 
     def list(self, peer, prefix='', bus='', subscribed=True, reverse=False, all_platforms=False):
         """Gets list of subscriptions matching the prefix and bus for the specified peer.
@@ -391,7 +389,7 @@ class PubSub(SubsystemBase):
             self._add_subscription(prefix, callback, bus)
             return self.rpc().call(peer, 'pubsub.subscribe', prefix, bus=bus)
         else:
-            result = self._results.next()
+            result = next(self._results)
             # Parameters are stored initially, in case remote agent/platform is using old pubsub
             if self._parameters_needed:
                 kwargs = dict(op='subscribe', prefix=prefix, bus=bus)
@@ -456,14 +454,14 @@ class PubSub(SubsystemBase):
                     bus_subscriptions = self._my_subscriptions[platform]
                 if bus in bus_subscriptions:
                     subscriptions = bus_subscriptions.pop(bus)
-                    topics = subscriptions.keys()
+                    topics = list(subscriptions)
             else:
                 if platform in self._my_subscriptions:
                     bus_subscriptions = self._my_subscriptions[platform]
                 if bus in bus_subscriptions:
                     subscriptions = bus_subscriptions[bus]
                     remove = []
-                    for topic, callbacks in subscriptions.iteritems():
+                    for topic, callbacks in subscriptions.items():
                         try:
                             callbacks.remove(callback)
                         except KeyError:
@@ -903,7 +901,7 @@ class PubSubWithRPC(object):
         """Clear all the saved parameters.
         """
         try:
-            for ident, param in self.parameters.iteritems():
+            for ident, param in self.parameters.items():
                 param['event'].cancel()
             self.parameters.clear()
         except KeyError:
@@ -916,7 +914,7 @@ class ProtectedPubSubTopics(object):
         self._re_list = []
 
     def add(self, topic, capabilities):
-        if isinstance(capabilities, basestring):
+        if isinstance(capabilities, str):
             capabilities = [capabilities]
         if len(topic) > 1 and topic[0] == topic[-1] == '/':
             regex = re.compile('^' + topic[1:-1] + '$')

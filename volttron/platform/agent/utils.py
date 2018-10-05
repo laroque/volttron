@@ -153,7 +153,7 @@ def load_config(config_path):
         try:
             with open(config_path) as f:
                 return parse_json_config(f.read())
-        except StandardError as e:
+        except Exception as e:
             _log.error("Problem parsing agent configuration")
             raise
 
@@ -191,7 +191,7 @@ def update_kwargs_with_config(kwargs, config):
                      "agentid")
         config.pop('agentid')
 
-    for k, v in config.items():
+    for k, v in list(config.items()):
         kwargs[k.replace("-","_")] = v
 
 

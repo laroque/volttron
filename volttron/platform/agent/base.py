@@ -38,7 +38,7 @@
 
 '''VOLTTRON platform™ base agent and helper classes/functions.'''
 
-from __future__ import absolute_import
+
 
 import random
 import string
@@ -66,7 +66,7 @@ _COOKIE_CHARS = string.ascii_letters + string.digits
 
 
 def random_cookie(length=40, choices=_COOKIE_CHARS):
-    return ''.join(random.choice(choices) for i in xrange(length))
+    return ''.join(random.choice(choices) for i in range(length))
 
 
 def remove_matching(test, items):
@@ -318,10 +318,10 @@ class BaseAgent(AgentBase):
         except zmq.error.Again:
             return
         try:
-            # Iterate over items() rather than iteritems() so that
+            # Iterate over list(x.items()) rather than items() so that
             # handlers may subscribe and unsubscribe, which changes
             # the size of the _subscriptions dictionary.
-            for prefix, handlers in self._subscriptions.items():
+            for prefix, handlers in list(self._subscriptions.items()):
                 if topic.startswith(prefix):
                     for callback, test in handlers:
                         if not callback:
@@ -384,7 +384,7 @@ class BaseAgent(AgentBase):
             if handlers:
                 remove_handler(prefix, handlers)
         else:
-            for prefix, handlers in self._subscriptions.items():
+            for prefix, handlers in list(self._subscriptions.items()):
                 remove_handler(prefix, handlers)
 
     def unsubscribe_all(self, prefix):

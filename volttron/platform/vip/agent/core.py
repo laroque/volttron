@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import, print_function
+
 
 from contextlib import contextmanager
 from datetime import datetime
@@ -48,7 +48,7 @@ import os
 import sys
 import threading
 import time
-import urlparse
+import urllib.parse
 import uuid
 import weakref
 import signal
@@ -270,10 +270,10 @@ class BasicCore(object):
         current.link(lambda glt: self._async.stop())
 
         looper = self.loop(running_event)
-        looper.next()
+        next(looper)
         self.onsetup.send(self)
 
-        loop = looper.next()
+        loop = next(looper)
         if loop:
             self.spawned_greenlets.add(loop)
         scheduler = gevent.spawn(schedule_loop)
@@ -291,10 +291,10 @@ class BasicCore(object):
         except (gevent.GreenletExit, KeyboardInterrupt):
             pass
         scheduler.kill()
-        looper.next()
+        next(looper)
         receivers = self.onstop.sendby(self.link_receiver, self)
         gevent.wait(receivers)
-        looper.next()
+        next(looper)
         self.onfinish.send(self)
 
     def stop(self, timeout=None):
@@ -478,18 +478,18 @@ class Core(BasicCore):
         they are not already present'''
 
         def add_param(query_str, key, value):
-            query_dict = urlparse.parse_qs(query_str)
+            query_dict = urllib.parse.parse_qs(query_str)
             if not value or key in query_dict:
                 return ''
             # urlparse automatically adds '?', but we need to add the '&'s
             return '{}{}={}'.format('&' if query_str else '', key, value)
 
-        url = list(urlparse.urlsplit(self.address))
+        url = list(urllib.parse.urlsplit(self.address))
         if url[0] in ['tcp', 'ipc']:
             url[3] += add_param(url[3], 'publickey', self.publickey)
             url[3] += add_param(url[3], 'secretkey', self.secretkey)
             url[3] += add_param(url[3], 'serverkey', self.serverkey)
-            self.address = str(urlparse.urlunsplit(url))
+            self.address = str(urllib.parse.urlunsplit(url))
 
     def _set_public_and_secret_keys(self):
         if self.publickey is None or self.secretkey is None:
@@ -540,8 +540,8 @@ class Core(BasicCore):
         return keystore.public, keystore.secret
 
     def _get_keys_from_addr(self):
-        url = list(urlparse.urlsplit(self.address))
-        query = urlparse.parse_qs(url[3])
+        url = list(urllib.parse.urlsplit(self.address))
+        query = urllib.parse.parse_qs(url[3])
         publickey = query.get('publickey', [None])[0]
         secretkey = query.get('secretkey', [None])[0]
         serverkey = query.get('serverkey', [None])[0]
@@ -674,7 +674,7 @@ class Core(BasicCore):
                     #     pass
                 finally:
                     try:
-                        url = list(urlparse.urlsplit(self.address))
+                        url = list(urllib.parse.urlsplit(self.address))
                         if url[0] in ['tcp'] and sock is not None:
                             sock.close()
                         if self.socket is not None:
