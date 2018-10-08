@@ -265,7 +265,7 @@ class BasicCore(object):
 
         self._stop_event = stop = gevent.event.Event()
         self._schedule_event = gevent.event.Event()
-        self._async = gevent.get_hub().loop.async()
+        self._async = gevent.get_hub().loop.async_()
         self._async.start(handle_async)
         current.link(lambda glt: self._async.stop())
 
@@ -324,25 +324,25 @@ class BasicCore(object):
 
     def send_async(self, func, *args, **kwargs):
         result = gevent.event.AsyncResult()
-        async = result.hub.loop.async()
+        async_ = result.hub.loop.async_()
         results = [None, None]
 
         def receiver():
-            async.stop()
+            async_.stop()
             exc, value = results
             if exc is None:
                 result.set(value)
             else:
                 result.set_exception(exc)
 
-        async.start(receiver)
+        async_.start(receiver)
 
         def worker():
             try:
                 results[:] = [None, func(*args, **kwargs)]
             except Exception as exc:  # pylint: disable=broad-except
                 results[:] = [exc, None]
-            async.send()
+            async_.send()
 
         self.send(worker)
         return result
