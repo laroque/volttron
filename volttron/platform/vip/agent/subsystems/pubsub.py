@@ -48,7 +48,7 @@ import weakref
 import gevent
 from zmq import green as zmq
 from zmq import SNDMORE
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .base import SubsystemBase
 from ..decorators import annotate, annotations, dualmethod, spawn

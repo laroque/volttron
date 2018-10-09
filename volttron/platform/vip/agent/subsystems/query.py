@@ -41,7 +41,7 @@ from __future__ import absolute_import
 import re
 import weakref
 
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .base import SubsystemBase
 from ..errors import VIPError

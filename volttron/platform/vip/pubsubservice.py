@@ -53,7 +53,7 @@ green.Context._instance = green.Context.shadow(zmq.Context.instance().underlying
 from .agent.subsystems.pubsub import ProtectedPubSubTopics
 from volttron.platform.jsonrpc import (INVALID_REQUEST, UNAUTHORIZED)
 from volttron.platform.vip.agent.errors import VIPError
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 # Optimizing by pre-creating frames
 _ROUTE_ERRORS = {

@@ -42,8 +42,7 @@ import pytest
 import time
 import os
 
-from volttron.platform import get_services_core, get_examples
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import get_services_core, get_examples, jsonapi
 
 from volttrontesting.utils.platformwrapper import start_wrapper_platform, \
     PlatformWrapper

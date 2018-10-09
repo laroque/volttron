@@ -41,7 +41,7 @@
 from contextlib import closing
 
 from zmq import green as zmq
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from . import Core, RPC, PeerList, PubSub
 from .subsystems.pubsub import encode_peer

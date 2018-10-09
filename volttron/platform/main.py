@@ -61,7 +61,7 @@ from zmq import green, ZMQError
 
 # Create a context common to the green and non-green zmq modules.
 green.Context._instance = green.Context.shadow(zmq.Context.instance().underlying)
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from . import aip
 from . import __version__

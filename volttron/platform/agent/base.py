@@ -51,7 +51,7 @@ from . import sched
 from .matching import iter_match_tests
 from .. import messaging
 from ..messaging import topics
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 
 __all__ = ['periodic', 'BaseAgent', 'PublishMixin']

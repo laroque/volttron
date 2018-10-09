@@ -51,7 +51,7 @@ import uuid
 import gevent
 from gevent.fileobject import FileObject
 from zmq import green as zmq
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .agent.utils import strip_comments, create_file_if_missing, watch_file
 from .vip.agent import Agent, Core, RPC

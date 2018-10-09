@@ -47,7 +47,7 @@ import weakref
 
 import gevent.local
 from gevent.event import AsyncResult
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .base import SubsystemBase
 from ..errors import VIPError

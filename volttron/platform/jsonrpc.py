@@ -44,7 +44,7 @@ See http://www.jsonrpc.org/specification for the complete specification.
 import sys
 from contextlib import contextmanager
 
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 __all__ = ['Error', 'MethodNotFound', 'RemoteError', 'Dispatcher']
 
