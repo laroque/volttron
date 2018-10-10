@@ -63,7 +63,7 @@ class Ping(SubsystemBase):
         result = next(self._results)
         args = list(args)
         args.insert(0, b'ping')
-        socket.send_vip(peer, b'ping', args, result.ident)
+        socket.send_vip(peer.encode('utf-8'), b'ping', args, result.ident.encode('utf-8'))
         return result
 
     __call__ = ping
@@ -80,7 +80,7 @@ class Ping(SubsystemBase):
             self.core().socket.send_vip_object(message, copy=False)
         elif op == b'pong':
             try:
-                result = self._results.pop(bytes(message.id))
+                result = self._results.pop(bytes(message.id).decode('utf-8'))
             except KeyError:
                 return
             result.set([bytes(arg) for arg in message.args[1:]])
@@ -89,7 +89,7 @@ class Ping(SubsystemBase):
 
     def _handle_error(self, sender, message, error, **kwargs):
         try:
-            result = self._results.pop(bytes(message.id))
+            result = self._results.pop(bytes(message.id).decode('utf-8'))
         except KeyError:
             return
         result.set_exception(error)

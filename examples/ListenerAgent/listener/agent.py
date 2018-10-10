@@ -46,6 +46,7 @@ from pprint import pformat
 
 from volttron.platform.messaging.health import STATUS_GOOD
 from volttron.platform.vip.agent import Agent, Core, PubSub, compat
+from volttron.platform.vip.agent.subsystems.query import Query
 from volttron.platform.agent import utils
 from volttron.platform.messaging import headers as headers_mod
 
@@ -96,6 +97,8 @@ class ListenerAgent(Agent):
         if self._heartbeat_period != 0:
             self.vip.heartbeat.start_with_period(self._heartbeat_period)
             self.vip.health.set_status(STATUS_GOOD, self._message)
+        query = Query(self.core)
+        _log.info('query: %r', query.query('serverkey').get())
 
     @PubSub.subscribe('pubsub', '')
     def on_match(self, peer, sender, bus,  topic, headers, message):
