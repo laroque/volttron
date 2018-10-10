@@ -156,15 +156,15 @@ class AuthService(Agent):
     def _send_auth_update_to_pubsub(self):
         user_to_caps = self.get_user_to_capabilities()
         #Send auth update message to router
-        json_msg = jsonapi.dumps(
+        json_msg = jsonapi.dumpb(
             dict(capabilities=user_to_caps)
         )
-        frames = [zmq.Frame(b'auth_update'), zmq.Frame(str(json_msg))]
+        frames = [zmq.Frame(b'auth_update'), zmq.Frame(json_msg)]
         # <recipient, subsystem, args, msg_id, flags>
         self.core.socket.send_vip(b'', 'pubsub', frames, copy=False)
 
     def _send_protected_update_to_pubsub(self, contents):
-        protected_topics_msg = jsonapi.dumps(contents)
+        protected_topics_msg = jsonapi.dumpb(contents)
 
         frames = [zmq.Frame(b'protected_update'), zmq.Frame(protected_topics_msg)]
         if self._is_connected:

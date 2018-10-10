@@ -580,7 +580,7 @@ class Core(BasicCore):
         if self.reconnect_interval:
             self.socket.setsockopt(zmq.RECONNECT_IVL, self.reconnect_interval)
         if self.identity:
-            self.socket.identity = self.identity
+            self.socket.identity = self.identity.encode('utf-8')
         yield
 
         # pre-start
@@ -719,6 +719,7 @@ class Core(BasicCore):
                                           router=server, identity=identity)
                     continue
 
+                subsystem = subsystem.decode('utf-8')
                 try:
                     handle = self.subsystems[subsystem]
                 except KeyError:

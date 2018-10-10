@@ -61,7 +61,7 @@ import urllib.parse
 import uuid
 
 from zmq import (SNDMORE, RCVMORE, NOBLOCK, POLLOUT, DEALER, ROUTER,
-                 curve_keypair, ZMQError)
+                 curve_keypair, Frame, ZMQError)
 from zmq.error import Again
 from zmq.utils import z85
 
@@ -191,15 +191,19 @@ class Address(object):
         return '%s.%s(%r)' % (
             self.__class__.__module__, self.__class__.__name__, str(self))
 
+    def _set_sock_identity(self, sock):
+        if self.identity:
+            sock.identity = self.identity.encode('utf-8')
+        elif not sock.identity:
+            self.identity = str(uuid.uuid4())
+            sock.identity = self.identity.encode('utf-8')
+
     def bind(self, sock, bind_fn=None):
         '''Extended zmq.Socket.bind() to include options in the address.'''
         if not self.domain:
             raise ValueError('Address domain must be set')
         sock.zap_domain = self.domain or ''
-        if self.identity:
-            sock.identity = self.identity
-        elif not sock.identity:
-            sock.identity = self.identity = bytes(uuid.uuid4())
+        self._set_sock_identity(sock)
         sock.ipv6 = self.ipv6 or False
         if self.server == 'CURVE':
             if not self.secretkey:
@@ -232,10 +236,7 @@ class Address(object):
 
     def connect(self, sock, connect_fn=None):
         '''Extended zmq.Socket.connect() to include options in the address.'''
-        if self.identity:
-            sock.identity = self.identity
-        elif not sock.identity:
-            sock.identity = self.identity = bytes(uuid.uuid4())
+        self._set_sock_identity(sock)
         sock.ipv6 = self.ipv6 or False
         if self.serverkey:
             sock.curve_serverkey = self.serverkey
@@ -418,7 +419,7 @@ class _Socket(object):
             self.send_multipart([peer, user, msg_id, subsystem],
                                 flags=flags|more, copy=copy, track=track)
             if args:
-                send = (self.send if isinstance(args, str)
+                send = (self.send if isinstance(args, (bytes, str))
                         else self.send_multipart)
                 send(args, flags=flags, copy=copy, track=track)
 

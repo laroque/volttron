@@ -47,6 +47,10 @@ from gevent.event import AsyncResult
 __all__ = ['counter', 'ResultsDictionary']
 
 
+class AsyncResult(AsyncResult):
+    __slots__ = AsyncResult.__slots__ + ('ident',)
+
+
 def counter(start=None, minimum=0, maximum=2**64-1):
     count = random.randint(minimum, maximum) if start is None else start
     while True:

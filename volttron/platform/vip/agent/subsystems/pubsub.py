@@ -270,7 +270,7 @@ class PubSub(SubsystemBase):
                 subscribers |= subscription
         if subscribers:
             sender = encode_peer(peer)
-            json_msg = jsonapi.dumps(jsonrpc.json_method(
+            json_msg = jsonapi.dumpb(jsonrpc.json_method(
                 None, 'pubsub.push',
                 [sender, bus, topic, headers, message], None))
             frames = [zmq.Frame(b''), zmq.Frame(b''),
@@ -295,7 +295,7 @@ class PubSub(SubsystemBase):
         subscriptions = {platform: {bus: list(subscriptions.keys())}
                          for platform, bus_subscriptions in self._my_subscriptions.items()
                          for bus, subscriptions in bus_subscriptions.items()}
-        sync_msg = jsonapi.dumps(dict(subscriptions=subscriptions))
+        sync_msg = jsonapi.dumpb(dict(subscriptions=subscriptions))
         frames = [b'synchronize', b'connected', sync_msg]
         # For backward compatibility with old pubsub
         if self._send_via_rpc:
@@ -306,7 +306,7 @@ class PubSub(SubsystemBase):
             if self._parameters_needed:
                 kwargs = dict(op='synchronize', subscriptions=subscriptions)
                 self._save_parameters(result.ident, **kwargs)
-            self.vip_socket.send_vip(b'', 'pubsub', frames, result.ident, copy=False)
+            self.vip_socket.send_vip(b'', b'pubsub', frames, result.ident.encode('utf-8'), copy=False)
 
     def list(self, peer, prefix='', bus='', subscribed=True, reverse=False, all_platforms=False):
         """Gets list of subscriptions matching the prefix and bus for the specified peer.
@@ -337,11 +337,11 @@ class PubSub(SubsystemBase):
             if self._parameters_needed:
                 kwargs = dict(op='list', prefix=prefix, subscribed=subscribed, reverse=reverse, bus=bus)
                 self._save_parameters(result.ident, **kwargs)
-            list_msg = jsonapi.dumps(dict(prefix=prefix, all_platforms=all_platforms,
+            list_msg = jsonapi.dumpb(dict(prefix=prefix, all_platforms=all_platforms,
                                           subscribed=subscribed, reverse=reverse, bus=bus))
 
             frames = [b'list', list_msg]
-            self.vip_socket.send_vip(b'', 'pubsub', frames, result.ident, copy=False)
+            self.vip_socket.send_vip(b'', b'pubsub', frames, result.ident.encode('utf-8'), copy=False)
             return result
 
     def _add_subscription(self, prefix, callback, bus='', all_platforms=False):
@@ -395,12 +395,12 @@ class PubSub(SubsystemBase):
                 kwargs = dict(op='subscribe', prefix=prefix, bus=bus)
                 self._save_parameters(result.ident, **kwargs)
             self._add_subscription(prefix, callback, bus, all_platforms)
-            sub_msg = jsonapi.dumps(
+            sub_msg = jsonapi.dumpb(
                 dict(prefix=prefix, bus=bus, all_platforms=all_platforms)
             )
 
             frames = [b'subscribe', sub_msg]
-            self.vip_socket.send_vip(b'', 'pubsub', frames, result.ident, copy=False)
+            self.vip_socket.send_vip(b'', b'pubsub', frames, result.ident.encode('utf-8'), copy=False)
             return result
 
     @subscribe.classmethod
@@ -548,10 +548,10 @@ class PubSub(SubsystemBase):
                 kwargs = dict(op='unsubscribe', prefix=topics, bus=bus)
                 self._save_parameters(result.ident, **kwargs)
 
-            unsub_msg = jsonapi.dumps(subscriptions)
+            unsub_msg = jsonapi.dumpb(subscriptions)
             topics = self._drop_subscription(prefix, callback, bus)
             frames = [b'unsubscribe', unsub_msg]
-            self.vip_socket.send_vip(b'', 'pubsub', frames, result.ident, copy=False)
+            self.vip_socket.send_vip(b'', b'pubsub', frames, result.ident.encode('utf-8'), copy=False)
             return result
 
     def publish(self, peer, topic, headers=None, message=None, bus=''):
@@ -599,10 +599,10 @@ class PubSub(SubsystemBase):
                               headers=headers, message=message)
                 self._save_parameters(result.ident, **kwargs)
 
-            json_msg = jsonapi.dumps(dict(bus=bus, headers=headers, message=message))
-            frames = [zmq.Frame(b'publish'), zmq.Frame(str(topic)), zmq.Frame(str(json_msg))]
+            json_msg = jsonapi.dumpb(dict(bus=bus, headers=headers, message=message))
+            frames = [zmq.Frame(b'publish'), zmq.Frame(topic.encode('utf-8')), zmq.Frame(json_msg)]
             #<recipient, subsystem, args, msg_id, flags>
-            self.vip_socket.send_vip(b'', 'pubsub', frames, result.ident, copy=False)
+            self.vip_socket.send_vip(b'', b'pubsub', frames, result.ident.encode('utf-8'), copy=False)
             return result
 
     def _check_if_protected_topic(self, topic):
@@ -629,7 +629,7 @@ class PubSub(SubsystemBase):
         param message: VIP message from PubSubService
         type message: dict
         """
-        op = message.args[0].bytes
+        op = message.args[0].bytes.decode('utf-8')
 
         if op == 'request_response':
             result = None
@@ -643,15 +643,15 @@ class PubSub(SubsystemBase):
                 self._parameters_needed = False
                 self._pubsubwithrpc.clear_parameters()
                 del self._pubsubwithrpc
-            response = message.args[1].bytes
+            response = message.args[1].bytes.decode('utf-8')
             #_log.debug("Message result: {}".format(response))
             if result:
                 result.set(response)
 
         elif op == 'publish':
             try:
-                topic = topic = message.args[1].bytes
-                data = message.args[2].bytes
+                topic = message.args[1].bytes.decode('utf-8')
+                data = message.args[2].bytes.decode('utf-8')
             except IndexError:
                 return
             try:
