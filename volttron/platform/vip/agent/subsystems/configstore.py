@@ -350,10 +350,14 @@ class ConfigStore(SubsystemBase):
         return self._gather_config(config_name)
 
     def _check_call_from_process_callbacks(self):
-        #Don't create any unneeded references to frame objects.
-        for frame, *_ in inspect.stack():
-            if self._process_callbacks_code_object is frame.f_code:
-                raise RuntimeError("Cannot request changes to the config store from a configuration callback.")
+        frame_records = inspect.stack()
+        try:
+            #Don't create any unneeded references to frame objects.
+            for frame, *_ in frame_records:
+                if self._process_callbacks_code_object is frame.f_code:
+                    raise RuntimeError("Cannot request changes to the config store from a configuration callback.")
+        finally:
+            del frame_records
 
 
     def set(self, config_name, contents, trigger_callback=False, send_update=True):
