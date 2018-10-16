@@ -190,7 +190,7 @@ def update_kwargs_with_config(kwargs, config):
                      "agentid")
         config.pop('agentid')
 
-    for k, v in list(config.items()):
+    for k, v in config.items():
         kwargs[k.replace("-","_")] = v
 
 

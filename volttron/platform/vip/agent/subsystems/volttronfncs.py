@@ -163,10 +163,8 @@ class FNCS(SubsystemBase):
                 raise ValueError("Invalid fncs_topic specified in key {}.".format(k))
 
             entry = dict(fncs_topic=v.get('fncs_topic'))
-            try:
+            if 'volttron_topic' in v:
                 entry['volttron_topic'] = v['volttron_topic']
-            except KeyError:
-                pass
 
             self._registered_fncs_topics[k] = entry
 
