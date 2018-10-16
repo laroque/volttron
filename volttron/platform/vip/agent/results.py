@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import
+
 
 import random
 import weakref
@@ -45,6 +45,10 @@ from gevent.event import AsyncResult
 
 
 __all__ = ['counter', 'ResultsDictionary']
+
+
+class AsyncResult(AsyncResult):
+    __slots__ = AsyncResult.__slots__ + ('ident',)
 
 
 def counter(start=None, minimum=0, maximum=2**64-1):
@@ -61,7 +65,7 @@ class ResultsDictionary(weakref.WeakValueDictionary):
         weakref.WeakValueDictionary.__init__(self)
         self._counter = counter()
 
-    def next(self):
+    def __next__(self):
         result = AsyncResult()
         result.ident = ident = '%s.%s' % (next(self._counter), hash(result))
         self[ident] = result

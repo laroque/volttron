@@ -36,19 +36,15 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-"""
-Wrapper around UJSON to protect against NaN values and also to
-increase the performance involved in serialization and
-deserialization of data.
-"""
-
-from zmq.utils.jsonapi import dumps as _dumps, loads as _loads
+from json import dump, dumps, load, loads
 
 
-def dumps(data, **kwargs):
-    return _dumps(data, **kwargs)
+__all__ = ('dump', 'dumpb', 'dumps', 'load', 'loadb', 'loads')
 
 
-def loads(s, **kwargs):
-    return _loads(s, **kwargs)
+def dumpb(data, **kwargs):
+    return dumps(data, **kwargs).encode('utf-8')
 
+
+def loadb(s, **kwargs):
+    return loads(s.decode('utf-8'), **kwargs)

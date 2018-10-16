@@ -54,11 +54,10 @@ import re
 import stat
 import time
 import yaml
-from volttron.platform import get_home, get_address
+from volttron.platform import get_home, get_address, jsonapi
 from dateutil.parser import parse
 from dateutil.tz import tzutc, tzoffset
 from tzlocal import get_localzone
-from volttron.platform.agent import json as jsonapi
 
 try:
     from ..lib.inotify.green import inotify, IN_MODIFY
@@ -153,7 +152,7 @@ def load_config(config_path):
         try:
             with open(config_path) as f:
                 return parse_json_config(f.read())
-        except StandardError as e:
+        except Exception as e:
             _log.error("Problem parsing agent configuration")
             raise
 
@@ -191,7 +190,7 @@ def update_kwargs_with_config(kwargs, config):
                      "agentid")
         config.pop('agentid')
 
-    for k, v in config.items():
+    for k, v in list(config.items()):
         kwargs[k.replace("-","_")] = v
 
 

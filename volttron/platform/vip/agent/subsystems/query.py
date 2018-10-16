@@ -41,7 +41,7 @@ from __future__ import absolute_import
 import re
 import weakref
 
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .base import SubsystemBase
 from ..errors import VIPError
@@ -57,10 +57,10 @@ class Query(SubsystemBase):
         self._results = ResultsDictionary()
         core.register('query', self._handle_result, self._handle_error)
 
-    def query(self, prop, peer=b''):
+    def query(self, prop, peer=''):
         socket = self.core().socket
         result = next(self._results)
-        socket.send_vip(peer, b'query', [prop], msg_id=result.ident)
+        socket.send_vip(peer.encode('utf-8'), b'query', [prop.encode('utf-8')], msg_id=result.ident.encode('utf-8'))
         return result
 
     __call__ = query
@@ -68,18 +68,18 @@ class Query(SubsystemBase):
     def _handle_result(self, message):
         if message.args and not message.args[0]:
             try:
-                result = self._results.pop(bytes(message.id))
+                result = self._results.pop(bytes(message.id).decode('utf-8'))
             except KeyError:
                 return
             try:
-                value = jsonapi.loads(bytes(message.args[1]))
+                value = jsonapi.loadb(bytes(message.args[1]))
             except IndexError:
                 value = None
             result.set(value)
 
     def _handle_error(self, sender, message, error, **kwargs):
         try:
-            result = self._results.pop(bytes(message.id))
+            result = self._results.pop(bytes(message.id).decode('utf-8'))
         except KeyError:
             return
         result.set_exception(error)

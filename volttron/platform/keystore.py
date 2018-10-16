@@ -47,7 +47,7 @@
 import json
 import logging
 import os
-import urlparse
+import urllib.parse
 
 from zmq import curve_keypair
 
@@ -182,7 +182,7 @@ class KnownHostsStore(BaseJSONStore):
 
     @staticmethod
     def _parse_addr(addr):
-        url = urlparse.urlparse(addr)
+        url = urllib.parse.urlparse(addr)
         if url.netloc:
             return url.netloc
         return url.path

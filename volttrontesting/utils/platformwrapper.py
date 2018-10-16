@@ -18,7 +18,7 @@ import requests
 from agent_additions import add_volttron_central
 from gevent.fileobject import FileObject
 from gevent.subprocess import Popen
-from volttron.platform import packaging
+from volttron.platform import packaging, jsonapi
 from volttron.platform.agent import utils
 from volttron.platform.agent.utils import strip_comments
 from volttron.platform.aip import AIPplatform
@@ -29,7 +29,6 @@ from volttron.platform.vip.agent import Agent
 from volttron.platform.vip.agent.connection import Connection
 from volttrontesting.utils.utils import get_rand_http_address
 from volttrontesting.utils.utils import get_rand_tcp_address
-from volttron.platform.agent import json as jsonapi
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
