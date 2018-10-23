@@ -43,7 +43,7 @@ import os
 import os.path
 import errno
 from csv import DictReader
-from StringIO import StringIO
+from io import StringIO
 
 from volttron.platform import jsonapi
 from gevent.lock import Semaphore
@@ -274,7 +274,7 @@ class ConfigStoreService(Agent):
 
         if agent_store is None:
             # Initialize a new store.
-            store_path = os.path.join(self.store_path, identity + store_ext)
+            store_path = os.path.join(self.store_path, identity.decode("utf-8") + store_ext)
             store = PersistentDict(filename=store_path, flag='c', format='json')
             agent_store = {
                 "configs": {}, "store": store, "name_map": {},

@@ -71,7 +71,7 @@ class BaseJSONStore(object):
         fd = os.open(self.filename, os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
                      self.permissions)
         try:
-            os.write(fd, json.dumps(data, indent=4))
+            os.write(fd, json.dumps(data, indent=4).encode("utf-8"))
         finally:
             os.close(fd)
 

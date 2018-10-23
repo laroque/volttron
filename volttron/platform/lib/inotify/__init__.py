@@ -141,7 +141,7 @@ class _inotify(object):
             self._fd = None
 
     def add_watch(self, pathname, mask=IN_ALL_EVENTS):
-        wd = inotify_add_watch(self.fileno(), pathname, mask | IN_IGNORED)
+        wd = inotify_add_watch(self.fileno(), pathname.encode("utf-8"), mask | IN_IGNORED)
         with self._lock:
             self._watch_names[pathname] = wd
             self._watch_wds[wd] = (pathname, mask)
@@ -160,7 +160,7 @@ class _inotify(object):
                 if not data:
                     return
             wd, mask, cookie, length = struct.unpack_from('iIII', data)
-            name = data[16:16+length].rstrip('\0')
+            name = data[16:16+length].rstrip(b'\0')
             self._buf = data[16+length:]
             with self._lock:
                 try:

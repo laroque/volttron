@@ -43,7 +43,7 @@ import errno
 import logging
 from logging import handlers
 import logging.config
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 import os
 import resource
@@ -55,6 +55,9 @@ import uuid
 import signal
 
 import gevent
+import gevent.monkey
+gevent.monkey.patch_socket()
+gevent.monkey.patch_ssl()
 from gevent.fileobject import FileObject
 import zmq
 from zmq import green, ZMQError
@@ -289,13 +292,14 @@ class Router(BaseRouter):
 
     def setup(self):
         sock = self.socket
-        sock.identity = identity = str(uuid.uuid4())
+        identity = str(uuid.uuid4())
+        sock.identity = identity.encode("utf-8")
         _log.debug("ROUTER SOCK identity: {}".format(sock.identity))
         if self._monitor:
             Monitor(sock.get_monitor_socket()).start()
         sock.bind('inproc://vip')
         _log.debug('In-process VIP router bound to inproc://vip')
-        sock.zap_domain = 'vip'
+        sock.zap_domain = b'vip'
         addr = self.local_address
         if not addr.identity:
             addr.identity = identity
@@ -403,7 +407,7 @@ class Router(BaseRouter):
                     value = __version__
                 else:
                     value = None
-            frames[6:] = [b'', jsonapi.dumps(value)]
+            frames[6:] = [b'', jsonapi.dumps(value).encode("utf-8")]
             frames[3] = b''
             return frames
         elif subsystem == b'pubsub':
@@ -549,18 +553,17 @@ def start_volttron_process(opts):
     if opts.instance_name is None:
         if len(opts.vip_address) > 0:
             opts.instance_name = opts.vip_address[0]
-    import urlparse
 
     if opts.bind_web_address:
-        parsed = urlparse.urlparse(opts.bind_web_address)
+        parsed = urlparse(opts.bind_web_address)
         if parsed.scheme not in ('http', 'https'):
-            raise StandardError(
+            raise Exception(
                 'bind-web-address must begin with http or https.')
         opts.bind_web_address = config.expandall(opts.bind_web_address)
     if opts.volttron_central_address:
-        parsed = urlparse.urlparse(opts.volttron_central_address)
+        parsed = urlparse(opts.volttron_central_address)
         if parsed.scheme not in ('http', 'https', 'tcp'):
-            raise StandardError(
+            raise Exception(
                 'volttron-central-address must begin with tcp, http or https.')
         opts.volttron_central_address = config.expandall(
             opts.volttron_central_address)

@@ -86,20 +86,22 @@ def encode_key(key):
     assert len(key) in (32, 40)
     if len(key) == 40:
         key = z85.decode(key)
-    return base64.urlsafe_b64encode(key)[:-1]
+    return base64.urlsafe_b64encode(key)[:-1].decode("ASCII")
 
 
 def decode_key(key):
     '''Parse and return a Z85 encoded key from other encodings.'''
+    if isinstance(key, str):
+        key = key.encode("ASCII")
     length = len(key)
     if length == 40:
         return key
     elif length == 43:
-        return z85.encode(base64.urlsafe_b64decode(key + '='))
+        return z85.encode(base64.urlsafe_b64decode(key + '='.encode("ASCII")))
     elif length == 44:
         return z85.encode(base64.urlsafe_b64decode(key))
     elif length == 54:
-        return base64.urlsafe_b64decode(key + '==')
+        return base64.urlsafe_b64decode(key + '=='.encode("ASCII"))
     elif length == 56:
         return base64.urlsafe_b64decode(key)
     elif length == 64:
@@ -185,6 +187,8 @@ class Address(object):
             parts.extend(['?', qs])
         if self.identity is not None:
             parts.extend(['#', urllib.parse.quote(self.identity)])
+
+        print(parts)
         return ''.join(parts)
 
     def __repr__(self):
@@ -193,7 +197,10 @@ class Address(object):
 
     def _set_sock_identity(self, sock):
         if self.identity:
-            sock.identity = self.identity.encode('utf-8')
+            if isinstance(self.identity, str):
+                sock.identity = self.identity.encode('utf-8')
+            else:
+                sock.identity = self.identity
         elif not sock.identity:
             self.identity = str(uuid.uuid4())
             sock.identity = self.identity.encode('utf-8')
@@ -202,7 +209,7 @@ class Address(object):
         '''Extended zmq.Socket.bind() to include options in the address.'''
         if not self.domain:
             raise ValueError('Address domain must be set')
-        sock.zap_domain = self.domain or ''
+        sock.zap_domain = self.domain.encode("utf-8") or b''
         self._set_sock_identity(sock)
         sock.ipv6 = self.ipv6 or False
         if self.server == 'CURVE':
@@ -226,7 +233,7 @@ class Address(object):
                 sock.plain_password = self.password or b''
         try:
             (bind_fn or sock.bind)(self.base)
-            self.base = sock.last_endpoint
+            self.base = sock.last_endpoint.decode("utf-8")
         except ZMQError:
             message = 'Attempted to bind Volttron to already bound address {}, stopping'
             message = message.format(self.base)
@@ -250,7 +257,7 @@ class Address(object):
         (connect_fn or sock.connect)(self.base)
 
     def reset(self, sock):
-        sock.zap_domain = ''
+        sock.zap_domain = b''
         sock.ipv6 = False
         sock.curve_server = False
         sock.plain_server = False
@@ -402,6 +409,8 @@ class _Socket(object):
         constraints are violated. If SNDMORE flag is used, additional
         arguments may be sent. via is required for ROUTER sockets.
         '''
+        peer = peer.encode('utf-8') if isinstance(peer, str) else peer
+
         with self._sending(flags) as flags:
             state = self._send_state
             if state > 0:

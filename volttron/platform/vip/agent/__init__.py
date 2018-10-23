@@ -85,8 +85,8 @@ class Agent(object):
         self._version = version
 
         if identity is not None and not is_valid_identity(identity):
-            _log.warn('Deprecation warning')
-            _log.warn(
+            _log.warning('Deprecation warning')
+            _log.warning(
                 'All characters in {identity} are not in the valid set.'.format(
                     identity=identity))
 

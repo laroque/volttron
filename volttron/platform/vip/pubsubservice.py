@@ -195,7 +195,7 @@ class PubSubService(object):
         else:
             self._logger.debug("Subscribe before: {}".format(self._peer_subscriptions))
             data = frames[7].bytes
-            msg = jsonapi.loads(data)
+            msg = jsonapi.loads(data.decode("utf-8"))
             peer = frames[0].bytes
             try:
                 prefix = msg['prefix']
@@ -236,7 +236,7 @@ class PubSubService(object):
             return False
         else:
             data = frames[7].bytes
-            msg = jsonapi.loads(data)
+            msg = jsonapi.loads(data.decode("utf-8"))
             peer = frames[0].bytes
             unsubmsg = dict()
             #Added for backward compatibility
@@ -296,9 +296,9 @@ class PubSubService(object):
                 peer = frames[0].bytes
                 bus = msg['bus']
                 pub_msg = jsonapi.dumps(
-                    dict(sender=peer, bus=bus, headers=headers, message=message)
+                    dict(sender=peer.decode("utf-8"), bus=bus, headers=headers, message=message)
                 )
-                frames[8] = zmq.Frame(str(pub_msg))
+                frames[8] = zmq.Frame(pub_msg.encode("utf-8"))
             except KeyError as exc:
                 self._logger.error("Missing key in _peer_publish message {}".format(exc))
                 return 0
@@ -321,7 +321,7 @@ class PubSubService(object):
         results = []
         if len(frames) > 7:
             data = frames[7].bytes
-            msg = jsonapi.loads(data)
+            msg = jsonapi.loads(data.decode("utf-8"))
             peer = frames[0].bytes
             try:
                 prefix = msg['prefix']
@@ -405,9 +405,9 @@ class PubSubService(object):
         :param frames: list of frames
         :return: Number of local subscribers
         """
-        publisher = frames[0].bytes
-        topic = frames[7].bytes
-        data = frames[8].bytes
+        publisher = frames[0].bytes.decode("utf-8")
+        topic = frames[7].bytes.decode("utf-8")
+        data = frames[8].bytes.decode("utf-8")
         try:
             msg = jsonapi.loads(data)
             bus = msg['bus']

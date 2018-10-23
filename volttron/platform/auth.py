@@ -49,6 +49,7 @@ import shutil
 import uuid
 
 import gevent
+import gevent.core
 from gevent.fileobject import FileObject
 from zmq import green as zmq
 from volttron.platform import jsonapi
@@ -161,7 +162,7 @@ class AuthService(Agent):
         )
         frames = [zmq.Frame(b'auth_update'), zmq.Frame(json_msg)]
         # <recipient, subsystem, args, msg_id, flags>
-        self.core.socket.send_vip(b'', 'pubsub', frames, copy=False)
+        self.core.socket.send_vip(b'', b'pubsub', frames, copy=False)
 
     def _send_protected_update_to_pubsub(self, contents):
         protected_topics_msg = jsonapi.dumpb(contents)
@@ -211,13 +212,16 @@ class AuthService(Agent):
                 elif kind not in [b'NULL', b'PLAIN']:
                     continue
                 response = zap[:4]
+                domain = domain.decode("utf-8")
+                address = address.decode("utf-8")
+                kind = kind.decode("utf-8")
                 user = self.authenticate(domain, address, kind, credentials)
                 if user:
                     _log.info(
                         'authentication success: domain=%r, address=%r, '
                         'mechanism=%r, credentials=%r, user_id=%r',
                         domain, address, kind, credentials[:1], user)
-                    response.extend([b'200', b'SUCCESS', user, b''])
+                    response.extend([b'200', b'SUCCESS', user.encode("utf-8"), b''])
                     sock.send_multipart(response)
                 else:
                     _log.info(
@@ -410,7 +414,7 @@ class AuthService(Agent):
         self._auth_failures.append(dict(fields))
         return
 
-class String(unicode):
+class String(str):
     def __new__(cls, value):
         obj = super(String, cls).__new__(cls, value)
         if isregex(obj):
@@ -475,7 +479,7 @@ class AuthEntry(object):
         self.comments = AuthEntry._build_field(comments)
         if user_id is None:
             user_id = str(uuid.uuid4())
-        self.user_id = user_id.encode('utf-8')
+        self.user_id = user_id
         self.enabled = enabled
         if kwargs:
             _log.debug(
@@ -496,7 +500,7 @@ class AuthEntry(object):
     def _build_field(value, list_class=List, str_class=String):
         if not value:
             return None
-        if isinstance(value, basestring):
+        if isinstance(value, str):
             return String(value)
         return List(String(elem) for elem in value)
 
@@ -580,9 +584,9 @@ class AuthFile(object):
             with open(self.auth_file) as fil:
                 # Use gevent FileObject to avoid blocking the thread
                 before_strip_comments = FileObject(fil, close=False).read()
-                data = strip_comments(before_strip_comments)
+                data = strip_comments(before_strip_comments.decode("utf-8"))
                 if data != before_strip_comments:
-                    _log.warn('Comments in %s are deprecated and will not be '
+                    _log.warning('Comments in %s are deprecated and will not be '
                               'preserved', self.auth_file)
                 if data:
                     auth_data = jsonapi.loads(data)
@@ -877,7 +881,7 @@ class AuthFile(object):
                 'roles': roles, 'version': self.version}
 
         with open(self.auth_file, 'w') as fp:
-            fp.write(jsonapi.dumps(auth, indent=2))
+            jsonapi.dump(auth, fp, indent=2)
 
 
 class AuthFileIndexError(AuthException, IndexError):

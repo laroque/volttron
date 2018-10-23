@@ -52,7 +52,7 @@ from volttron.platform.agent import utils
 from .agent import Agent, Core, RPC
 from requests.packages.urllib3.connection import (ConnectionError,
                                                   NewConnectionError)
-from urlparse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin
 from gevent.fileobject import FileObject
 from volttron.utils.persistance import PersistentDict
 
@@ -61,7 +61,7 @@ _log = logging.getLogger(__name__)
 
 __version__ = '0.1'
 
-class DiscoveryError(StandardError):
+class DiscoveryError(Exception):
     """ Raised when a different volttron central tries to register.
     """
     pass
