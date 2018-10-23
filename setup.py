@@ -63,7 +63,6 @@ if __name__ == '__main__':
         install_requires = [
             'gevent',
             'psutil',
-            'pymodbus',
             'python-dateutil',
             'pytz',
             'pyyaml',
