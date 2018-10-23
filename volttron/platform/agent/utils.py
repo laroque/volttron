@@ -577,7 +577,7 @@ def create_file_if_missing(path, permission=0o660, contents=None):
         fd = os.open(path, os.O_CREAT | os.O_WRONLY, permission)
         try:
             if contents:
-                os.write(fd, contents)
+                os.write(fd, contents if isinstance(contents, bytes) else contents.encode("utf-8"))
         finally:
             os.close(fd)
 
