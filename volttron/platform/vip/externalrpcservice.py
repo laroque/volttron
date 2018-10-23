@@ -38,21 +38,7 @@
 
 from __future__ import print_function, absolute_import
 
-import argparse
-import errno
-import logging
-from logging import handlers
-import logging.config
-from urlparse import urlparse
-
 import os
-import sys
-import threading
-import uuid
-import re
-
-import gevent
-from gevent.fileobject import FileObject
 import zmq
 import logging
 from zmq.utils import jsonapi
