@@ -553,8 +553,9 @@ class Core(BasicCore):
     def register(self, name, handler, error_handler=None):
         self.subsystems[name] = handler
         if error_handler:
+            name_bytes = name.encode("utf-8")
             def onerror(sender, error, **kwargs):
-                if error.subsystem == name:
+                if error.subsystem == name_bytes:
                     error_handler(sender, error=error, **kwargs)
 
             self.onviperror.connect(onerror)

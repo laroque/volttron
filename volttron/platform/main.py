@@ -224,7 +224,7 @@ class Monitor(threading.Thread):
         self.sock = sock
 
     def run(self):
-        events = {value: name[6:] for name, value in vars(zmq).iteritems()
+        events = {value: name[6:] for name, value in vars(zmq).items()
                   if name.startswith('EVENT_') and name != 'EVENT_ALL'}
         log = logging.getLogger('vip.monitor')
         if log.level == logging.NOTSET:

@@ -671,9 +671,9 @@ def status_agents(opts):
 
     def get_health(agent):
         try:
-            return opts.connection.server.vip.rpc.call(agent.vip_identity, 'health.get_status_json').get(timeout=4)[
-                'status']
-        except VIPError:
+            return opts.connection.server.vip.rpc.call(agent.vip_identity,
+                                                       'health.get_status_json').get(timeout=4)['status']
+        except (VIPError, gevent.Timeout):
             return ''
 
 
