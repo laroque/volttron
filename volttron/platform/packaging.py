@@ -146,7 +146,7 @@ def _get_agent_metadata(silent):
 def _get_setup_py(template, agent_package, metadata):
     metadata_strings = []
 
-    for key, value in metadata.iteritems():
+    for key, value in metadata.items():
         if value:
             metadata_strings.append('{key}="{value}",'.format(key=key, value=value))
 
@@ -389,7 +389,7 @@ def _files_from_kwargs(**kwargs):
     if 'config_file' in kwargs and kwargs['config_file'] != None:
         files['config_file'] = kwargs['config_file']
 
-    if len(files.keys()) > 0:
+    if len(files) > 0:
         return files
 
     return None
@@ -423,7 +423,7 @@ def _sign_agent_package(agent_package, **kwargs):
         raise AgentPackageError('Unknown packaging options')
 
     if verified:
-        print('{} signed as {}'.format(agent_package, cert_type))
+        print('f{agent_package} signed as {cert_type}')
     else:
         print('Verification of signing failed!')
 
@@ -451,7 +451,7 @@ invalidate any signed certs.
 
 Are you sure you want to do this? type 'yes' to continue: '''
 
-        continue_yes = raw_input(msg)
+        continue_yes = input(msg)
         if continue_yes.upper() != 'YES':
             return
 
@@ -508,7 +508,7 @@ def _create_cert_ui(cn):
     for item in input_order:
         cmd = '\t{} - {}({}): '.format(item, input_help[item],
                                               input_defaults[item])
-        output_items[item] = raw_input(cmd)
+        output_items[item] = input(cmd)
         if len(output_items[item].strip()) == 0:
             output_items[item] = input_defaults[item]
 
@@ -701,10 +701,10 @@ def main(argv=sys.argv):
                         _create_ca()
                     elif opts.subparser_name == 'verify':
                         if not os.path.exists(opts.package):
-                            print('Invalid package name {}'.format(opts.package))
+                            print(f'Invalid package name {opts.package}')
                         verifier = auth.SignedZipPackageVerifier(opts.package)
                         verifier.verify()
-                        print "Package is verified"
+                        print("Package is verified")
                     else:
                         user_type = {'admin': opts.admin,
                                   'creator': opts.creator,
@@ -736,7 +736,7 @@ def main(argv=sys.argv):
         #print e
 
     if whl_path:
-        print("Package created at: {}".format(whl_path))
+        print("Package created at: {whl_path}")
 
 
 def _main():

@@ -109,7 +109,7 @@ class VolttronPackageWheelFileNoSign(WheelFile):
 
 
                 if files_to_add:
-                    if 'config_file' in files_to_add.keys():
+                    if 'config_file' in files_to_add:
                         try:
                             data = open(files_to_add['config_file']).read()
                         except OSError as e:
@@ -123,7 +123,7 @@ class VolttronPackageWheelFileNoSign(WheelFile):
                         record_path = '/'.join((self.distinfo_name, 'config'))
                         writer.writerow((record_path, hash_data, size))
 
-                    if 'identity_file' in files_to_add.keys():
+                    if 'identity_file' in files_to_add:
                         try:
                             data = open(files_to_add['identity_file']).read()
                         except OSError as e:
@@ -137,7 +137,7 @@ class VolttronPackageWheelFileNoSign(WheelFile):
                         record_path = '/'.join((self.distinfo_name, 'IDENTITY_TEMPLATE'))
                         writer.writerow((record_path, hash_data, size))
 
-                    if 'contract' in files_to_add.keys() and files_to_add['contract'] is not None:
+                    if 'contract' in files_to_add and files_to_add['contract'] is not None:
                         try:
                             data = open(files_to_add['contract']).read()
                         except OSError as e:
@@ -195,7 +195,7 @@ class VolttronPackageWheelFileNoSign(WheelFile):
 
     def remove_files(self, files):
         '''Relative to files in the package, ie: ./dist-info/config.'''
-        if isinstance(files, basestring):
+        if isinstance(files, str):
             files = [files]
         tmpdir = tempfile.mkdtemp()
         try:
@@ -225,7 +225,7 @@ class VolttronPackageWheelFileNoSign(WheelFile):
 
         from wheel.util import urlsafe_b64encode
 
-        digest = hashlib.sha256(data).digest()
+        digest = hashlib.sha256(data.encode("utf-8")).digest()
         hash_text = 'sha256=' + native(urlsafe_b64encode(digest))
         size = len(data)
         return (hash_text, size, digest)

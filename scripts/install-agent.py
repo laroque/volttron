@@ -17,7 +17,7 @@ log = logging.getLogger(os.path.basename(__file__))
 # determine whether or not the script is being run from an activated environment
 # or not.  If we are then we need to call this script again from the correct
 # python interpreter.
-if not hasattr(sys, 'real_prefix'):
+if sys.base_prefix == sys.prefix:
     inenv = False
 else:
     inenv = True
@@ -49,7 +49,7 @@ if not inenv and not corrected:
     process.wait()
     sys.exit(process.returncode)
 
-from zmq.utils import jsonapi
+from volttron.platform import jsonapi
 from volttron.platform import get_address, get_home, get_volttron_root, \
     is_instance_running
 from volttron.platform.packaging import create_package, add_files_to_package
@@ -145,6 +145,7 @@ def install_agent(opts, package, config):
                     stdout=subprocess.PIPE)
     (output, errorout) = process.communicate()
 
+    output = output.decode("utf-8")
     parsed = output.split("\n")
 
     # If there is not an agent with that identity:
@@ -212,10 +213,10 @@ def install_agent(opts, package, config):
     if opts.json:
         sys.stdout.write("%s\n" % json.dumps(output_dict, indent=4))
     if opts.csv:
-        keylen = len(output_dict.keys())
+        keylen = len(output_dict)
         keyline = ''
         valueline = ''
-        keys = output_dict.keys()
+        keys = list(output_dict.keys())
         for k in range(keylen):
             if k < keylen - 1:
                 keyline += "%s," % keys[k]
@@ -228,8 +229,9 @@ def install_agent(opts, package, config):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(version=__version__)
+    parser = argparse.ArgumentParser()
 
+    parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument("-a", "--vip-address", default=get_address(),
                         help="vip-address to connect to.")
     parser.add_argument("-vh", "--volttron-home", default=get_home(),
@@ -240,7 +242,7 @@ if __name__ == '__main__':
                         help="source directory of the agent which is to be installed.")
     parser.add_argument("-i", "--vip-identity", default=None,
                         help="identity of the agent to be installed (unique per instance)")
-    parser.add_argument("-c", "--config", default=None, type=file,
+    parser.add_argument("-c", "--config", default=None, type=argparse.FileType,
                         help="agent configuration file that will be packaged with the agent.")
     parser.add_argument("-wh", "--wheelhouse", default=None,
                         help="location of agents after they have been built")
@@ -279,7 +281,7 @@ if __name__ == '__main__':
         sys.exit(-10)
 
     if opts.volttron_home.endswith('/'):
-        log.warn("VOLTTRON_HOME should not have / on the end trimming it.")
+        log.warning("VOLTTRON_HOME should not have / on the end trimming it.")
         opts.volttron_home = opts.volttron_home[:-1]
 
     if not is_instance_running(opts.volttron_home):

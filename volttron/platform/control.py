@@ -170,9 +170,9 @@ class ControlService(BaseAgent):
         identity = self.agent_vip_identity(uuid)
         self._aip.stop_agent(uuid)
         #Send message to router that agent is shutting down
-        frames = [bytes(identity)]
+        frames = [identity.encode('utf-8')]
 
-        self.core.socket.send_vip(b'', 'agentstop', frames, copy=False)
+        self.core.socket.send_vip(b'', b'agentstop', frames, copy=False)
 
     @RPC.export
     def restart_agent(self, uuid):
@@ -655,7 +655,7 @@ def status_agents(opts):
         except KeyError:
             agents[uuid] = agent = Agent(name, None, uuid)
         status[uuid] = stat
-    agents = agents.values()
+    agents = list(agents.values())
 
     def get_status(agent):
         try:
