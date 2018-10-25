@@ -201,8 +201,7 @@ class ConfigStoreService(Agent):
 
     @RPC.export
     def manage_list_stores(self):
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
-        result =  list(self.store.keys())
+        result = list(self.store.keys())
         result.sort()
         return result
 
@@ -256,7 +255,7 @@ class ConfigStoreService(Agent):
 
     @RPC.export
     def set_config(self, config_name, contents, trigger_callback=False, send_update=True):
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
+        identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         self.store_config(identity, config_name, contents, trigger_callback=trigger_callback, send_update=send_update)
 
 
@@ -266,7 +265,7 @@ class ConfigStoreService(Agent):
         Called by an Agent at startup to trigger initial configuration state
         push.
         """
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
+        identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
 
         #We need to create store and lock if it doesn't exist in case someone
         # tries to add a configuration while we are sending the initial state.
@@ -274,7 +273,7 @@ class ConfigStoreService(Agent):
 
         if agent_store is None:
             # Initialize a new store.
-            store_path = os.path.join(self.store_path, identity.decode("utf-8") + store_ext)
+            store_path = os.path.join(self.store_path, identity + store_ext)
             store = PersistentDict(filename=store_path, flag='c', format='json')
             agent_store = {
                 "configs": {}, "store": store, "name_map": {},
@@ -308,7 +307,7 @@ class ConfigStoreService(Agent):
     @RPC.export
     def delete_config(self, config_name, trigger_callback=False, send_update=True):
         """Called by an Agent to delete a configuration."""
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
+        identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         self.delete(identity, config_name, trigger_callback=trigger_callback,
                     send_update=send_update)
 
