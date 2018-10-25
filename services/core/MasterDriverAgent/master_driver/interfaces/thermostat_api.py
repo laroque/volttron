@@ -40,9 +40,7 @@ http://lowpowerlab.com/downloads/RadioThermostat_CT50_Honeywell_Wifi_API_V1.3.pd
 """
 
 import json
-import sys
-import time
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 
 def Thermostat_API(url):
     ''' Call the interface'''
@@ -62,7 +60,7 @@ class ThermostatInterface(object):
             'sat' : "5",
             'sun' : "6"
         }
-        print "Initialized a REAL Thermostat object"
+        print("Initialized a REAL Thermostat object")
 
     def t_setpoint(self,data,point,tmode=''):
         ''' Sets cooling setpoint'''
@@ -72,7 +70,7 @@ class ThermostatInterface(object):
             msg = {"tmode": tmode, point : data}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(self.urladdress,value))
+            mode =  (urllib.request.urlopen(self.urladdress,value))
             parsed = json.loads(mode.read().decode("utf-8"))
             return json.dumps(parsed)
         except Exception as parsed:
@@ -83,7 +81,7 @@ class ThermostatInterface(object):
         msg = {"tmode":2,"t_cool":data}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(self.urladdress,value))
+            mode =  (urllib.request.urlopen(self.urladdress,value))
             parsed = json.loads(mode.read().decode("utf-8"))
             return json.dumps(parsed)
         except Exception as parsed:
@@ -94,7 +92,7 @@ class ThermostatInterface(object):
         msg = {"tmode":1,"t_heat":data}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(self.urladdress,value))
+            mode =  (urllib.request.urlopen(self.urladdress,value))
             parsed = json.loads(mode.read().decode("utf-8"))
             return json.dumps(parsed)
         except Exception as parsed:
@@ -105,7 +103,7 @@ class ThermostatInterface(object):
         msg = {"override":data}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(self.urladdress,value))
+            mode =  (urllib.request.urlopen(self.urladdress,value))
             parsed = json.loads(mode.read().decode("utf-8"))
             return json.dumps(parsed)
         except Exception as parsed:
@@ -116,7 +114,7 @@ class ThermostatInterface(object):
         msg = {"hold":data}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(self.urladdress,value))
+            mode =  (urllib.request.urlopen(self.urladdress,value))
             parsed = json.loads(mode.read().decode("utf-8"))
             return json.dumps(parsed)
         except Exception as parsed:
@@ -126,7 +124,7 @@ class ThermostatInterface(object):
         ''' Returns device model'''
         address= self.address+"/model"
         try:
-            mode =  (urllib2.urlopen(address))
+            mode =  (urllib.request.urlopen(address))
             parsed = json.loads(mode.read().decode("utf-8"))
             return json.dumps(parsed)
         except Exception as parsed:
@@ -135,7 +133,7 @@ class ThermostatInterface(object):
     def tstat(self):
         ''' Returns current deicve paramenters'''
         try:
-            mode =  (urllib2.urlopen(self.urladdress))
+            mode =  (urllib.request.urlopen(self.urladdress))
             parsed = json.loads(mode.read().decode("utf-8"))
 
             return json.dumps(parsed)
@@ -148,7 +146,7 @@ class ThermostatInterface(object):
         msg = {"fmode":data}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(self.urladdress,value))
+            mode =  (urllib.request.urlopen(self.urladdress,value))
             parsed = json.loads(mode.read().decode("utf-8"))
 
             return json.dumps(parsed)
@@ -160,7 +158,7 @@ class ThermostatInterface(object):
         msg = {"tmode":data}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(self.urladdress,value))
+            mode =  (urllib.request.urlopen(self.urladdress,value))
             parsed = json.loads(mode.read().decode("utf-8"))
 
             return json.dumps(parsed)
@@ -173,7 +171,7 @@ class ThermostatInterface(object):
         msg = { "energy_led" :int(data)}
         value = json.dumps(msg)
         try:
-            mode =  (urllib2.urlopen(url,value))
+            mode =  (urllib.request.urlopen(url,value))
             parsed = json.loads(mode.read().decode("utf-8"))
 
             return json.dumps(parsed)
@@ -218,7 +216,7 @@ class ThermostatInterface(object):
         else:
             url = self.urladdress+"/program/heat/"+str(day)
         try:
-            mode =  (urllib2.urlopen(url))
+            mode =  (urllib.request.urlopen(url))
             parsed = json.loads(mode.read().decode("utf-8"))
 
             return json.dumps(parsed)
@@ -243,7 +241,7 @@ class ThermostatInterface(object):
         else:
             url = self.urladdress+"/program/cool/"+str(day)
         try:
-            mode =  (urllib2.urlopen(url))
+            mode =  (urllib.request.urlopen(url))
             parsed = json.loads(mode.read().decode("utf-8"))
 
             return json.dumps(parsed)
@@ -273,7 +271,7 @@ class ThermostatInterface(object):
             url = self.urladdress+"/program/cool"
             try:
 
-                mode =  (urllib2.urlopen(url,json.dumps(schedules)))
+                mode =  (urllib.request.urlopen(url,json.dumps(schedules)))
                 parsed = json.loads(mode.read().decode("utf-8"))
 
                 return json.dumps(parsed)
@@ -285,7 +283,7 @@ class ThermostatInterface(object):
                 schedule_str = {}
                 schedule_str = { str(self.day_num[day]): [int(e) if e.isdigit() else e for e in schedule.split(',')]}
 
-                mode =  (urllib2.urlopen(url,json.dumps(schedule_str)))
+                mode =  (urllib.request.urlopen(url,json.dumps(schedule_str)))
                 parsed = json.loads(mode.read().decode("utf-8"))
 
                 return json.dumps(parsed)
@@ -323,7 +321,7 @@ class ThermostatInterface(object):
             url = self.urladdress+"/program/heat"
             try:
 
-                mode =  (urllib2.urlopen(url,json.dumps(schedules)))
+                mode =  (urllib.request.urlopen(url,json.dumps(schedules)))
                 parsed = json.loads(mode.read().decode("utf-8"))
                 return json.dumps(parsed)
             except Exception as parsed:
@@ -335,7 +333,7 @@ class ThermostatInterface(object):
             try:
                 schedule_str = {}
                 schedule_str = { str(self.day_num[day]): [int(e) if e.isdigit() else e for e in schedule.split(',')]}
-                mode =  (urllib2.urlopen(url,json.dumps(schedule_str)))
+                mode =  (urllib.request.urlopen(url,json.dumps(schedule_str)))
                 parsed = json.loads(mode.read().decode("utf-8"))
                 return json.dumps(parsed)
             except Exception as parsed:

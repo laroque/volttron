@@ -60,7 +60,7 @@ import time
 import socket
 import types
 
-from client import Client
+from .client import Client
 from modbus_tk.modbus_tcp import TcpServer
 from modbus_tk.modbus_rtu import RtuServer
 from modbus_tk.hooks import install_hook

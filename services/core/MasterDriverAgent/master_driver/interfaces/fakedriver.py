@@ -44,7 +44,7 @@ from math import pi
 
 from master_driver.interfaces import BaseInterface, BaseRegister, BasicRevert
 from csv import DictReader
-from StringIO import StringIO
+from io import StringIO
 import logging
 
 _log = logging.getLogger(__name__)
