@@ -49,7 +49,7 @@ import resource
 from datetime import datetime, timedelta
 import bisect
 import fnmatch
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 from .interfaces import DriverInterfaceError
 from .driver_locks import configure_socket_lock, configure_publish_lock
 

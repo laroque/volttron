@@ -149,9 +149,10 @@ class DriverAgent(BasicAgent):
 
     def get_interface(self, driver_type, config_dict, config_string):
         """Returns an instance of the interface"""
-        module_name = "interfaces." + driver_type
-        module = __import__(module_name,globals(),locals(),[], -1)
-        sub_module = getattr(module, driver_type)
+        module_name = "master_driver.interfaces." + driver_type
+        module = __import__(module_name,globals(),locals(),[], 0)
+        interfaces = module.interfaces
+        sub_module = getattr(interfaces, driver_type)
         klass = getattr(sub_module, "Interface")
         interface = klass(vip=self.vip, core=self.core)
         interface.configure(config_dict, config_string)
