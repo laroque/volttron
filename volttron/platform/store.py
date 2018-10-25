@@ -195,14 +195,14 @@ class ConfigStoreService(Agent):
 
     @RPC.export
     def manage_list_configs(self, identity):
-        result = self.store.get(identity, {}).get("store", {}).keys()
+        result = list(self.store.get(identity, {}).get("store", {}).keys())
         result.sort()
         return result
 
     @RPC.export
     def manage_list_stores(self):
         identity = bytes(self.vip.rpc.context.vip_message.peer)
-        result =  self.store.keys()
+        result =  list(self.store.keys())
         result.sort()
         return result
 
