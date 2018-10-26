@@ -211,13 +211,13 @@ the same date over again.
 
 """
 
-from __future__ import absolute_import, print_function
+
 
 import logging
 import sqlite3
 import threading
 import weakref
-from Queue import Queue, Empty
+from queue import Queue, Empty
 from abc import abstractmethod
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -288,7 +288,7 @@ def add_timing_data_to_header(headers, agent_id, phase):
 
     agent_timing_data[phase] = utils.format_timestamp(utils.get_aware_utc_now())
 
-    values = agent_timing_data.values()
+    values = list(agent_timing_data.values())
 
     if len(values) < 2:
         return 0.0
@@ -663,7 +663,7 @@ class BaseHistorianAgent(Agent):
         table_prefix = tables_def.get('table_prefix', None)
         table_prefix = table_prefix + "_" if table_prefix else ""
         if table_prefix:
-            for key, value in table_names.items():
+            for key, value in list(table_names.items()):
                 table_names[key] = table_prefix + table_names[key]
         table_names["agg_topics_table"] = table_prefix + \
             "aggregate_" + tables_def["topics_table"]
@@ -682,7 +682,7 @@ class BaseHistorianAgent(Agent):
         # Only if we have some topics to replace.
         if self._topic_replace_list:
             # if we have already cached the topic then return it.
-            if input_topic_lower in self._topic_replace_map.keys():
+            if input_topic_lower in self._topic_replace_map:
                 output_topic = self._topic_replace_map[input_topic_lower]
             else:
                 self._topic_replace_map[input_topic_lower] = input_topic
@@ -754,7 +754,7 @@ class BaseHistorianAgent(Agent):
         if self.gather_timing_data:
             add_timing_data_to_header(headers, self.core.agent_uuid or self.core.identity, "collected")
 
-        for point, item in data.iteritems():
+        for point, item in data.items():
             if 'Readings' not in item or 'Units' not in item:
                 _log.error("logging request for {topic} missing Readings "
                            "or Units".format(topic=topic))
@@ -875,7 +875,7 @@ class BaseHistorianAgent(Agent):
         if self.gather_timing_data:
             add_timing_data_to_header(headers, self.core.agent_uuid or self.core.identity, "collected")
 
-        for key, value in values.iteritems():
+        for key, value in values.items():
             point_topic = device + '/' + key
             self._event_queue.put({'source': source,
                                    'topic': point_topic,
@@ -1331,7 +1331,7 @@ class BackupDatabase:
                 self._backup_cache[topic] = topic_id
 
             meta_dict = self._meta_data[(source, topic_id)]
-            for name, value in meta.iteritems():
+            for name, value in meta.items():
                 current_meta_value = meta_dict.get(name)
                 if current_meta_value != value:
                     c.execute('''INSERT OR REPLACE INTO metadata

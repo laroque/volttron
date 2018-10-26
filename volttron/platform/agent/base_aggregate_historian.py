@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import
+
 
 import copy
 import logging
@@ -204,8 +204,8 @@ class AggregateHistorian(Agent):
                             topic_pattern))
 
                 _log.info("topic_names matching the given pattern {} "
-                          ":\n {}".format(topic_pattern, topic_map.keys()))
-                data['topic_ids'] = topic_map.values()
+                          ":\n {}".format(topic_pattern, list(topic_map.keys())))
+                data['topic_ids'] = list(topic_map.values())
 
             # Aggregating across multiple points. Check if unique topic
             # name was given for this.
@@ -328,7 +328,7 @@ class AggregateHistorian(Agent):
                         topic_pattern=topic_pattern).get()
                     _log.debug("Found topics for pattern {}".format(topic_map))
                     if topic_map:
-                        topic_ids = topic_map.values()
+                        topic_ids = list(topic_map.values())
                         _log.debug("topic ids loaded {} ".format(topic_ids))
                     else:
                         _log.warn(
