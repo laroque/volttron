@@ -47,7 +47,7 @@ from math import ceil
 
 import os
 import re
-from basedb import DbDriver
+from .basedb import DbDriver
 from volttron.platform.agent import utils
 from volttron.platform.agent import json as jsonapi
 
@@ -92,7 +92,7 @@ class SqlLiteFuncts(DbDriver):
 
         connect_params['database'] = self.__database
 
-        if 'detect_types' not in connect_params.keys():
+        if 'detect_types' not in connect_params:
             connect_params['detect_types'] = \
                 sqlite3.PARSE_DECLTYPES | sqlite3.PARSE_COLNAMES
         if 'timeout' not in connect_params.keys():
@@ -473,7 +473,7 @@ class SqlLiteFuncts(DbDriver):
 
     def query_topics_by_pattern(self, topic_pattern):
         id_map, name_map = self.get_topic_map()
-        _log.debug("Contents of topics table {}".format(id_map.keys()))
+        _log.debug("Contents of topics table {}".format(list(id_map.keys())))
         q = "SELECT topic_id, topic_name FROM " + self.topics_table + \
             " WHERE topic_name REGEXP '" + topic_pattern + "';"
 
@@ -720,7 +720,7 @@ class SqlLiteFuncts(DbDriver):
 
         lower_tup0 = tup[0].lower()
         operator = lower_tup0
-        if reserved_words.has_key(lower_tup0):
+        if lower_tup0 in reserved_words:
             operator = reserved_words[lower_tup0]
 
         query = ""

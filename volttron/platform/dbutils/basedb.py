@@ -35,7 +35,7 @@
 # BATTELLE for the UNITED STATES DEPARTMENT OF ENERGY
 # under Contract DE-AC05-76RL01830
 # }}}
-from __future__ import absolute_import, print_function
+
 
 import contextlib
 import importlib
@@ -65,7 +65,7 @@ def closing(obj):
         try:
             obj.close()
         except Exception as exc:
-            if isinstance(exc, StandardError) and exc.__class__.__module__ == 'exceptions':
+            if exc.__class__.__module__ == 'exceptions':
                 # Don't ignore built-in exceptions because they likely indicate
                 # a bug that should stop execution. psycopg2.Error subclasses
                 # StandardError, so the module must also be checked. :-(
@@ -104,7 +104,7 @@ class DbDriver(object):
             self.__connection = self.__connect()
         except Exception as e:
             _log.error("Could not connect to database. Raise ConnectionError")
-            raise ConnectionError(e), None, sys.exc_info()[2]
+            raise ConnectionError(e).with_traceback(sys.exc_info()[2])
         if self.__connection is None:
             raise ConnectionError(
                 "Unknown error. Could not connect to database")
