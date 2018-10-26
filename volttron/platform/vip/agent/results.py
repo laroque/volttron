@@ -39,7 +39,7 @@
 
 
 import random
-import weakref
+from weakref import WeakValueDictionary
 
 from gevent.event import AsyncResult
 
@@ -60,10 +60,30 @@ def counter(start=None, minimum=0, maximum=2**64-1):
             count = minimum
 
 
-class ResultsDictionary(weakref.WeakValueDictionary):
+class ResultsDictionary(WeakValueDictionary):
     def __init__(self):
-        weakref.WeakValueDictionary.__init__(self)
+        WeakValueDictionary.__init__(self)
         self._counter = counter()
+
+    def pop(self, key, *args):
+        if isinstance(key, bytes):
+            key = key.decode("utf-8")
+        return WeakValueDictionary.pop(self, key, *args)
+
+    def __contains__(self, key):
+        if isinstance(key, bytes):
+            key = key.decode("utf-8")
+        return WeakValueDictionary.__contains__(self, key)
+
+    def __getitem__(self, key):
+        if isinstance(key, bytes):
+            key = key.decode("utf-8")
+        return WeakValueDictionary.__getitem__(self, key)
+
+    def get(self, key, default=None):
+        if isinstance(key, bytes):
+            key = key.decode("utf-8")
+        return WeakValueDictionary.get(self, key, default=default)
 
     def __next__(self):
         result = AsyncResult()
