@@ -41,7 +41,7 @@
 Supports killing threads and executing callbacks from other threads.
 '''
 
-from __future__ import absolute_import, print_function
+
 
 import functools
 import sys

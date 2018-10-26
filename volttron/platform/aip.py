@@ -393,7 +393,7 @@ class AIPplatform(object):
         return results
 
     def get_all_agent_identities(self):
-       return self.get_agent_identity_to_uuid_mapping().keys()
+       return list(self.get_agent_identity_to_uuid_mapping().keys())
 
     def _get_available_agent_identity(self, name_template):
         all_agent_identities = self.get_all_agent_identities()

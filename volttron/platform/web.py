@@ -742,8 +742,8 @@ class MasterWebService(Agent):
         if not self.bind_web_address:
             _log.info('Web server not started.')
             return
-        import urlparse
-        parsed = urlparse.urlparse(self.bind_web_address)
+        import urllib.parse
+        parsed = urllib.parse.urlparse(self.bind_web_address)
         hostname = parsed.hostname
         port = parsed.port
 

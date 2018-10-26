@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import print_function, absolute_import
+
 
 import argparse
 import errno
@@ -572,7 +572,7 @@ def start_volttron_process(opts):
     # Log configuration options
     if getattr(opts, 'show_config', False):
         _log.info('volttron version: {}'.format(__version__))
-        for name, value in sorted(vars(opts).iteritems()):
+        for name, value in sorted(vars(opts).items()):
             _log.info("%s: %s" % (name, str(repr(value))))
 
     # Increase open files resource limit to max or 8192 if unlimited

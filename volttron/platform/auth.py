@@ -37,7 +37,7 @@
 # }}}
 
 
-from __future__ import absolute_import, print_function
+
 
 import bisect
 import errno
@@ -483,7 +483,7 @@ class AuthEntry(object):
         self.enabled = enabled
         if kwargs:
             _log.debug(
-                'auth record has unrecognized keys: %r' % (kwargs.keys(),))
+                'auth record has unrecognized keys: %r' % (list(kwargs.keys()),))
         self._check_validity()
 
     def __lt__(self, other):
@@ -519,7 +519,7 @@ class AuthEntry(object):
                   self.credentials.match(credentials[0]))))
 
     def __str__(self):
-        return (u'domain={0.domain!r}, address={0.address!r}, '
+        return ('domain={0.domain!r}, address={0.address!r}, '
                 'mechanism={0.mechanism!r}, credentials={0.credentials!r}, '
                 'user_id={0.user_id!r}'.format(self))
 
@@ -825,7 +825,7 @@ class AuthFile(object):
         param_name = 'groups' if is_group else 'roles'
         if not isinstance(groups_or_roles, dict):
             raise ValueError('{} parameter must be dict'.format(param_name))
-        for key, value in groups_or_roles.iteritems():
+        for key, value in groups_or_roles.items():
             if not isinstance(value, list):
                 raise ValueError('each value of the {} dict must be '
                                  'a list'.format(param_name))
