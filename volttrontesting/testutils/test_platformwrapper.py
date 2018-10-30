@@ -243,7 +243,7 @@ def clear_messages():
 
 def messages_contains_prefix(prefix):
     global messages
-    return any(map(lambda x: x.startswith(prefix), messages.keys()))
+    return any([x.startswith(prefix) for x in list(messages.keys())])
 
 
 @pytest.mark.wrapper
