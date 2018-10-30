@@ -198,7 +198,7 @@ class AlertGroup(Agent):
     def onstart(self, sender, **kwargs):
         _log.info("Listening for alert group {}".format(self.group_name))
         config = self.config
-        for topic in config.iterkeys():
+        for topic in config.keys():
 
             # Optional config option with a list of points that
             # might not be published.
@@ -302,7 +302,7 @@ class AlertGroup(Agent):
 
         # Reset timeouts on volatile points
         if topic in self.point_ttl:
-            received_points = set(message[0].keys())
+            received_points = message[0].keys()
             expected_points = self.point_ttl[topic].keys()
             for point in expected_points:
                 if point in received_points:
@@ -397,7 +397,7 @@ class AlertGroup(Agent):
         """
 
         topics_timedout = set()
-        for topic in self.wait_time.iterkeys():
+        for topic in self.wait_time.keys():
 
             # Send an alert if a topic hasn't been seen
             self.topic_ttl[topic] -= 1
