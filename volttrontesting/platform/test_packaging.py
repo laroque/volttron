@@ -67,7 +67,7 @@ def test_package():
     """
 
     # now change to the newly created tmpdir
-    print ("cwd {}".format(os.getcwd()))
+    print("cwd {}".format(os.getcwd()))
     cwd = os.getcwd()
     try:
         tmpdir = tempfile.mkdtemp()
@@ -117,7 +117,7 @@ def test_create_package_no_id(test_package):
     the fake/test package, and package name
 
     """
-    print ("cwd {}".format(os.getcwd()))
+    print("cwd {}".format(os.getcwd()))
     tmpdir, distribution_name, version, package_name = test_package
     wheel_dir = os.path.join(tmpdir, "wheel_dir")
     result = create_package(tmpdir, wheel_dir)
@@ -202,7 +202,7 @@ def test_repackage_output_to_cwd(volttron_instance):
             agent_dir=os.path.join(cwd, get_examples("ListenerAgent")))
         agent_dir = os.path.join(volttron_instance.volttron_home, 'agents',
             agent_uuid, 'listeneragent-3.2')
-        print agent_dir
+        print(agent_dir)
         wheel_name = repackage(agent_dir)
         assert wheel_name == 'listeneragent-3.2-py2-none-any.whl'
 
@@ -234,7 +234,7 @@ def test_repackage_valid_dest_dir(volttron_instance):
             agent_dir=os.path.join(get_examples("ListenerAgent")))
         agent_dir = os.path.join(volttron_instance.volttron_home, 'agents',
             agent_uuid, 'listeneragent-3.2')
-        print agent_dir
+        print(agent_dir)
         wheel_path = repackage(agent_dir, dest=dest_dir)
         expected_wheel = os.path.join(dest_dir,
                                       'listeneragent-3.2-py2-none-any.whl')
@@ -262,13 +262,13 @@ def test_repackage_new_dest_dir(volttron_instance):
     try:
         dest_dir = tempfile.mkdtemp()
         dest_dir = os.path.join(dest_dir, "subdir")
-        print ("cwd {}".format(os.getcwd()))
+        print("cwd {}".format(os.getcwd()))
 
         agent_uuid = volttron_instance.install_agent(
             agent_dir=os.path.join(get_examples("ListenerAgent")))
         agent_dir = os.path.join(volttron_instance.volttron_home, 'agents',
             agent_uuid, 'listeneragent-3.2')
-        print agent_dir
+        print(agent_dir)
         wheel_path = repackage(agent_dir, dest=dest_dir)
         expeceted_wheel = os.path.join(
             dest_dir, 'listeneragent-3.2-py2-none-any.whl')
@@ -374,7 +374,7 @@ def test_extract_valid_wheel_and_dir(test_package):
                                       include_uuid=False,
                                       specific_uuid=None)
 
-        print ("destination {}".format(destination))
+        print("destination {}".format(destination))
         name_version = distribution_name + "-" + version
         assert destination == os.path.join(install_dir, name_version)
         assert Counter(os.listdir(destination)) == Counter(
@@ -415,7 +415,7 @@ def test_extract_include_uuid(test_package):
                                       include_uuid=True,
                                       specific_uuid=None)
 
-        print ("destination {}".format(destination))
+        print("destination {}".format(destination))
         name_version = distribution_name + "-" + version
         assert os.path.basename(destination) == name_version
         assert os.path.dirname(os.path.dirname(destination)) == install_dir
@@ -457,7 +457,7 @@ def test_extract_specific_uuid(test_package):
                                       include_uuid=True,
                                       specific_uuid="123456789")
 
-        print ("destination {}".format(destination))
+        print("destination {}".format(destination))
         name_version = distribution_name + "-" + version
         assert os.path.basename(destination) == name_version
         assert os.path.dirname(destination) == os.path.join(install_dir,
@@ -519,7 +519,7 @@ def test_extract_invalid_install_dir(test_package):
                         specific_uuid="123456789")
 
     except Exception as e:
-        print e
+        print(e)
         assert str(e).find("Permission denied") != -1
     finally:
         if install_dir:
@@ -551,7 +551,7 @@ def test_extract_new_install_dir(test_package):
         destination = extract_package(wheel_file, install_dir,
                                       include_uuid=True,
                                       specific_uuid="123456789")
-        print ("destination {}".format(destination))
+        print("destination {}".format(destination))
         name_version = distribution_name + "-" + version
         assert os.path.basename(destination) == name_version
         assert os.path.dirname(destination) == os.path.join(install_dir,
