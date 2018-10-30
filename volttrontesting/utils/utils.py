@@ -42,7 +42,7 @@ def messages_contains_prefix(prefix, messages):
     :param messages:
     :return:
     """
-    return any(map(lambda x: x.startswith(prefix), messages.keys()))
+    return any([x.startswith(prefix) for x in list(messages.keys())])
 
 
 def get_rand_http_address():
@@ -132,6 +132,6 @@ def validate_published_device_data(expected_headers, expected_message,
     assert headers and message
     assert expected_headers[headers_mod.DATE] == headers[headers_mod.DATE]
 
-    for k, v in expected_message[0].items():
+    for k, v in list(expected_message[0].items()):
         assert k in message[0]
         assert message[0][k] == pytest.approx(v, abs=1e-6)

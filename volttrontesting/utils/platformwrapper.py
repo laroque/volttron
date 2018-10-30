@@ -1,4 +1,4 @@
-import ConfigParser as configparser
+import configParser as configparser
 import json
 import logging
 import os
@@ -15,7 +15,7 @@ from subprocess import CalledProcessError
 import gevent
 import gevent.subprocess as subprocess
 import requests
-from agent_additions import add_volttron_central
+from .agent_additions import add_volttron_central
 from gevent.fileobject import FileObject
 from gevent.subprocess import Popen
 from volttron.platform import packaging, jsonapi
@@ -103,7 +103,7 @@ PUBLISH_TO = RUN_DIR + '/publish'
 SUBSCRIBE_TO = RUN_DIR + '/subscribe'
 
 
-class PlatformWrapperError(StandardError):
+class PlatformWrapperError(Exception):
     pass
 
 
@@ -361,7 +361,7 @@ class PlatformWrapper:
         return add_volttron_central(self)
 
     def add_capabilities(self, publickey, capabilities):
-        if isinstance(capabilities, basestring):
+        if isinstance(capabilities, str):
             capabilities = [capabilities]
         auth, auth_path = self._read_auth_file()
         cred = publickey
