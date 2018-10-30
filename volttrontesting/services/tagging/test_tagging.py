@@ -123,17 +123,17 @@ historians = [
 
 
 def setup_sqlite(config):
-    print ("setup sqlite")
+    print("setup sqlite")
     connection_params = config['connection']['params']
     database_path = connection_params['database']
-    print ("connecting to sqlite path " + database_path)
+    print("connecting to sqlite path " + database_path)
     db_connection = sqlite3.connect(database_path)
-    print ("successfully connected to sqlite")
+    print("successfully connected to sqlite")
     return db_connection
 
 
 def setup_mongodb(config):
-    print ("setup mongodb")
+    print("setup mongodb")
     connection_params = config['connection']['params']
     mongo_conn_str = 'mongodb://{user}:{passwd}@{host}:{port}/{database}'
     params = connection_params
@@ -204,7 +204,7 @@ def tagging_service(request, volttron_instance):
             msg="No setup method({}) found for connection type {} ".format(
                 function_name, connection_type))
 
-    print ("request.param -- {}".format(request.param))
+    print("request.param -- {}".format(request.param))
     # 2. Install agent
     source = request.param.pop('source')
     tagging_service_id = volttron_instance.install_agent(
@@ -255,7 +255,7 @@ def test_init_failure(volttron_instance, tagging_service, query_agent):
             volttron_instance.start_agent(agent_id)
         except:
             pass
-        print ("Call back count {}".format(query_agent.callback.call_count))
+        print("Call back count {}".format(query_agent.callback.call_count))
         assert query_agent.callback.call_count == 1
         print("Call args {}".format(query_agent.callback.call_args))
         assert query_agent.callback.call_args[0][1] == 'test.tagging.init'
@@ -307,7 +307,7 @@ def test_reinstall(volttron_instance, tagging_service,
         # [['campus', '1'],
         # ['dis', 'Test description'],
         # ['geoCountry', 'US']]
-        print result1
+        print(result1)
         assert len(result1) == 3
         assert len(result1[0]) == len(result1[1]) == 2
         assert result1[0][0] == 'campus'
@@ -337,7 +337,7 @@ def test_reinstall(volttron_instance, tagging_service,
         # [['campus', '1'],
         # ['dis', 'Test description'],
         # ['geoCountry', 'US']]
-        print result1
+        print(result1)
         assert len(result1) == 3
         assert len(result1[0]) == len(result1[1]) == 2
         assert result1[0][0] == 'campus'
@@ -362,12 +362,12 @@ def test_get_categories_no_desc(tagging_service, query_agent):
                                       order="FIRST_TO_LAST").get(timeout=10)
     assert isinstance(result, list)
     assert len(result) == 4
-    print ("Categories returned: {}".format(result))
+    print("Categories returned: {}".format(result))
     result2 = query_agent.vip.rpc.call('platform.tagging', 'get_categories',
                                        skip=1, count=4,
                                        order="FIRST_TO_LAST").get(timeout=10)
     assert isinstance(result2, list)
-    print ("result2 returned: {}".format(result2))
+    print("result2 returned: {}".format(result2))
     assert len(result2) == 4
     assert isinstance(result, list)
     assert isinstance(result[0], str)
@@ -384,7 +384,7 @@ def test_get_categories_with_desc(tagging_service, query_agent):
     assert isinstance(result1[0], list)
     assert len(result1) == 4
     assert len(result1[0]) == 2
-    print ("Categories returned: {}".format(result1))
+    print("Categories returned: {}".format(result1))
     result2 = query_agent.vip.rpc.call('platform.tagging', 'get_categories',
                                        include_description=True, skip=1,
                                        count=4, order="LAST_TO_FIRST").get(
@@ -392,7 +392,7 @@ def test_get_categories_with_desc(tagging_service, query_agent):
     assert isinstance(result2, list)
     assert len(result2) == 4
     assert isinstance(result2[0], list)
-    print ("result2 returned: {}".format(result2))
+    print("result2 returned: {}".format(result2))
 
     # Verify skip param
     assert result1[1][0] == result2[0][0]
@@ -415,7 +415,7 @@ def test_tags_by_category_no_metadata(tagging_service, query_agent):
     result1 = query_agent.vip.rpc.call(
         'platform.tagging', 'get_tags_by_category', category='AHU', skip=0,
         count=3, order="FIRST_TO_LAST").get(timeout=10)
-    print ("tags returned: {}".format(result1))
+    print("tags returned: {}".format(result1))
     assert isinstance(result1, list)
     assert len(result1) == 3
     assert isinstance(result1[0], str)
@@ -424,7 +424,7 @@ def test_tags_by_category_no_metadata(tagging_service, query_agent):
                                        'get_tags_by_category', category='AHU',
                                        skip=2, count=3,
                                        order="FIRST_TO_LAST").get(timeout=10)
-    print ("tags returned: {}".format(result2))
+    print("tags returned: {}".format(result2))
     assert isinstance(result2, list)
     assert len(result2) == 3  # verify count
     assert isinstance(result2[0], str)
@@ -437,7 +437,7 @@ def test_tags_by_category_with_metadata(tagging_service, query_agent):
         'platform.tagging', 'get_tags_by_category', category='AHU',
         include_kind=True, skip=0, count=3,
         order="FIRST_TO_LAST").get(timeout=10)
-    print ("tags returned: {}".format(result1))
+    print("tags returned: {}".format(result1))
     assert isinstance(result1, list)
     assert len(result1) == 3
     assert isinstance(result1[0], list)
@@ -447,7 +447,7 @@ def test_tags_by_category_with_metadata(tagging_service, query_agent):
         'platform.tagging', 'get_tags_by_category',
         category='AHU', include_description=True,
         skip=0, count=3, order="FIRST_TO_LAST").get(timeout=10)
-    print ("tags returned: {}".format(result2))
+    print("tags returned: {}".format(result2))
     assert isinstance(result2, list)
     assert len(result2) == 3
     assert isinstance(result2[0], list)
@@ -457,7 +457,7 @@ def test_tags_by_category_with_metadata(tagging_service, query_agent):
         'platform.tagging', 'get_tags_by_category', category='AHU',
         include_kind=True, include_description=True, skip=0,
         count=3, order="FIRST_TO_LAST").get(timeout=10)
-    print ("tags returned: {}".format(result3))
+    print("tags returned: {}".format(result3))
     assert isinstance(result3, list)
     assert len(result3) == 3
     assert isinstance(result3[0], list)
@@ -505,7 +505,7 @@ def test_insert_topic_tags(volttron_instance, tagging_service, query_agent,
         # entity.'],
         #  ['campus', '1', 'Marker',
         #   'Marks a campus that might have one or more site/building']]
-        print result3
+        print(result3)
         assert len(result3) == 3
         assert len(result3[0]) == len(result3[1]) == 4
         assert result3[0][0] == 'id'
@@ -607,7 +607,7 @@ def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
                                            topic_prefix='campus2/d2/p2',
                                            skip=0, count=3,
                                            order="FIRST_TO_LAST").get()
-        print result1
+        print(result1)
         assert len(result1) == 3
         assert len(result1[0]) == len(result1[1]) == 2
         assert result1[0][0] == 'air'
@@ -622,7 +622,7 @@ def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
                                            topic_prefix='campus2', skip=0,
                                            count=3,
                                            order="FIRST_TO_LAST").get()
-        print ("Result1: {} ".format(result1))
+        print("Result1: {} ".format(result1))
         assert len(result1) == 3
         assert len(result1[0]) == len(result1[1]) == 2
         assert result1[0][0] == 'campus'
@@ -637,7 +637,7 @@ def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
                                            topic_prefix='campus1', skip=0,
                                            count=3,
                                            order="LAST_TO_FIRST").get()
-        print ("Result2:{}".format(result2))
+        print("Result2:{}".format(result2))
         assert len(result2) == 3
         assert len(result2[0]) == len(result2[1]) == 2
         assert result2[2][0] == 'dis'
@@ -693,7 +693,7 @@ def test_insert_topic_tags_update(volttron_instance, tagging_service,
                                            topic_prefix='campus1', skip=0,
                                            count=3,
                                            order="LAST_TO_FIRST").get()
-        print result2
+        print(result2)
         assert len(result2) == 2
         assert len(result2[0]) == len(result2[1]) == 2
         assert result2[1][0] == 'geoCity'
@@ -710,7 +710,7 @@ def test_insert_topic_tags_update(volttron_instance, tagging_service,
                                            topic_prefix='campus1', skip=0,
                                            count=3,
                                            order="LAST_TO_FIRST").get()
-        print result2
+        print(result2)
         assert len(result2) == 2
         assert len(result2[0]) == len(result2[1]) == 2
         assert result2[1][0] == 'geoCity'
@@ -772,7 +772,7 @@ def test_update_topic_tags(volttron_instance, tagging_service, query_agent):
         # entity.'],
         #  ['campus', '1', 'Marker',
         #   'Marks a campus that might have one or more site/building']]
-        print result3
+        print(result3)
         assert len(result3) == 2
         assert len(result3[0]) == len(result3[1]) == 4
         assert result3[0][0] == 'id'
@@ -803,7 +803,7 @@ def test_update_topic_tags(volttron_instance, tagging_service, query_agent):
         # entity.'],
         #  ['campus', '1', 'Marker',
         #   'Marks a campus that might have one or more site/building']]
-        print result3
+        print(result3)
         assert len(result3) == 4
         assert len(result3[0]) == len(result3[1]) == 4
         assert result3[0][0] == 'id'
@@ -890,7 +890,7 @@ def test_tags_by_topic_no_metadata(volttron_instance, tagging_service,
         # [['campus', '1'],
         # ['dis', 'Test description'],
         # ['geoCountry', 'US']]
-        print result1
+        print(result1)
         assert len(result1) == 3
         assert len(result1[0]) == len(result1[1]) == 2
         assert result1[0][0] == 'campus'
@@ -907,7 +907,7 @@ def test_tags_by_topic_no_metadata(volttron_instance, tagging_service,
             order="FIRST_TO_LAST").get(timeout=10)
         # [['dis', 'Test description'],
         # ['geoCountry', 'US']]
-        print result2
+        print(result2)
         assert len(result2) == 3
         assert len(result2[0]) == len(result2[1]) == 2
         assert result2[0][0] == 'dis'
@@ -925,7 +925,7 @@ def test_tags_by_topic_no_metadata(volttron_instance, tagging_service,
             order="FIRST_TO_LAST").get(timeout=10)
         # [['dis', 'Test description'],
         # ['geoCountry', 'US']]
-        print result3
+        print(result3)
         assert len(result3) == 3
         assert len(result3[0]) == len(result3[1]) == 2
         assert result3[0][0] == 'dis'
@@ -941,7 +941,7 @@ def test_tags_by_topic_no_metadata(volttron_instance, tagging_service,
             topic_prefix='campus1/d2', skip=0, count=3,
             order="LAST_TO_FIRST").get(timeout=10)
 
-        print result1
+        print(result1)
         assert len(result1) == 3
         assert len(result1[0]) == len(result1[1]) == 2
         assert result1[2][0] == 'dis'
@@ -995,7 +995,7 @@ def test_tags_by_topic_with_metadata(volttron_instance, tagging_service,
         # [['campus', '1', 'Marks a campus that might have one or more
         # site/building'],
         # ['dis', 'Test description', 'Short display name for an entity.']]
-        print result1
+        print(result1)
         assert len(result1) == 3
         assert len(result1[0]) == len(result1[1]) == 3
         assert result1[0][0] == 'campus'
@@ -1016,7 +1016,7 @@ def test_tags_by_topic_with_metadata(volttron_instance, tagging_service,
             topic_prefix='campus1/d2', include_kind=True,
             skip=0, count=1, order="LAST_TO_FIRST").get(timeout=10)
         # [['dis', 'Test description', 'Str']]
-        print result2
+        print(result2)
         assert len(result2) == 1
         assert len(result2[0]) == 3
         assert result2[0][0] == 'id'
@@ -1033,7 +1033,7 @@ def test_tags_by_topic_with_metadata(volttron_instance, tagging_service,
         # entity.'],
         #  ['campus', '1', 'Marker',
         #   'Marks a campus that might have one or more site/building']]
-        print result3
+        print(result3)
         assert len(result3) == 2
         assert len(result3[0]) == len(result3[1]) == 4
         assert result3[0][0] == 'id'
@@ -1134,7 +1134,7 @@ def test_topic_by_tags_param_and_or(volttron_instance, tagging_service,
         result1 = query_agent.vip.rpc.call(
             'platform.tagging', 'get_topics_by_tags',
             and_condition={'campus': True, 'geoCountry': 'US'}).get(timeout=10)
-        print ("Results of simple AND query: {} ".format(result1))
+        print("Results of simple AND query: {} ".format(result1))
         assert result1 == ['campus1']
 
         # Array
@@ -1149,7 +1149,7 @@ def test_topic_by_tags_param_and_or(volttron_instance, tagging_service,
             'get_topics_by_tags',
             or_condition={"geoCountry": "UK",
                           'dis': "Test campus description"}).get(timeout=10)
-        print ("Results of simple AND query: {} ".format(result1))
+        print("Results of simple AND query: {} ".format(result1))
         assert result1 == ['campus1', 'campus2']
 
         # Array
@@ -1265,7 +1265,7 @@ def test_topic_by_tags_custom_condition(volttron_instance, tagging_service,
         result1 = query_agent.vip.rpc.call(
             'platform.tagging', 'get_topics_by_tags',
             condition="campus AND geoCountry='US'").get(timeout=10)
-        print ("Results of simple AND query: {} ".format(result1))
+        print("Results of simple AND query: {} ".format(result1))
         assert len(result1) == 1
         assert result1[0] == 'campus1'
 
@@ -1273,7 +1273,7 @@ def test_topic_by_tags_custom_condition(volttron_instance, tagging_service,
         result1 = query_agent.vip.rpc.call(
             'platform.tagging', 'get_topics_by_tags',
             condition='minVal<0 OR maxVal>=5 AND maxVal<10').get(timeout=10)
-        print ("Results of AND and OR query: {} ".format(result1))
+        print("Results of AND and OR query: {} ".format(result1))
         assert len(result1) == 6
         # Check  default order
         assert result1 == ['campus1/d1/p1', 'campus1/d1/p3', 'campus1/d2/p1',
@@ -1283,7 +1283,7 @@ def test_topic_by_tags_custom_condition(volttron_instance, tagging_service,
         result1 = query_agent.vip.rpc.call(
             'platform.tagging', 'get_topics_by_tags',
             condition='(minVal<0 OR maxVal>=5) AND maxVal<10').get(timeout=10)
-        print ("Results of AND and OR query with parenthesis: {} ".format(
+        print("Results of AND and OR query with parenthesis: {} ".format(
             result1))
         assert len(result1) == 3
         assert result1 == ['campus1/d1/p3', 'campus1/d2/p3', 'campus2/d1/p3']
