@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import, print_function
+
 
 import logging
 import numbers
@@ -611,12 +611,12 @@ class MongodbHistorian(BaseHistorian):
             # of the combined result
             _log.debug("Spawning threads")
             pool.map(self.query_topic_data,
-                     zip(topic_ids, repeat(id_name_map),
+                     list(zip(topic_ids, repeat(id_name_map),
                          repeat(collection_name), repeat(start),
                          repeat(end), repeat(query_start), repeat(query_end),
                          repeat(count), repeat(skip_count), repeat(order_by),
                          repeat(use_rolled_up_data),
-                         repeat(values)))
+                         repeat(values))))
             pool.close()
             pool.join()
             _log.debug("Time taken to load all values for all topics"
@@ -631,9 +631,9 @@ class MongodbHistorian(BaseHistorian):
         finally:
             pool.close()
 
-    def query_topic_data(self, (topic_id, id_name_map, collection_name, start,
+    def query_topic_data(self, topic_id, id_name_map, collection_name, start,
                          end, query_start, query_end, count, skip_count,
-                         order_by, use_rolled_up_data, values)):
+                         order_by, use_rolled_up_data, values):
         start_time = datetime.utcnow()
         topic_name = id_name_map[topic_id]
         db = self._client.get_default_database()
@@ -897,7 +897,7 @@ class MongodbHistorian(BaseHistorian):
             # topic
             meta_tid = None
             if not multi_topic_query:
-                values = values.values()[0]
+                values = list(values.values())[0]
                 if agg_type:
                     # if aggregation is on single topic find the topic id
                     # in the topics table.
@@ -971,7 +971,7 @@ class MongodbHistorian(BaseHistorian):
 
         # Hangs when using cursor as iterable.
         # See https://github.com/VOLTTRON/volttron/issues/643
-        for num in xrange(cursor.count()):
+        for num in range(cursor.count()):
             document = cursor[num]
             self._topic_id_map[document['topic_name'].lower()] = document[
                 '_id']
@@ -984,7 +984,7 @@ class MongodbHistorian(BaseHistorian):
         cursor = db[self._meta_collection].find()
         # Hangs when using cursor as iterable.
         # See https://github.com/VOLTTRON/volttron/issues/643
-        for num in xrange(cursor.count()):
+        for num in range(cursor.count()):
             document = cursor[num]
             self._topic_meta[document['topic_id']] = document['meta']
 
@@ -1006,7 +1006,7 @@ class MongodbHistorian(BaseHistorian):
         # if data collection exists check if necessary indexes exists
         elif self._data_collection in col_list:
             index_info = db[self._data_collection].index_information()
-            index_list = [value['key'] for value in index_info.viewvalues()]
+            index_list = [value['key'] for value in index_info.values()]
             index_new_list = []
             for index in index_list:
                 keys = set()
