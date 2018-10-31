@@ -116,7 +116,7 @@ def market_service_agent(config_path, **kwargs):
     _log.debug("Starting MarketServiceAgent")
     try:
         config = utils.load_config(config_path)
-    except StandardError:
+    except Exception:
         config = {}
 
     if not config:
