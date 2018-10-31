@@ -96,7 +96,7 @@ def publish_agent(request, volttron_instance1):
     print(result)
     assert result == 0
 
-    for i in xrange(4):
+    for i in range(4):
         config_name = "devices/fakedriver{}".format(i)
         cmd = ['volttron-ctl', 'config', 'store', PLATFORM_DRIVER,
                config_name, 'fake_unit_testing.config', '--json']
@@ -159,8 +159,7 @@ def cancel_schedules(request, publish_agent):
 
     def cleanup():
         for schedule in cleanup_parameters:
-            print('Requesting cancel for task:', schedule['taskid'],
-                  'from agent:', schedule['agentid'])
+            print('Requesting cancel for task:', schedule['taskid'], 'from agent:', schedule['agentid'])
             result = publish_agent.vip.rpc.call(
                 PLATFORM_ACTUATOR,
                 REQUEST_CANCEL_SCHEDULE,
@@ -169,7 +168,7 @@ def cancel_schedules(request, publish_agent):
             # sleep so that the message is sent to pubsub before next
             gevent.sleep(1)
             # test monitors callback method calls
-            print ("result of cancel ", result)
+            print("result of cancel ", result)
 
     request.addfinalizer(cleanup)
     return cleanup_parameters
@@ -189,9 +188,7 @@ def revert_devices(request, publish_agent):
 
     def cleanup():
         for device in cleanup_parameters:
-            print(
-            'Requesting revert on device:', device['device'], 'from agent:',
-            device['agentid'])
+            print('Requesting revert on device:', device['device'], 'from agent:', device['agentid'])
             publish_agent.vip.rpc.call(
                 PLATFORM_ACTUATOR,  # Target agent
                 'revert_device',  # Method
@@ -235,7 +232,7 @@ def test_schedule_success(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
 
@@ -264,7 +261,7 @@ def test_schedule_error_int_taskid(publish_agent):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == \
            'MALFORMED_REQUEST: TypeError: taskid must be a nonempty string'
@@ -300,7 +297,7 @@ def test_schedule_empty_taskid(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == \
            'MALFORMED_REQUEST: TypeError: taskid must be a nonempty string'
@@ -330,7 +327,7 @@ def test_schedule_error_none_taskid(publish_agent):
         taskid,
         PRIORITY_LOW,
         msg).get(timeout=10)
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'MISSING_TASK_ID'
 
@@ -359,7 +356,7 @@ def test_schedule_error_invalid_priority(publish_agent):
         'LOW2',
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'INVALID_PRIORITY'
 
@@ -386,7 +383,7 @@ def test_schedule_error_empty_message(publish_agent):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'MALFORMED_REQUEST_EMPTY'
 
@@ -431,7 +428,7 @@ def test_schedule_error_duplicate_task(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'TASK_ID_ALREADY_EXISTS'
 
@@ -461,7 +458,7 @@ def test_schedule_error_none_priority(publish_agent):
         None,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'MISSING_PRIORITY'
 
@@ -492,7 +489,7 @@ def test_schedule_error_malformed_request(publish_agent):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'].startswith('MALFORMED_REQUEST')
 
@@ -538,7 +535,7 @@ def test_schedule_premept_self(publish_agent, cancel_schedules):
         'LOW_PREEMPT',
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
     # wait for above call's success response to publish_agent.callback method
     gevent.sleep(1)
@@ -555,7 +552,7 @@ def test_schedule_premept_self(publish_agent, cancel_schedules):
     # wait for 2 callbacks - success msg for task_high_priority and preempt
     # msg for task_low_priority
     gevent.sleep(6)
-    print ('call args list:', publish_agent.callback.call_args_list)
+    print('call args list:', publish_agent.callback.call_args_list)
     assert publish_agent.callback.call_count == 1
 
     # Grab the args of callback and verify
@@ -618,7 +615,7 @@ def test_schedule_premept_active_task(publish_agent, cancel_schedules):
         'LOW_PREEMPT',
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
     # wait for above call's success response to publish_agent.callback method
     gevent.sleep(1)
@@ -635,7 +632,7 @@ def test_schedule_premept_active_task(publish_agent, cancel_schedules):
     # wait for 2 callbacks - success msg for task_high_priority and preempt
     # msg for task_low_priority
     gevent.sleep(6)
-    print ('call args list:', publish_agent.callback.call_args_list)
+    print('call args list:', publish_agent.callback.call_args_list)
     assert publish_agent.callback.call_count == 1
 
     # Grab the args of callback and verify
@@ -703,7 +700,7 @@ def test_schedule_premept_active_task_gracetime(publish_agent,
         'LOW_PREEMPT',
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
     # wait for above call's success response to publish_agent.callback method
     gevent.sleep(1)
@@ -721,7 +718,7 @@ def test_schedule_premept_active_task_gracetime(publish_agent,
     # wait for 2 callbacks - success msg for task_high_priority and preempt
     # msg for task_low_priority
     gevent.sleep(6)
-    print ('call args list:', publish_agent.callback.call_args_list)
+    print('call args list:', publish_agent.callback.call_args_list)
     assert publish_agent.callback.call_count == 2
 
     # Grab the args of callback and verify
@@ -816,7 +813,7 @@ def test_schedule_premept_error_active_task(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
     # wait for above call's success response to publish_agent.callback method
     gevent.sleep(1)
@@ -832,7 +829,7 @@ def test_schedule_premept_error_active_task(publish_agent, cancel_schedules):
 
     assert result['result'] == FAILURE
     assert result['info'] == 'CONFLICTS_WITH_EXISTING_SCHEDULES'
-    assert result['data'][TEST_AGENT].keys()[0] == taskid
+    assert list(result['data'][TEST_AGENT].keys())[0] == taskid
 
 
 @pytest.mark.actuator
@@ -877,7 +874,7 @@ def test_schedule_premept_future_task(publish_agent, cancel_schedules):
         'LOW',
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
     # wait for above call's success response to publish_agent.callback method
     gevent.sleep(1)
@@ -894,7 +891,7 @@ def test_schedule_premept_future_task(publish_agent, cancel_schedules):
     # wait for 2 callbacks - success msg for task_high_priority and preempt
     # msg for task_low_priority
     gevent.sleep(6)
-    print ('call args list:', publish_agent.callback.call_args_list)
+    print('call args list:', publish_agent.callback.call_args_list)
     assert publish_agent.callback.call_count == 1
 
     # Grab the args of callback and verify
@@ -941,7 +938,7 @@ def test_schedule_conflict_self(publish_agent):
         PRIORITY_LOW,
         msg).get(timeout=10)
 
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'REQUEST_CONFLICTS_WITH_SELF'
 
@@ -975,7 +972,7 @@ def test_schedule_conflict(publish_agent, cancel_schedules):
         taskid,
         PRIORITY_LOW,
         msg).get(timeout=10)
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     result = publish_agent.vip.rpc.call(
@@ -986,7 +983,7 @@ def test_schedule_conflict(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'CONFLICTS_WITH_EXISTING_SCHEDULES'
 
@@ -1025,7 +1022,7 @@ def test_schedule_overlap_success(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
 
@@ -1046,7 +1043,7 @@ def test_cancel_error_invalid_taskid(publish_agent):
         'invalid_cancel',
     ).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'TASK_ID_DOES_NOT_EXIST'
 
@@ -1074,7 +1071,7 @@ def test_cancel_success(publish_agent):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     result = publish_agent.vip.rpc.call(
@@ -1084,7 +1081,7 @@ def test_cancel_success(publish_agent):
         'cancel_success',
     ).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
 
@@ -1103,7 +1100,7 @@ def test_get_default(publish_agent):
         'get_point',  # Method
         'fakedriver1/SampleWritableFloat1'  # point
     ).get(timeout=10)
-    print result
+    print(result)
     assert result == 10.0
 
 
@@ -1137,7 +1134,7 @@ def test_get_success(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     result = publish_agent.vip.rpc.call(
@@ -1155,7 +1152,7 @@ def test_get_success(publish_agent, cancel_schedules):
         'fakedriver1/SampleWritableFloat1'  # point
     ).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result == 1.0
 
 @pytest.mark.actuator
@@ -1188,7 +1185,7 @@ def test_get_success_with_point(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     result = publish_agent.vip.rpc.call(
@@ -1206,7 +1203,7 @@ def test_get_success_with_point(publish_agent, cancel_schedules):
         'fakedriver1', point='SampleWritableFloat1'  # point
     ).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result == 1.0
 
 
@@ -1262,7 +1259,7 @@ def test_set_value_float(publish_agent, cancel_schedules, revert_devices):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     result = publish_agent.vip.rpc.call(
@@ -1304,7 +1301,7 @@ def test_revert_point(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     initial_value = publish_agent.vip.rpc.call(
@@ -1368,7 +1365,7 @@ def test_revert_point_with_point(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     initial_value = publish_agent.vip.rpc.call(
@@ -1432,7 +1429,7 @@ def test_revert_device(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     initial_value = publish_agent.vip.rpc.call(
@@ -1498,7 +1495,7 @@ def test_set_error_array(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
     try:
         result = publish_agent.vip.rpc.call(
@@ -1572,7 +1569,7 @@ def test_set_value_error(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
     try:
         result = publish_agent.vip.rpc.call(
@@ -1617,7 +1614,7 @@ def test_set_error_read_only_point(publish_agent, cancel_schedules):
         PRIORITY_LOW,
         msg).get(timeout=10)
     # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-    print result
+    print(result)
     assert result['result'] == SUCCESS
 
     try:
@@ -1907,7 +1904,7 @@ def test_set_value_no_lock_failure(publish_agent, volttron_instance1):
             PRIORITY_LOW,
             msg).get(timeout=10)
         # expected result {'info': u'', 'data': {}, 'result': SUCCESS}
-        print result
+        print(result)
         assert result['result'] == SUCCESS
 
         agentid = TEST_AGENT

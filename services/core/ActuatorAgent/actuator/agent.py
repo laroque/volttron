@@ -483,7 +483,7 @@ utils.setup_logging()
 __version__ = "1.0"
 
 
-class LockError(StandardError):
+class LockError(Exception):
     """Error raised when the user does not have a device scheuled
     and tries to use methods that require exclusive access."""
     pass
@@ -501,7 +501,7 @@ def actuator_agent(config_path, **kwargs):
     """
     try:
         config = utils.load_config(config_path)
-    except StandardError:
+    except Exception:
         config = {}
 
     if not config:
@@ -722,7 +722,7 @@ class ActuatorAgent(Agent):
                 if device_only in self._device_states:
                     device_states.append((device_only, self._device_states[device_only]))
             else:
-                device_states = self._device_states.iteritems()
+                device_states = iter(self._device_states.items())
 
             for device, state in device_states:
                 _log.debug("device, state -  {}, {}".format(device, state))
@@ -816,7 +816,7 @@ class ActuatorAgent(Agent):
                                          point, headers, value)
         except RemoteError as ex:
             self._handle_remote_error(ex, point, headers)
-        except StandardError as ex:
+        except Exception as ex:
             self._handle_standard_error(ex, point, headers)
 
     def handle_set(self, peer, sender, bus, topic, headers, message):
@@ -866,7 +866,7 @@ class ActuatorAgent(Agent):
             self._set_point(requester, point, message)
         except RemoteError as ex:
             self._handle_remote_error(ex, point, headers)
-        except StandardError as ex:
+        except Exception as ex:
             self._handle_standard_error(ex, point, headers)
 
     @RPC.export
@@ -1004,7 +1004,7 @@ class ActuatorAgent(Agent):
                 e = ValueError("Invalid topic: {}".format(topic))
                 errors[repr(topic)] = repr(e)
 
-        for device, point_names in devices.iteritems():
+        for device, point_names in devices.items():
             r, e = self.vip.rpc.call(self.driver_vip_identity,
                                      'get_multiple_points',
                                      device,
@@ -1053,7 +1053,7 @@ class ActuatorAgent(Agent):
             if not self._check_lock(device, requester_id):
                 raise LockError("caller ({}) does not lock for device {}".format(requester_id, device))
 
-        for device, point_names_values in devices.iteritems():
+        for device, point_names_values in devices.items():
             r = self.vip.rpc.call(self.driver_vip_identity,
                                   'set_multiple_points',
                                   device,
@@ -1100,7 +1100,7 @@ class ActuatorAgent(Agent):
             self._revert_point(requester, point)
         except RemoteError as ex:
             self._handle_remote_error(ex, point, headers)
-        except StandardError as ex:
+        except Exception as ex:
             self._handle_standard_error(ex, point, headers)
 
     def handle_revert_device(self, peer, sender, bus, topic, headers, message):
@@ -1140,7 +1140,7 @@ class ActuatorAgent(Agent):
             self._revert_device(requester, point)
         except RemoteError as ex:
             self._handle_remote_error(ex, point, headers)
-        except StandardError as ex:
+        except Exception as ex:
             self._handle_standard_error(ex, point, headers)
 
     @RPC.export
@@ -1297,14 +1297,14 @@ class ActuatorAgent(Agent):
 
                 self._request_new_schedule(requester_id, task_id, priority,
                                            requests)
-            except StandardError as ex:
+            except Exception as ex:
                 return self._handle_unknown_schedule_error(ex, headers,
                                                            message)
 
         elif request_type == SCHEDULE_ACTION_CANCEL:
             try:
                 self._request_cancel_schedule(requester_id, task_id)
-            except StandardError as ex:
+            except Exception as ex:
                 return self._handle_unknown_schedule_error(ex, headers,
                                                            message)
         else:
@@ -1350,7 +1350,7 @@ class ActuatorAgent(Agent):
         headers['type'] = SCHEDULE_ACTION_NEW
         local_tz = get_localzone()
         try:
-            if requests and isinstance(requests[0], basestring):
+            if requests and isinstance(requests[0], str):
                 requests = [requests]
 
             tmp_requests = requests
@@ -1369,7 +1369,7 @@ class ActuatorAgent(Agent):
 
                 requests.append([device, start, end])
 
-        except StandardError as ex:
+        except Exception as ex:
             return self._handle_unknown_schedule_error(ex, headers, requests)
 
         _log.debug("Got new schedule request: {}, {}, {}, {}".

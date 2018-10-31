@@ -58,7 +58,7 @@
 
 import bisect
 import logging
-from cPickle import dumps, loads
+from pickle import dumps, loads
 from collections import defaultdict, namedtuple
 from copy import deepcopy
 from datetime import timedelta
@@ -242,7 +242,7 @@ class Task(object):
         return None
 
 
-class ScheduleError(StandardError):
+class ScheduleError(Exception):
     pass
 
 
@@ -348,7 +348,7 @@ class ScheduleManager(object):
         try:
             self.tasks = loads(initial_state_string)
             self._cleanup(now)
-        except StandardError:
+        except Exception:
             self.tasks = {}
             _log.error ('Scheduler state file corrupted!')
 
@@ -359,7 +359,7 @@ class ScheduleManager(object):
         try:
             self._cleanup(now)
             self.save_state_callback(dumps(self.tasks))
-        except StandardError:
+        except Exception:
             _log.error('Failed to save scheduler state!')
 
     def request_slots(self, agent_id, id_, requests, priority, now=None):
@@ -396,7 +396,7 @@ class ScheduleManager(object):
             new_task = Task(agent_id, priority, requests)
         except ScheduleError:
             return RequestResult(False, {}, 'REQUEST_CONFLICTS_WITH_SELF')
-        except StandardError as ex:
+        except Exception as ex:
             return RequestResult(False, {},
                                  'MALFORMED_REQUEST: ' +
                                  ex.__class__.__name__ + ': ' + str(
@@ -405,7 +405,7 @@ class ScheduleManager(object):
         conflicts = defaultdict(dict)
         preempted_tasks = set()
 
-        for task_id, task in self.tasks.iteritems():
+        for task_id, task in self.tasks.items():
             conflict_list = new_task.get_conflicts(task)
             agent_id = task.agent_id
             if conflict_list:
@@ -455,7 +455,7 @@ class ScheduleManager(object):
             agent_id = task.agent_id
             current_task_slots = task.get_current_slots(now)
             _log.debug("current_task_slots {}".format(current_task_slots))
-            for device, time_slot in current_task_slots.iteritems():
+            for device, time_slot in current_task_slots.items():
                 assert (device not in running_results)
                 running_results[device] = DeviceState(agent_id, task_id, (
                     time_slot.end - now).total_seconds())
@@ -464,7 +464,7 @@ class ScheduleManager(object):
             task = self.tasks[task_id]
             agent_id = task.agent_id
             current_task_slots = task.get_current_slots(now)
-            for device, time_slot in current_task_slots.iteritems():
+            for device, time_slot in current_task_slots.items():
                 assert (device not in preempted_results)
                 preempted_results[device] = DeviceState(agent_id, task_id, (
                     time_slot.end - now).total_seconds())
@@ -473,7 +473,7 @@ class ScheduleManager(object):
         return running_results
 
     def get_next_event_time(self, now):
-        task_times = (x.get_next_event_time(now) for x in self.tasks.itervalues())
+        task_times = (x.get_next_event_time(now) for x in self.tasks.values())
         events = [x for x in task_times if x is not None]
 
         if events:

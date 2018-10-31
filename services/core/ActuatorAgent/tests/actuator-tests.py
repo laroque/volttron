@@ -115,5 +115,5 @@ class ActuatorTests(base.BasePlatformTest):
         time.sleep(20)
          
     def on_match(self, topic, headers, message, match):
-        print "**********************************Match"
+        print("**********************************Match")
   

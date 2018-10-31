@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import print_function
+
 
 from volttron.platform import get_services_core, get_examples
 
@@ -175,7 +175,7 @@ def publish_agent(request, volttron_instance):
     print(result)
     assert result == 0
 
-    for i in xrange(4):
+    for i in range(4):
         config_name = "devices/fakedriver{}".format(i)
         cmd = ['volttron-ctl', 'config', 'store', PLATFORM_DRIVER,
                config_name, 'fake_unit_testing.config', '--json']
