@@ -193,7 +193,7 @@ class Publisher(Agent):
         if isinstance(self._input_data, list):
             if self._input_data:
                 item = self._input_data[0]
-                names = item.keys()
+                names = list(item.keys())
             self._data = self._input_data
         else:
             handle = open(self._input_data, 'rb')
@@ -208,7 +208,7 @@ class Publisher(Agent):
     @staticmethod
     def build_metadata(name_map, unittype_map):
         results = defaultdict(dict)
-        for topic, point in name_map.itervalues():
+        for topic, point in name_map.values():
             unit_type = Publisher._get_unit(point, unittype_map)
             results[topic][point] = unit_type
         return results
@@ -251,7 +251,7 @@ class Publisher(Agent):
 
     def build_publishes(self, row):
         results = defaultdict(dict)
-        for name, value in row.iteritems():
+        for name, value in row.items():
             topic, point = self._name_map[name]
             parsed_value = float(value)
             results[topic][point] = parsed_value
@@ -315,7 +315,7 @@ class Publisher(Agent):
 
                 _log.debug("Publishing data for timestamp: {}".format(now))
 
-                for topic, message in publish_dict.iteritems():
+                for topic, message in publish_dict.items():
                     self._publish_point_all(topic, message, self._meta_data, headers)
 
                 if self._remember_playback:
