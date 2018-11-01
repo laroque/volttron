@@ -124,20 +124,20 @@ def DrivenAgent(config_path, **kwargs):
             results to a file or database.
             '''
             _log.debug('Processing Results!')
-            for key, value in results.commands.iteritems():
+            for key, value in results.commands.items():
                 _log.debug("COMMAND: {}->{}".format(key, value))
             for value in results.log_messages:
                 _log.debug("LOG: {}".format(value))
-            for key, value in results.table_output.iteritems():
+            for key, value in results.table_output.items():
                 _log.debug("TABLE: {}->{}".format(key, value))
             # publish to output file if available.
             if output_file != None:
-                if len(results.table_output.keys()) > 0:
-                    for _, v in results.table_output.items():
+                if results.table_output:
+                    for v in results.table_output.values():
                         fname = output_file  # +"-"+k+".csv"
                         for r in v:
                             with open(fname, 'a+') as f:
-                                keys = r.keys()
+                                keys = list(r.keys())
                                 fout = csv.DictWriter(f, keys)
                                 if not self._header_written:
                                     fout.writeheader()
@@ -147,7 +147,7 @@ def DrivenAgent(config_path, **kwargs):
                                 fout.writerow(r)
                                 f.close()
             # publish to message bus.
-            if len(results.table_output.keys()) > 0:
+            if results.table_output:
                 now = utils.format_timestamp(self.received_input_datetime)
                 headers = {
                     headers_mod.CONTENT_TYPE: headers_mod.CONTENT_TYPE.JSON,
@@ -155,9 +155,9 @@ def DrivenAgent(config_path, **kwargs):
                     headers_mod.TIMESTAMP: now
                 }
 
-                for _, v in results.table_output.items():
+                for v in results.table_output.values():
                     for r in v:
-                        for key, value in r.iteritems():
+                        for key, value in r.items():
                             if isinstance(value, bool):
                                 value = int(value)
                             topic = topics.ANALYSIS_VALUE(point=key, **config['device']) #.replace('{analysis}', key)
@@ -167,7 +167,7 @@ def DrivenAgent(config_path, **kwargs):
             if results.commands and mode:
                 self.commands = results.commands
                 if self.keys is None:
-                    self.keys = self.commands.keys()
+                    self.keys = list(self.commands.keys())
                 self.schedule_task()
 
         def schedule_task(self):
@@ -203,7 +203,7 @@ def DrivenAgent(config_path, **kwargs):
         @matching.match_exact(topics.ACTUATOR_SCHEDULE_RESULT())
         def schedule_result(self, topic, headers, message, match):
             '''Actuator response (FAILURE, SUCESS).'''
-            print 'Actuator Response'
+            _log.debug('Actuator Response')
             msg = jsonapi.loads(message[0])
             msg = msg['result']
             _log.debug('Schedule Device ACCESS')
@@ -211,16 +211,12 @@ def DrivenAgent(config_path, **kwargs):
                 if msg == "SUCCESS":
                     self.command_equip()
                 elif msg == "FAILURE":
-                    print 'auto correction failed'
                     _log.debug('Auto-correction of device failed.')
 
         @matching.match_headers({headers_mod.REQUESTER_ID: agent_id})
         @matching.match_glob(topics.ACTUATOR_VALUE(point='*', **device))
         def on_set_result(self, topic, headers, message, match):
             '''Setting of point on device was successful.'''
-            print ('Set Success:  {point} - {value}'
-                   .format(point=self.current_key,
-                           value=str(self.commands[self.current_key])))
             _log.debug('set_point({}, {})'.
                        format(self.current_key,
                               self.commands[self.current_key]))
@@ -228,7 +224,7 @@ def DrivenAgent(config_path, **kwargs):
             if self.keys:
                 self.command_equip()
             else:
-                print 'Done with Commands - Release device lock.'
+                _log.debug('Done with Commands - Release device lock.')
                 headers = {
                     'type': 'CANCEL_SCHEDULE',
                     'requesterID': agent_id,
@@ -242,7 +238,6 @@ def DrivenAgent(config_path, **kwargs):
         @matching.match_glob(topics.ACTUATOR_ERROR(point='*', **device))
         def on_set_error(self, topic, headers, message, match):
             '''Setting of point on device failed, log failure message.'''
-            print 'Set ERROR'
             msg = jsonapi.loads(message[0])
             msg = msg['type']
             _log.debug('Actuator Error: ({}, {}, {})'.
