@@ -29,7 +29,7 @@ def fncs_example(config_path, **kwargs):
     """
     try:
         config = utils.load_config(config_path)
-    except StandardError:
+    except Exception:
         config = {}
 
     if not config:
