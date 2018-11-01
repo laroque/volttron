@@ -37,7 +37,7 @@
 # }}}
 
 
-from __future__ import absolute_import, print_function
+
 
 import base64
 import datetime
@@ -48,7 +48,7 @@ import re
 import shutil
 import sys
 import tempfile
-import urlparse
+import urllib.parse
 from collections import defaultdict
 
 import gevent
@@ -357,7 +357,7 @@ volttron-central-serverkey."""
         if vc_address is None:
             try:
                 address = local_web_address
-                parsed_address = urlparse.urlparse(local_web_address)
+                parsed_address = urllib.parse.urlparse(local_web_address)
             except AttributeError:
                 _log.error("local_web_address is invalid: {}".format(
                     local_web_address))
@@ -365,7 +365,7 @@ volttron-central-serverkey."""
         else:
             try:
                 address = vc_address
-                parsed_address = urlparse.urlparse(vc_address)
+                parsed_address = urllib.parse.urlparse(vc_address)
             except AttributeError:
                 _log.error("vc_address invalid: {}".format(vc_address))
                 raise
@@ -419,7 +419,7 @@ volttron-central-serverkey."""
                     self._vc_address = info.vip_address
                     self._vc_serverkey = info.serverkey
             else:
-                parsed = urlparse.urlparse(inst_vc_address)
+                parsed = urllib.parse.urlparse(inst_vc_address)
 
                 if parsed.scheme in ('http', 'https'):
                     _log.debug('inst_vc_address is {}'.format(inst_vc_address))
@@ -480,7 +480,7 @@ volttron-central-serverkey."""
         :return: The scheme of the address
         """
         parsed_type = None
-        parsed = urlparse.urlparse(address)
+        parsed = urllib.parse.urlparse(address)
         if parsed.scheme not in ('http', 'https', 'ipc', 'tcp'):
             raise ValueError('Invalid volttron central address.')
 
@@ -1023,7 +1023,7 @@ volttron-central-serverkey."""
                             identity, a['uuid']
                         ))
         for a in agents:
-            if a['uuid'] in uuid_to_status.keys():
+            if a['uuid'] in uuid_to_status:
                 _log.debug('UPDATING STATUS OF: {}'.format(a['uuid']))
                 a.update(uuid_to_status[a['uuid']])
         return agents
@@ -1091,7 +1091,7 @@ volttron-central-serverkey."""
         device_dict = self._devices[device_topic]
 
         if not device_dict.get('points', None):
-            points = message[0].keys() # [k for k, v in message[0].items()]
+            points = list(message[0].keys()) # [k for k, v in message[0].items()]
             device_dict['points'] = points
 
         device_dict['health'] = status.as_dict()
@@ -1130,7 +1130,7 @@ volttron-central-serverkey."""
         # Only if we have some topics to replace.
         if self._topic_replace_map:
             # if we have already cached the topic then return it.
-            if input_topic_lower in self._topic_replacement.keys():
+            if input_topic_lower in self._topic_replacement:
                 output_topic = self._topic_replacement[input_topic_lower]
             else:
                 self._topic_replacement[input_topic_lower] = input_topic
@@ -1177,7 +1177,7 @@ volttron-central-serverkey."""
 
         if not config_changed:
             # The stat times of the config files are unchanged. Return the device list that's already in memory.
-            keys = list(self._devices.keys())
+            keys = self._devices.keys()
 
             for k in keys:
                 new_key = self.get_renamed_topic(k)
@@ -1260,7 +1260,7 @@ volttron-central-serverkey."""
             _log.debug('We are trying to exectute method {}'.format(method))
             if isinstance(params, list) and len(params) != 1 or \
                             isinstance(params,
-                                       dict) and 'uuid' not in params.keys():
+                                       dict) and 'uuid' not in params:
                 result = jsonrpc.json_error(ident=id, code=INVALID_PARAMS)
             else:
                 if isinstance(params, list):
@@ -1360,7 +1360,7 @@ volttron-central-serverkey."""
         try:
             _log.debug('Installing agent FILEARGS: {}'.format(fileargs))
             vip_identity = fileargs.get('vip_identity', None)
-            if 'local' in fileargs.keys():
+            if 'local' in fileargs:
                 path = fileargs['file_name']
             else:
                 path = os.path.join(tmpdir, fileargs['file_name'])

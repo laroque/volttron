@@ -66,7 +66,7 @@ def values_not_none(keylist, lookup):
     for k in keylist:
         names = k.split('.')
         obj = lookup
-        for i in xrange(len(names)):
+        for i in range(len(names)):
             if i == len(names) - 1:
                 return names[i] in obj and obj[names[i]] is not None
             try:
@@ -81,7 +81,7 @@ def contains_keys(keylist, lookup):
     for k in keylist:
         names = k.split('.')
         obj = lookup
-        for i in xrange(len(names)):
+        for i in range(len(names)):
             if i == len(names) - 1:
                 return names[i] in obj
             try:
@@ -240,7 +240,7 @@ def test_can_get_agentlist(pa_instance):
     checkkeys = ('process_id', 'error_code', 'is_running', 'permissions',
                  'health', 'version')
     for k in checkkeys:
-        assert k in retagent.keys()
+        assert k in retagent
 
     # make sure can stop is determined to be false
     assert retagent['permissions']['can_stop'] == False
