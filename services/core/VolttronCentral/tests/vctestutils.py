@@ -119,4 +119,4 @@ def validate_response(response):
     print('RPCDICT', rpcdict)
     assert rpcdict['jsonrpc'] == '2.0'
     assert rpcdict['id']
-    assert 'error' in rpcdict.keys() or 'result' in rpcdict.keys()
+    assert 'error' in rpcdict or 'result' in rpcdict

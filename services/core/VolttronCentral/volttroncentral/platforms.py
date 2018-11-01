@@ -213,7 +213,7 @@ class Platforms(object):
 
         :return: list of str
         """
-        return self._platforms.keys()
+        return list(self._platforms.keys())
 
     def get_platform(self, vip_identity, default=None):
         """

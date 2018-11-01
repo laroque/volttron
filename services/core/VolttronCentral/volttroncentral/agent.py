@@ -65,16 +65,16 @@ import os.path as p
 import sys
 from collections import defaultdict, namedtuple
 from copy import deepcopy
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 import datetime
 import gevent
 from volttron.platform.auth import AuthFile, AuthEntry
 from volttron.platform.agent import json as jsonapi
 
-from authenticate import Authenticate
-from platforms import Platforms, PlatformHandler
-from sessions import SessionHandler
+from .authenticate import Authenticate
+from .platforms import Platforms, PlatformHandler
+from .sessions import SessionHandler
 from volttron.platform import jsonrpc
 from volttron.platform.agent import utils
 from volttron.platform.agent.exit_codes import INVALID_CONFIGURATION_CODE
@@ -855,7 +855,7 @@ class VolttronCentralAgent(Agent):
                 platform = self._platforms.get_platform(platform_uuid)
                 # Determine whether the method to call is on the current class
                 # or on the platform object.
-                if isinstance(class_method, basestring):
+                if isinstance(class_method, str):
                     method_ref = getattr(platform, class_method)
                 else:
                     method_ref = class_method
@@ -998,7 +998,7 @@ class VolttronCentralAgent(Agent):
                             user
                         ))
 
-                    if 'groups' not in item.keys():
+                    if 'groups' not in item:
                         problems.append('missing groups key for user {}'.format(
                             user
                         ))
