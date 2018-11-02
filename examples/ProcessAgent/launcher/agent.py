@@ -49,7 +49,7 @@ from volttron.platform.agent import BaseAgent, PublishMixin, periodic
 from volttron.platform.agent import utils, matching
 from volttron.platform.messaging import headers as headers_mod
 
-import settings
+from . import settings
 
 
 utils.setup_logging()
