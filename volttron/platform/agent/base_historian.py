@@ -248,21 +248,21 @@ from volttron.platform.messaging.health import (STATUS_BAD,
 
 try:
     import ujson
-    from zmq.utils.jsonapi import dumps as _dumps, loads as _loads
+    from volttron.platform.jsonapi import dumps as _dumps, loads as _loads
 
     def dumps(data):
         try:
             return ujson.dumps(data, double_precision=15)
-        except:
+        except Exception:
             return _dumps(data)
 
     def loads(data_string):
         try:
             return ujson.loads(data_string, precise_float=True)
-        except:
+        except Exception:
             return _loads(data_string)
 except ImportError:
-    from zmq.utils.jsonapi import dumps, loads
+    from volttron.platform.jsonapi import dumps, loads
 
 from volttron.platform.agent import utils
 

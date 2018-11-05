@@ -58,10 +58,7 @@ from wheel.tool import unpack
 import zmq
 
 # Can't use zmq.utils.jsonapi because it is missing the load() method.
-try:
-    import simplejson as jsonapi
-except ImportError:
-    import json as jsonapi
+from volttron.platform import jsonapi
 
 from . import messaging
 from .agent.utils import is_valid_identity

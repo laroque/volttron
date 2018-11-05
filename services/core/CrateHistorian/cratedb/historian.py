@@ -55,7 +55,7 @@ try:
     def loads(data_string):
         return ujson.loads(data_string, precise_float=True)
 except ImportError:
-    from zmq.utils.jsonapi import dumps, loads
+    from volttron.platform.jsonapi import dumps, loads
 
 import logging
 import sys
