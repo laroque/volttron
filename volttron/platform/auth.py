@@ -112,7 +112,7 @@ class AuthService(Agent):
         self.zap_socket = zmq.Socket(zmq.Context.instance(), zmq.ROUTER)
         self.zap_socket.bind('inproc://zeromq.zap.01')
         if self.allow_any:
-            _log.warn('insecure permissive authentication enabled')
+            _log.warning('insecure permissive authentication enabled')
         self.read_auth_file()
         self._read_protected_topics_file()
         self.core.spawn(watch_file, self.auth_file_path, self.read_auth_file)

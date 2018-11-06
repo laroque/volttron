@@ -533,9 +533,11 @@ def watch_file(fullpath, callback):
         Not available on OS X/MacOS.
     """
     dirname, filename = os.path.split(fullpath)
+    filename = filename.encode('utf-8')
     if inotify is None:
         _log.warning("Runtime changes to: %s not supported on this platform.", fullpath)
     else:
+        _log.info("Added file watch for %s", fullpath)
         with inotify() as inot:
             inot.add_watch(dirname, IN_MODIFY)
             for event in inot:
