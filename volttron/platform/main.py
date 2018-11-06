@@ -407,7 +407,7 @@ class Router(BaseRouter):
                     value = __version__
                 else:
                     value = None
-            frames[6:] = [b'', jsonapi.dumps(value).encode("utf-8")]
+            frames[6:] = [b'', jsonapi.dumpb(value)]
             frames[3] = b''
             return frames
         elif subsystem == b'pubsub':
@@ -472,7 +472,7 @@ class Router(BaseRouter):
         if name == 'external_rpc':
             # Reframe the frames
             sender, proto, usr_id, msg_id, subsystem, msg = frames[:6]
-            msg_data = jsonapi.loads(msg.bytes)
+            msg_data = jsonapi.loadb(msg.bytes)
             peer = msg_data['to_peer']
             # Send to destionation agent/peer
             # Form new frame for local

@@ -42,7 +42,6 @@ import sys
 
 from volttron.platform.agent import BaseAgent, PublishMixin, matching, utils
 from volttron.platform.agent.driven import ConversionMapper
-from volttron.platform.agent.utils import jsonapi
 from volttron.platform.messaging import (headers as headers_mod, topics)
 
 __author1__ = 'Craig Allwardt <craig.allwardt@pnnl.gov>'
@@ -110,9 +109,9 @@ def DrivenAgent(config_path, **kwargs):
             the driven application.
             '''
             _log.debug("Message received")
-            _log.debug("MESSAGE: " + jsonapi.dumps(message[0]))
+            _log.debug("MESSAGE: " + str(message[0]))
             _log.debug("TOPIC: " + topic)
-            data = jsonapi.loads(message[0])
+            data = message[0]
             
             #TODO: grab the time from the header if it's there or use now if not
             self.received_input_datetime = datetime.utcnow()
@@ -204,7 +203,7 @@ def DrivenAgent(config_path, **kwargs):
         def schedule_result(self, topic, headers, message, match):
             '''Actuator response (FAILURE, SUCESS).'''
             _log.debug('Actuator Response')
-            msg = jsonapi.loads(message[0])
+            msg = message[0]
             msg = msg['result']
             _log.debug('Schedule Device ACCESS')
             if self.keys:
@@ -238,7 +237,7 @@ def DrivenAgent(config_path, **kwargs):
         @matching.match_glob(topics.ACTUATOR_ERROR(point='*', **device))
         def on_set_error(self, topic, headers, message, match):
             '''Setting of point on device failed, log failure message.'''
-            msg = jsonapi.loads(message[0])
+            msg = message[0]
             msg = msg['type']
             _log.debug('Actuator Error: ({}, {}, {})'.
                        format(msg,

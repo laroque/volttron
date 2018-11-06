@@ -119,7 +119,7 @@ def install_agent(opts, package, config):
     else:
         cfg = tempfile.NamedTemporaryFile()
         with open(cfg.name, 'w') as fout:
-            fout.write(yaml.safe_dump(config)) # jsonapi.dumps(config))
+            fout.write(yaml.safe_dump(config))
         config_file = cfg.name
 
     try:
