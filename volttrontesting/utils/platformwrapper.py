@@ -1,4 +1,4 @@
-import configParser as configparser
+import configparser as configparser
 import json
 import logging
 import os
@@ -525,7 +525,7 @@ class PlatformWrapper:
 
         if not has_control:
             self.shutdown_platform()
-            raise "Couldn't connect to core platform!"
+            raise Exception("Couldn't connect to core platform!")
 
         if bind_web_address:
             times = 0
@@ -541,7 +541,7 @@ class PlatformWrapper:
                     gevent.sleep(0.1)
                     self.logit("Connection error found {}".format(e))
             if not has_discovery:
-                raise "Couldn't connect to discovery platform."
+                raise Exception("Couldn't connect to discovery platform.")
 
         self.use_twistd = use_twistd
 
