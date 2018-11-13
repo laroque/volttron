@@ -1,2 +1,4 @@
-bacpypes==0.16.4
-pymodbus3
+bacpypes
+pymodbus
+modbus-tk
+pyserial
