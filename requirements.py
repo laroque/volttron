@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- {{{
 # vim: set fenc=utf-8 ft=python sw=4 ts=4 sts=4 et:
 #
-# Copyright 2017, Battelle Memorial Institute.
+# Copyright 2018, Battelle Memorial Institute.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,41 +36,71 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-import contextlib
+# These need to be importable by bootstrap.py. If we put them in
+# setup.py the import may fail if setuptools in not installed
+# in the global python3.
 
-from setuptools import setup, find_packages
-from requirements import extras_require, install_requires
+option_requirements = [
+    ('pyzmq', ['--zmq=bundled']),
+]
 
-with open('volttron/platform/__init__.py') as file:
-    for line in file:
-        if line.startswith('__version__'):
-            with contextlib.suppress(IndexError):
-                exec(line)
-                break
-    else:
-        raise RuntimeError('Unable to find version string in {}.'.format(file.name))
+install_requires = [
+    'gevent',
+    'grequests',
+    'requests',
+    'ply',
+    'psutil',
+    'python-dateutil',
+    'pytz',
+    'pyyaml',
+    'pyzmq',
+    'setuptools',
+    'tzlocal',
+    'wheel==0.30',
+    'ws4py'
+]
 
-if __name__ == '__main__':
-    setup(
-        name = 'volttron',
-        version = __version__,
-        description = 'Agent Execution Platform',
-        author = 'Volttron Team',
-        author_email = 'volttron@pnnl.gov',
-        url = 'https://github.com/VOLTTRON/volttron',
-        packages = find_packages('.'),
-        install_requires = install_requires,
-        extras_require = extras_require,
-        entry_points = {
-            'console_scripts': [
-                'volttron = volttron.platform.main:_main',
-                'volttron-ctl = volttron.platform.control:_main',
-                'volttron-pkg = volttron.platform.packaging:_main',
-                'volttron-cfg = volttron.platform.config:_main',
-                'vctl = volttron.platform.control:_main',
-                'vpkg = volttron.platform.packaging:_main',
-                'vcfg = volttron.platform.config:_main',
-            ]
-        },
-        zip_safe = False,
-    )
+extras_require = {
+    'crate': [  # crate databases
+        'crate'
+    ],
+    'databases': [  # Support for all known databases
+        'mysql-connector-python-rf',
+        'pymongo',
+        'crate'
+    ],
+    'drivers': [
+        'pymodbus',
+        'bacpypes',
+        'modbus-tk',
+        'pyserial'
+    ],
+    'documentation': [  # Requirements for building the documentation
+        'mock',
+        'mysql-connector-python-rf',
+        'psutil',
+        'pymongo',
+        'sphinx',
+    ],
+    'market': [  # Requirements for the market service
+        'numpy',
+        'transitions',
+    ],
+    'mongo': [  # mongo databases
+        'pymongo',
+    ],
+    'mysql': [  # mysql databases
+        'mysql-connector-python-rf',
+    ],
+    'pandas': [  # numpy and pandas for applications
+        'numpy',
+        'pandas',
+    ],
+    'testing': [  # Testing infrastructure dependencies
+        'mock',
+        'pytest',
+        'pytest-catchlog',
+        'pytest-timeout',
+        'websocket-client',
+    ],
+}
