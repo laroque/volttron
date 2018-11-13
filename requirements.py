@@ -99,7 +99,6 @@ extras_require = {
     'testing': [  # Testing infrastructure dependencies
         'mock',
         'pytest',
-        'pytest-catchlog',
         'pytest-timeout',
         'websocket-client',
     ],
