@@ -8,7 +8,8 @@ import pytest
 from pytest import approx
 
 from volttron.platform import get_services_core
-from volttron.platform.agent import json as jsonapi, utils
+from volttron.platform.agent import utils
+from volttron.platform import jsonapi
 
 from volttron.platform.messaging import headers as headers_mod
 

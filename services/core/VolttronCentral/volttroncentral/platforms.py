@@ -54,7 +54,7 @@ from volttron.platform.messaging.health import Status, UNKNOWN_STATUS, \
     GOOD_STATUS, BAD_STATUS
 from volttron.platform.vip.agent import Unreachable
 from volttron.platform.vip.agent.utils import build_connection
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 
 class Platforms(object):

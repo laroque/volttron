@@ -1,6 +1,6 @@
 import requests
 
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 
 class APITester(object):

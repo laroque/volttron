@@ -18,7 +18,7 @@ from volttrontesting.utils.agent_additions import \
     add_volttron_central_platform
 from volttrontesting.utils.platformwrapper import PlatformWrapper, \
     start_wrapper_platform
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 
 
