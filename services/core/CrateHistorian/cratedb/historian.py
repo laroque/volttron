@@ -63,7 +63,6 @@ from collections import defaultdict
 
 from crate.client.exceptions import ConnectionError, ProgrammingError
 from crate import client as crate_client
-from volttron.platform.agent import json as jsonapi
 
 from volttron.platform.dbutils.crateutils import (create_schema,
                                                   select_all_topics_query,

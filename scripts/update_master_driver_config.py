@@ -38,7 +38,7 @@
 
 from volttron.platform.agent.utils import parse_json_config
 from argparse import ArgumentParser
-from volttron.platform.agent import json as jsonapi
+from volttron.platform.agent import jsonapi
 import os
 import shutil
 

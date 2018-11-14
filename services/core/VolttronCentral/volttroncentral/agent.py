@@ -70,7 +70,7 @@ from urllib.parse import urlparse
 import datetime
 import gevent
 from volttron.platform.auth import AuthFile, AuthEntry
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .authenticate import Authenticate
 from .platforms import Platforms, PlatformHandler

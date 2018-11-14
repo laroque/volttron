@@ -49,7 +49,7 @@ import os
 import re
 from .basedb import DbDriver
 from volttron.platform.agent import utils
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
