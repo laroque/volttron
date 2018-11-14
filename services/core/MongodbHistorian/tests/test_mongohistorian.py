@@ -25,7 +25,7 @@ try:
 except:
     HAS_PYMONGO = False
 
-from . fixtures import (ALL_TOPIC, BASE_ANALYSIS_TOPIC, BASE_DEVICE_TOPIC,
+from fixtures import (ALL_TOPIC, BASE_ANALYSIS_TOPIC, BASE_DEVICE_TOPIC,
                       mongo_connection_params, mongo_agent_config,
                       mongo_connection_string)
 
