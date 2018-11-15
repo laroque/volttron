@@ -130,7 +130,7 @@ class ExecutionEnvironment(object):
 
     def execute(self, *args, **kwargs):
         try:
-            self.process = subprocess.Popen(*args, **kwargs)
+            self.process = subprocess.Popen(*args, **kwargs, universal_newlines=True)
         except OSError as e:
             if e.filename:
                 raise

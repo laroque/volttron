@@ -81,7 +81,7 @@ def publish_agent(request, volttron_instance1):
     cmd = ['volttron-ctl', 'config', 'delete', PLATFORM_DRIVER, '--all']
     process = Popen(cmd, env=volttron_instance1.env,
                     cwd='scripts/scalability-testing',
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     result = process.wait()
     print(result)
     assert result == 0
@@ -91,7 +91,7 @@ def publish_agent(request, volttron_instance1):
            'fake.csv', 'fake_unit_testing.csv', '--csv']
     process = Popen(cmd, env=volttron_instance1.env,
                     cwd='scripts/scalability-testing',
-                    stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     result = process.wait()
     print(result)
     assert result == 0
@@ -102,7 +102,7 @@ def publish_agent(request, volttron_instance1):
                config_name, 'fake_unit_testing.config', '--json']
         process = Popen(cmd, env=volttron_instance1.env,
                         cwd='scripts/scalability-testing',
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         result = process.wait()
         print(result)
         assert result == 0

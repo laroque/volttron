@@ -33,7 +33,7 @@ if not inenv and not corrected:
     # Travis-CI puts the python in a little bit different location than
     # we do.
     if os.environ.get('CI') is not None:
-        correct_python =subprocess.check_output(['which', 'python']).strip()
+        correct_python =subprocess.check_output(['which', 'python'], universal_newlines=True).strip()
     else:
         correct_python = os.path.abspath(
             os.path.join(mypath, '../env/bin/python'))
@@ -69,7 +69,7 @@ def identity_exists(opts, identity):
     cmds = [opts.volttron_control, "status"]
 
     process = subprocess.Popen(cmds, env=env, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+                               stderr=subprocess.PIPE, universal_newlines=True)
 
     (stdoutdata, stderrdata) = process.communicate()
 
@@ -141,11 +141,11 @@ def install_agent(opts, package, config):
     if opts.tag:
         cmds.extend(["--tag", opts.tag])
 
+
     process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                    stdout=subprocess.PIPE)
+                    stdout=subprocess.PIPE, universal_newlines=True)
     (output, errorout) = process.communicate()
 
-    output = output.decode("utf-8")
     parsed = output.split("\n")
 
     # If there is not an agent with that identity:
@@ -171,7 +171,7 @@ def install_agent(opts, package, config):
     if opts.start:
         cmds = [opts.volttron_control, "start", agent_uuid]
         process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
+                        stdout=subprocess.PIPE, universal_newlines=True)
         (outputdata, errordata) = process.communicate()
 
         # Expected output on standard out
@@ -186,7 +186,7 @@ def install_agent(opts, package, config):
             cmds.extend(["--priority", str(opts.priority)])
 
         process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
+                        stdout=subprocess.PIPE, universal_newlines=True)
         (outputdata, errordata) = process.communicate()
         # Expected output from standard out
         # Enabling 6bcee29b-7af3-4361-a67f-7d3c9e986419 listeneragent-3.2 with priority 50
@@ -200,7 +200,7 @@ def install_agent(opts, package, config):
 
         cmds = [opts.volttron_control, "status", agent_uuid]
         process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
+                        stdout=subprocess.PIPE, universal_newlines=True)
         (outputdata, errordata) = process.communicate()
 
         # 5 listeneragent-3.2 foo     running [10737]
@@ -242,7 +242,7 @@ if __name__ == '__main__':
                         help="source directory of the agent which is to be installed.")
     parser.add_argument("-i", "--vip-identity", default=None,
                         help="identity of the agent to be installed (unique per instance)")
-    parser.add_argument("-c", "--config", default=None, type=argparse.FileType,
+    parser.add_argument("-c", "--config", default=None, type=argparse.FileType('r'),
                         help="agent configuration file that will be packaged with the agent.")
     parser.add_argument("-wh", "--wheelhouse", default=None,
                         help="location of agents after they have been built")

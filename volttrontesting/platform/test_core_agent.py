@@ -16,7 +16,7 @@ def test_agent_can_get_platform_version(volttron_instance):
     agent = volttron_instance.build_agent()
     query = Query(agent.core)
     response = subprocess.check_output(['volttron', "--version"],
-                                       stderr=subprocess.STDOUT)
+                                       stderr=subprocess.STDOUT, universal_newlines=True)
     assert response.strip()
     _, version = response.strip().split(" ")
 

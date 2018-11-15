@@ -96,7 +96,7 @@ packages = ['packagetest'],
 zip_safe = False,
 )
 ''')
-        p = subprocess.Popen([sys.executable, 'setup.py', 'bdist_wheel'])
+        p = subprocess.Popen([sys.executable, 'setup.py', 'bdist_wheel'], universal_newlines=True)
         p.wait()
         os.path.join('dist', '-'.join(['distribution_name',
                                                '0.1', 'py2-none-any.whl']))

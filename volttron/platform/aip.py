@@ -176,7 +176,7 @@ class ExecutionEnvironment(object):
     def execute(self, *args, **kwargs):
         try:
             self.env = kwargs.get('env', None)
-            self.process = subprocess.Popen(*args, **kwargs)
+            self.process = subprocess.Popen(*args, **kwargs, universal_newlines=True)
         except OSError as e:
             if e.filename:
                 raise
@@ -308,7 +308,7 @@ class AIPplatform(object):
             agent_name = self.agent_name(agent_uuid)
             name_template = agent_name + "_{n}"
         else:
-            with open(identity_template_filename, 'rb') as fp:
+            with open(identity_template_filename, 'r') as fp:
                 name_template = fp.read(64)
 
             rm_id_template = True
