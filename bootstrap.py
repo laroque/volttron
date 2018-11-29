@@ -68,7 +68,7 @@ may be used. Look here for more information on configuring pip:
 
 '''
 
-from __future__ import print_function
+
 
 import argparse
 import errno
