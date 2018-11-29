@@ -44,7 +44,7 @@
 """Module for storing local public and secret keys and remote public keys"""
 
 
-import json
+from volttron.platform import jsonapi
 import logging
 import os
 import urllib.parse
@@ -71,16 +71,16 @@ class BaseJSONStore(object):
         fd = os.open(self.filename, os.O_CREAT | os.O_WRONLY | os.O_TRUNC,
                      self.permissions)
         try:
-            os.write(fd, json.dumps(data, indent=4).encode("utf-8"))
+            os.write(fd, jsonapi.dumpb(data, indent=4))
         finally:
             os.close(fd)
 
     def load(self):
         try:
             with open(self.filename, 'r') as json_file:
-                return json.load(json_file)
+                return jsonapi.load(json_file)
         except ValueError:
-            # If the file is empty json.load will raise ValueError
+            # If the file is empty jsonapi.load will raise ValueError
             return {}
 
     def remove(self, key):
