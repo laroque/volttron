@@ -52,7 +52,6 @@ from collections import defaultdict
 green.Context._instance = green.Context.shadow(zmq.Context.instance().underlying)
 from .agent.subsystems.pubsub import ProtectedPubSubTopics
 from volttron.platform.jsonrpc import (INVALID_REQUEST, UNAUTHORIZED)
-from volttron.platform.vip.agent.errors import VIPError
 from volttron.platform import jsonapi
 
 # Optimizing by pre-creating frames
@@ -172,7 +171,7 @@ class PubSubService(object):
             conn = frames[7].bytes
             if conn == b'connected':
                 data = frames[8].bytes
-                msg = jsonapi.loads(data)
+                msg = jsonapi.loadb(data)
                 peer = frames[0].bytes
                 try:
                     items = msg['subscriptions']
@@ -188,14 +187,12 @@ class PubSubService(object):
         :param frames list of frames
         :type frames list
         """
-        # for f in frames:
-        #     self._logger.debug("sub frames: {}".format(bytes(f)))
         if len(frames) < 8:
             return False
         else:
             self._logger.debug("Subscribe before: {}".format(self._peer_subscriptions))
             data = frames[7].bytes
-            msg = jsonapi.loads(data.decode("utf-8"))
+            msg = jsonapi.loadb(data)
             peer = frames[0].bytes
             try:
                 prefix = msg['prefix']
@@ -236,7 +233,7 @@ class PubSubService(object):
             return False
         else:
             data = frames[7].bytes
-            msg = jsonapi.loads(data.decode("utf-8"))
+            msg = jsonapi.loadb(data)
             peer = frames[0].bytes
             unsubmsg = dict()
             #Added for backward compatibility
@@ -290,15 +287,15 @@ class PubSubService(object):
         if len(frames) > 8:
             data = frames[8].bytes
             try:
-                msg = jsonapi.loads(data)
+                msg = jsonapi.loadb(data)
                 headers = msg['headers']
                 message = msg['message']
                 peer = frames[0].bytes
                 bus = msg['bus']
-                pub_msg = jsonapi.dumps(
+                pub_msg = jsonapi.dumpb(
                     dict(sender=peer.decode("utf-8"), bus=bus, headers=headers, message=message)
                 )
-                frames[8] = zmq.Frame(pub_msg.encode("utf-8"))
+                frames[8] = zmq.Frame(pub_msg)
             except KeyError as exc:
                 self._logger.error("Missing key in _peer_publish message {}".format(exc))
                 return 0
@@ -321,7 +318,7 @@ class PubSubService(object):
         results = []
         if len(frames) > 7:
             data = frames[7].bytes
-            msg = jsonapi.loads(data.decode("utf-8"))
+            msg = jsonapi.loadb(data)
             peer = frames[0].bytes
             try:
                 prefix = msg['prefix']
@@ -379,14 +376,14 @@ class PubSubService(object):
         """
         publisher, receiver, proto, _, msg_id, subsystem, op, topic, data = frames[0:9]
         #Check if peer is authorized to publish the topic
-        errmsg = self._check_if_protected_topic(bytes(user_id), bytes(topic))
+        errmsg = self._check_if_protected_topic(user_id.decode("utf-8"), topic.decode("utf-8"))
 
         #Send error message as peer is not authorized to publish to the topic
         if errmsg is not None:
             try:
                 frames = [publisher, b'', proto, user_id, msg_id,
-                          b'error', zmq.Frame(bytes(UNAUTHORIZED)),
-                          zmq.Frame(str(errmsg)), b'', subsystem]
+                          b'error', zmq.Frame(str(UNAUTHORIZED).encode("utf-8")),
+                          zmq.Frame(str(errmsg).encode("utf-8")), b'', subsystem]
             except ValueError:
                 self._logger.debug("Value error")
             self._send(frames, publisher)
@@ -405,11 +402,11 @@ class PubSubService(object):
         :param frames: list of frames
         :return: Number of local subscribers
         """
-        publisher = frames[0].bytes.decode("utf-8")
+        publisher = frames[0].bytes
         topic = frames[7].bytes.decode("utf-8")
-        data = frames[8].bytes.decode("utf-8")
+        data = frames[8].bytes
         try:
-            msg = jsonapi.loads(data)
+            msg = jsonapi.loadb(data)
             bus = msg['bus']
         except KeyError as exc:
             self._logger.error("Missing key in _peer_publish message {}".format(exc))
@@ -460,9 +457,10 @@ class PubSubService(object):
         publisher, receiver, proto, user_id, msg_id, subsystem, op, topic, data = frames[0:9]
         success = False
         external_subscribers = set()
+        topic = topic.encode("utf-8")
         for platform_id, subscriptions in self._ext_subscriptions.items():
             for prefix in subscriptions:
-                if bytes(topic).startswith(prefix):
+                if topic.startswith(prefix):
                     external_subscribers.add(platform_id)
         ##self._logger.debug("PUBSUBSERVICE External subscriptions {0}".format(external_subscribers))
         if external_subscribers:
@@ -524,10 +522,10 @@ class PubSubService(object):
             except KeyError:
                 error = None
             if exc.errno == EHOSTUNREACH:
-                self._logger.debug("Host unreachable {}".format(subscriber.bytes))
-                drop.append(bytes(subscriber))
+                self._logger.debug("Host unreachable {}".format(subscriber.bytes.encode("utf-8")))
+                drop.append(subscriber.bytes)
             elif exc.errno == EAGAIN:
-                self._logger.debug("EAGAIN error {}".format(subscriber.bytes))
+                self._logger.debug("EAGAIN error {}".format(subscriber.bytes.encode("utf-8")))
                 # Only send EAGAIN errors
                 proto, user_id, msg_id, subsystem = frames[2:6]
                 frames = [publisher, b'', proto, user_id, msg_id,
@@ -549,7 +547,7 @@ class PubSubService(object):
         if len(frames) > 7:
             data = frames[7].bytes
             try:
-                msg = jsonapi.loads(data)
+                msg = jsonapi.loadb(data)
                 self._user_capabilities = msg['capabilities']
             except KeyError as exc:
                 self._logger.error("Missing key in update auth capabilities message {}".format(exc))
@@ -566,7 +564,7 @@ class PubSubService(object):
         if len(frames) > 7:
             data = frames[7].bytes
             try:
-                msg = jsonapi.loads(data)
+                msg = jsonapi.loadb(data)
                 self._load_protected_topics(msg)
             except ValueError:
                 pass
@@ -603,8 +601,7 @@ class PubSubService(object):
         """
         response = []
         result = None
-        # for f in frames:
-        #     self._logger.debug("PUBSUBSERVICE msg {}".format(bytes(f)))
+
         try:
             sender, recipient, proto, usr_id, msg_id, subsystem, op = frames[:7]
         except IndexError:
@@ -621,7 +618,7 @@ class PubSubService(object):
                     result = self._peer_publish(frames, user_id)
                 except IndexError:
                     #send response back -- Todo
-                    return
+                    return []
             elif op == b'unsubscribe':
                 result = self._peer_unsubscribe(frames)
             elif op == b'list':
@@ -643,14 +640,14 @@ class PubSubService(object):
             elif op == b'request_response':
                 pass
             else:
-                self._logger.error("PUBSUBSERVICE Unknown pubsub request {}".format(bytes(op)))
+                self._logger.error("PUBSUBSERVICE Unknown pubsub request {}".format(op.decode("utf-8")))
                 pass
 
         if result is not None:
             #Form response frame
             response = [sender, recipient, proto, user_id, msg_id, subsystem]
             response.append(zmq.Frame(b'request_response'))
-            response.append(zmq.Frame(bytes(result)))
+            response.append(zmq.Frame(str(result).encode("utf-8")))
 
         return response
 
@@ -707,7 +704,7 @@ class PubSubService(object):
         instance_name = self._ext_router.my_instance_name()
         prefix_msg = dict()
         prefix_msg[instance_name] = prefixes
-        msg = jsonapi.dumps(prefix_msg)
+        msg = jsonapi.dumpb(prefix_msg)
         frames = [b'', 'VIP1', b'', b'', b'pubsub', b'external_list', msg]
 
         if self._ext_router is not None:
@@ -726,7 +723,7 @@ class PubSubService(object):
             return False
         else:
             data = frames[7].bytes
-            msg = jsonapi.loads(data)
+            msg = jsonapi.loadb(data)
             try:
                 for instance_name in msg:
                     prefixes = msg[instance_name]
@@ -751,31 +748,28 @@ class PubSubService(object):
 
         if len(frames) > 8:
             publisher, receiver, proto, user_id, msg_id, subsystem, op, topic, data = frames[0:9]
-            data = frames[8].bytes
-            msg = jsonapi.loads(data)
             # Check if peer is authorized to publish the topic
-            errmsg = self._check_if_protected_topic(bytes(user_id), bytes(topic))
+            errmsg = self._check_if_protected_topic(user_id.decode("utf-8"), topic.decode("utf-8"))
 
             #peer is not authorized to publish to the topic, send error message to the peer
             if errmsg is not None:
                 try:
                     frames = [publisher, b'', proto, user_id, msg_id,
-                              subsystem, b'error', zmq.Frame(bytes(UNAUTHORIZED)),
-                              zmq.Frame(str(errmsg))]
+                              subsystem, b'error', zmq.Frame(str(UNAUTHORIZED).encode("utf-8")),
+                              zmq.Frame(str(errmsg).encode("utf-8"))]
                     self._ext_router.send_external(publisher, frames)
                     return
                 except ValueError:
                     self._logger.debug("Value error")
 
             # Make it an internal publish
-            frames[6] = 'publish'
+            frames[6] = b'publish'
             subscribers_count = self._distribute_internal(frames)
             # There are no subscribers, send error message back to source platform
             if subscribers_count == 0:
                 try:
-                    errmsg = 'NO SUBSCRIBERS'
                     frames = [publisher, b'', proto, user_id, msg_id,
-                              subsystem, zmq.Frame(b'error'), zmq.Frame(bytes(INVALID_REQUEST)),
+                              subsystem, zmq.Frame(b'error'), zmq.Frame(str(INVALID_REQUEST).encode("utf-8")),
                               topic]
                     self._ext_router.send_external(publisher, frames)
                 except ValueError:
