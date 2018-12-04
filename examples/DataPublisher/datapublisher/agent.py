@@ -341,7 +341,7 @@ class Publisher(Agent):
 
     @RPC.export
     def set_point(self, requester_id, topic, value, **kwargs):
-        requester_id = bytes(self.vip.rpc.context.vip_message.peer)
+        requester_id = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.info("Set point: {} {} {}".format(requester_id, topic, value))
         return None
 
@@ -358,7 +358,7 @@ class Publisher(Agent):
 
     @RPC.export
     def request_new_schedule(self, requester_id, task_id, priority, requests):
-        requester_id = bytes(self.vip.rpc.context.vip_message.peer)
+        requester_id = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.info("Schedule requested: {} {} {} {}".format(requester_id, task_id, priority, requests))
         results = {'result': 'SUCCESS',
                    'data': {},
@@ -368,7 +368,7 @@ class Publisher(Agent):
 
     @RPC.export
     def request_cancel_schedule(self, requester_id, task_id):
-        requester_id = bytes(self.vip.rpc.context.vip_message.peer)
+        requester_id = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.info("Schedule canceled: {} {}".format(requester_id, task_id))
         results = {'result': 'SUCCESS',
                    'data': {},
