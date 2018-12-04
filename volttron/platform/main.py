@@ -357,7 +357,7 @@ class Router(BaseRouter):
                 self._message_debugger_socket.connect(socket_path)
             # Publish the routed message, including the "topic" (status/direction), for use by MessageDebuggerAgent.
             frame_bytes = [topic]
-            frame_bytes.extend([frame if type(frame) is str else frame.bytes for frame in frames])
+            frame_bytes.extend([frame if type(frame) is bytes else frame.bytes for frame in frames])
             self._message_debugger_socket.send_pyobj(frame_bytes)
 
     def handle_subsystem(self, frames, user_id):

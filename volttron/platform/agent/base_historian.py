@@ -607,7 +607,7 @@ class BaseHistorianAgent(Agent):
         if self.no_insert:
             raise RuntimeError("Insert not supported by this historian.")
 
-        rpc_peer = bytes(self.vip.rpc.context.vip_message.peer)
+        rpc_peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug("insert called by {} with {} records".format(rpc_peer, len(records)))
 
         for r in records:

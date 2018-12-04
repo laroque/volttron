@@ -376,7 +376,7 @@ class PubSubService(object):
         """
         publisher, receiver, proto, _, msg_id, subsystem, op, topic, data = frames[0:9]
         #Check if peer is authorized to publish the topic
-        errmsg = self._check_if_protected_topic(user_id.decode("utf-8"), topic.decode("utf-8"))
+        errmsg = self._check_if_protected_topic(user_id.decode("utf-8"), topic.bytes.decode("utf-8"))
 
         #Send error message as peer is not authorized to publish to the topic
         if errmsg is not None:
@@ -457,7 +457,7 @@ class PubSubService(object):
         publisher, receiver, proto, user_id, msg_id, subsystem, op, topic, data = frames[0:9]
         success = False
         external_subscribers = set()
-        topic = topic.encode("utf-8")
+        topic = topic.bytes.decode("utf-8")
         for platform_id, subscriptions in self._ext_subscriptions.items():
             for prefix in subscriptions:
                 if topic.startswith(prefix):

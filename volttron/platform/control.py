@@ -116,7 +116,7 @@ class ControlService(BaseAgent):
     @RPC.export
     def agent_status(self, uuid):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -125,7 +125,7 @@ class ControlService(BaseAgent):
     @RPC.export
     def agent_name(self, uuid):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -134,7 +134,7 @@ class ControlService(BaseAgent):
     @RPC.export
     def agent_version(self, uuid):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -151,7 +151,7 @@ class ControlService(BaseAgent):
     @RPC.export
     def start_agent(self, uuid):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -160,7 +160,7 @@ class ControlService(BaseAgent):
     @RPC.export
     def stop_agent(self, uuid):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -198,12 +198,12 @@ class ControlService(BaseAgent):
     @RPC.export
     def tag_agent(self, uuid, tag):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
         if not isinstance(tag, (type(None), str)):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'tag';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -212,7 +212,7 @@ class ControlService(BaseAgent):
     @RPC.export
     def remove_agent(self, uuid, remove_auth=True):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -221,12 +221,12 @@ class ControlService(BaseAgent):
     @RPC.export
     def prioritize_agent(self, uuid, priority='50'):
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
         if not isinstance(priority, (type(None), str)):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string or null for 'priority';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -240,7 +240,7 @@ class ControlService(BaseAgent):
         @return:
         """
         if not isinstance(uuid, str):
-            identity = bytes(self.vip.rpc.context.vip_message.peer)
+            identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
             raise TypeError("expected a string for 'uuid';"
                             "got {!r} from identity: {}".format(
                 type(uuid).__name__, identity))
@@ -327,7 +327,7 @@ class ControlService(BaseAgent):
             Encoded secret key the installed agent will use
         """
 
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         channel = self.vip.channel(peer, channel_name)
         try:
             tmpdir = tempfile.mkdtemp()

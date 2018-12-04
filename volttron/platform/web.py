@@ -434,7 +434,7 @@ class MasterWebService(Agent):
         """
         _log.debug('Registering route with endpoint: {}'.format(endpoint))
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug('Route is associated with peer: {}'.format(peer))
 
         if endpoint in self.endpoints:
@@ -454,7 +454,7 @@ class MasterWebService(Agent):
         """
 
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
 
         _log.info(
             'Registering agent route expression: {} peer: {} function: {}'
@@ -468,7 +468,7 @@ class MasterWebService(Agent):
     def unregister_all_agent_routes(self):
 
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
 
         _log.info('Unregistering agent routes for: {}'.format(peer))
         for regex in self.peerroutes[peer]:
@@ -491,7 +491,7 @@ class MasterWebService(Agent):
         _log.info('Registering path route: {}'.format(root_dir))
 
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
 
         compiled = re.compile(regex)
         self.pathroutes[peer].append(compiled)
@@ -499,7 +499,7 @@ class MasterWebService(Agent):
 
     @RPC.export
     def register_websocket(self, endpoint):
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
+        identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug('Caller identity: {}'.format(identity))
         _log.debug('REGISTERING ENDPOINT: {}'.format(endpoint))
         if self.appContainer:
@@ -512,7 +512,7 @@ class MasterWebService(Agent):
 
     @RPC.export
     def unregister_websocket(self, endpoint):
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
+        identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug('Caller identity: {}'.format(identity))
         self.appContainer.destroy_ws_endpoint(endpoint)
 

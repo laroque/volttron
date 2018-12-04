@@ -104,7 +104,7 @@ _level_map = {7: logging.DEBUG,      # LOG_DEBUG
 def log_entries(name, agent, pid, level, stream):
     log = logging.getLogger(name)
     extra = {'processName': agent, 'process': pid}
-    for line in (l.decode('utf-8').rstrip('\r\n') for l in stream):
+    for line in (l.rstrip('\r\n') for l in stream):
         if line[0:1] == '{' and line[-1:] == '}':
             try:
                 obj = jsonapi.loads(line)
