@@ -170,6 +170,7 @@ class BasicCore(object):
         self.onstop = Signal()
         self.onfinish = Signal()
         self.oninterrupt = None
+        self.tie_breaker = 0
         prev_int_signal = gevent.signal.getsignal(signal.SIGINT)
         # To avoid a child agent handler overwriting the parent agent handler
         if prev_int_signal in [None, signal.SIG_IGN, signal.SIG_DFL, signal.default_int_handler]:
@@ -256,7 +257,7 @@ class BasicCore(object):
                     event.clear()
                 now = time.time()
                 while heap and now >= heap[0][0]:
-                    _, callback = heapq.heappop(heap)
+                    _, _, callback = heapq.heappop(heap)
                     greenlet = gevent.spawn(callback)
                     cur.link(lambda glt: greenlet.kill())
 
@@ -410,9 +411,13 @@ class BasicCore(object):
             self._schedule_iter(it, event)
         return event
 
+    def get_tie_breaker(self):
+        self.tie_breaker += 1
+        return self.tie_breaker
+
     def _schedule_callback(self, deadline, callback):
         deadline = utils.get_utc_seconds_from_epoch(deadline)
-        heapq.heappush(self._schedule, (deadline, callback))
+        heapq.heappush(self._schedule, (deadline, self.get_tie_breaker(), callback))
         self._schedule_event.set()
 
     def _schedule_iter(self, it, event):
@@ -762,7 +767,7 @@ class Core(BasicCore):
                     handle = self.subsystems[subsystem]
                 except KeyError:
                     _log.error('peer %r requested unknown subsystem %r',
-                               bytes(message.peer), subsystem)
+                               bytes(message.peer).encode("utf-8"), subsystem)
                     message.user = b''
                     message.args = list(router._INVALID_SUBSYSTEM)
                     message.args.append(message.subsystem)
