@@ -147,15 +147,15 @@ class ConversionMapper(object):
     def setup_conversion_map(self, conversion_map_config, field_names):
         #time_format = conversion_map_config.pop(TIME_STAMP_COLUMN)
         re_exp_list = list(conversion_map_config.keys())
-        re_exp_list.sort(cmp=lambda x, y: cmp(len(x), len(y)))
+        re_exp_list.sort(key=lambda x: len(x), reverse=True)
         re_exp_list.reverse()
         re_list = [re.compile(x) for x in re_exp_list]
 
         def default_handler():
             return lambda x:x
         self.conversion_map = defaultdict(default_handler)
-        def handle_time(item):
-            return datetime.strptime(item, time_format)
+        # def handle_time(item):
+        #     return datetime.strptime(item, time_format)
         #self.conversion_map[TIME_STAMP_COLUMN] = handle_time
 
         def handle_bool(item):
