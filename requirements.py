@@ -81,6 +81,8 @@ extras_require = {
         'psutil',
         'pymongo',
         'sphinx',
+        'recommonmark',
+        'sphinx_rtd_theme'
     ],
     'market': [  # Requirements for the market service
         'numpy',
