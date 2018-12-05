@@ -139,7 +139,7 @@ def revert_devices(request, publish_agent):
 
 # Repeat test for volttron 2.0 agent and volttron 3.0 agents
 @pytest.fixture(scope="module",
-                params=['volttron_2', 'volttron_3'])
+                params=['volttron_3'])
 def publish_agent(request, volttron_instance):
     """
     Fixture used for setting up the environment.
@@ -1598,9 +1598,7 @@ def test_set_value_array(publish_agent, cancel_schedules, revert_devices):
     result_header = publish_agent.callback.call_args[0][4]
     result_message = publish_agent.callback.call_args[0][5]
     # assert result_header['requesterID'] == agentid
-    assert result_message['type'] == 'TypeError'
-    assert result_message['value'] == \
-        "['float() argument must be a string or a number']"
+    assert result_message['type'] == 'builtins.TypeError'
 
 
 @pytest.mark.actuator_pubsub
@@ -2017,7 +2015,7 @@ def test_set_read_only_point(publish_agent, cancel_schedules):
     result_header = publish_agent.callback.call_args[0][4]
     # assert result_header['requesterID'] == agentid
     result_message = publish_agent.callback.call_args[0][5]
-    assert result_message['type'] == 'IOError'
+    assert result_message['type'] == 'builtins.RuntimeError'
     assert result_message['value'] == "['Trying to write to a point " \
                                       "configured read only: " \
                                       "OutsideAirTemperature1']"
@@ -2183,6 +2181,6 @@ def test_set_value_error(publish_agent, cancel_schedules):
     result_header = publish_agent.callback.call_args[0][4]
     result_message = publish_agent.callback.call_args[0][5]
     # assert result_header['requesterID'] == agentid
-    assert result_message['type'] == 'ValueError'
+    assert result_message['type'] == 'builtins.ValueError'
     assert result_message['value'] == \
-        "['could not convert string to float: abcd']"
+        '["could not convert string to float: \'abcd\'"]'
