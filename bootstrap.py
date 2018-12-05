@@ -68,7 +68,9 @@ may be used. Look here for more information on configuring pip:
 
 '''
 
-
+#Do not remove! Allows proper execution in Python 2.
+#Otherwise user will get the wrong error message in that case.
+from __future__ import print_function
 
 import argparse
 import errno
