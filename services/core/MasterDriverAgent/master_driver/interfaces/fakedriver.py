@@ -118,7 +118,7 @@ class Interface(BasicRevert, BaseInterface):
     def _set_point(self, point_name, value):
         register = self.get_register_by_name(point_name)
         if register.read_only:
-            raise IOError(
+            raise RuntimeError(
                 "Trying to write to a point configured read only: " + point_name)
 
         register.value = register.reg_type(value)

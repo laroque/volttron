@@ -159,7 +159,7 @@ def cancel_schedules(request, publish_agent):
 
     def cleanup():
         for schedule in cleanup_parameters:
-            print('Requesting cancel for task:', schedule['taskid'], 'from agent:', schedule['agentid'])
+            print('\nRequesting cancel for task:', schedule['taskid'], 'from agent:', schedule['agentid'])
             result = publish_agent.vip.rpc.call(
                 PLATFORM_ACTUATOR,
                 REQUEST_CANCEL_SCHEDULE,
@@ -235,7 +235,6 @@ def test_schedule_success(publish_agent, cancel_schedules):
     print(result)
     assert result['result'] == SUCCESS
 
-
 @pytest.mark.actuator
 def test_schedule_error_int_taskid(publish_agent):
     """
@@ -265,7 +264,6 @@ def test_schedule_error_int_taskid(publish_agent):
     assert result['result'] == FAILURE
     assert result['info'] == \
            'MALFORMED_REQUEST: TypeError: taskid must be a nonempty string'
-
 
 @pytest.mark.actuator
 def test_schedule_empty_taskid(publish_agent, cancel_schedules):
@@ -331,7 +329,6 @@ def test_schedule_error_none_taskid(publish_agent):
     assert result['result'] == FAILURE
     assert result['info'] == 'MISSING_TASK_ID'
 
-
 @pytest.mark.actuator
 def test_schedule_error_invalid_priority(publish_agent):
     """
@@ -360,7 +357,6 @@ def test_schedule_error_invalid_priority(publish_agent):
     assert result['result'] == FAILURE
     assert result['info'] == 'INVALID_PRIORITY'
 
-
 @pytest.mark.actuator
 def test_schedule_error_empty_message(publish_agent):
     """
@@ -386,7 +382,6 @@ def test_schedule_error_empty_message(publish_agent):
     print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'MALFORMED_REQUEST_EMPTY'
-
 
 @pytest.mark.actuator
 def test_schedule_error_duplicate_task(publish_agent, cancel_schedules):
@@ -431,7 +426,6 @@ def test_schedule_error_duplicate_task(publish_agent, cancel_schedules):
     print(result)
     assert result['result'] == FAILURE
     assert result['info'] == 'TASK_ID_ALREADY_EXISTS'
-
 
 @pytest.mark.actuator
 def test_schedule_error_none_priority(publish_agent):
@@ -1508,9 +1502,7 @@ def test_set_error_array(publish_agent, cancel_schedules):
         pytest.fail('Expecting RemoteError for trying to set array on point '
                     'that expects float. Code returned {}'.format(result))
     except RemoteError as e:
-        assert e.message == \
-               "TypeError('float() argument must be a string or a number')"
-
+        assert "TypeError" in e.message
 
 @pytest.mark.actuator
 def test_set_lock_error(publish_agent):
@@ -1581,8 +1573,7 @@ def test_set_value_error(publish_agent, cancel_schedules):
         pytest.fail(
             "Expecting ValueError but code returned: {}".format(result))
     except RemoteError as e:
-        assert e.message == "ValueError('could not convert string to float: " \
-                            "On')"
+        assert "ValueError" in e.message
 
 
 @pytest.mark.actuator
@@ -1628,8 +1619,7 @@ def test_set_error_read_only_point(publish_agent, cancel_schedules):
         pytest.fail(
             'Expecting RemoteError but code returned: {}'.format(result))
     except RemoteError as e:
-        assert e.message == "IOError('Trying to write to a point configured " \
-                            "read only: OutsideAirTemperature1')"
+        assert "RuntimeError" in e.message
 
 
 @pytest.mark.actuator
@@ -1814,7 +1804,7 @@ def test_set_multiple_captures_errors(publish_agent, cancel_schedules):
 
     try:
         r = result['fakedriver0/OutsideAirTemperature1']
-        assert r == "IOError('Trying to write to a point configured read only: OutsideAirTemperature1',)"
+        assert "RuntimeError" in r
     except KeyError:
         pytest.fail('read only point did not raise an exception')
 

@@ -110,6 +110,21 @@ class TimeSlice(object):
             return -1
         return 0
 
+    # def __ne__(self, other):
+    #     return self.__cmp__(other) != 0
+    #
+    # def __gt__(self, other):
+    #     return self.__cmp__(other) > 0
+
+    def __lt__(self, other):
+        return self.__cmp__(other) < 0
+
+    # def __ge__(self, other):
+    #     return self.__cmp__(other) >= 0
+    #
+    # def __le__(self, other):
+    #     return self.__cmp__(other) <= 0
+
     def __contains__(self, other):
         return self._start < other < self._end
 
@@ -162,7 +177,7 @@ class Task(object):
             self.devices.clear()
             return
 
-        for device, schedule in self.devices.items():
+        for device, schedule in list(self.devices.items()):
             if schedule.finished(now):
                 del self.devices[device]
 
@@ -383,11 +398,11 @@ class ScheduleManager(object):
 
         if requests is None or not requests:
             return RequestResult(False, {}, 'MALFORMED_REQUEST_EMPTY')
-        if not isinstance(agent_id, str):
+        if not isinstance(agent_id, str) or not agent_id:
             return RequestResult(False, {},
                                  'MALFORMED_REQUEST: TypeError: agentid must '
                                  'be a nonempty string')
-        if not isinstance(id_, str):
+        if not isinstance(id_, str) or not id_:
             return RequestResult(False, {},
                                  'MALFORMED_REQUEST: TypeError: taskid must '
                                  'be a nonempty string')
@@ -494,7 +509,7 @@ class ScheduleManager(object):
         self.running_tasks = set()
         self.preempted_tasks = set()
 
-        for task_id in self.tasks.keys():
+        for task_id in list(self.tasks.keys()):
             task = self.tasks[task_id]
             task.make_current(now)
             if task.state == Task.STATE_FINISHED:
