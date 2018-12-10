@@ -294,7 +294,7 @@ def repackage(directory, dest=None):
         except Exception as e:
             raise AgentPackageError("Unable to create destination directory "
                                     "{}. Exception {}".format(
-                                    dest, e.message))
+                                    dest, e.args[0]))
     if not os.path.exists(directory):
         raise AgentPackageError("Agent directory {} does not "
                                 "exist".format(directory))
