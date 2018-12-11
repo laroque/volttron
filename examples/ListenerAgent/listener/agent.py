@@ -64,7 +64,7 @@ class ListenerAgent(Agent):
     """
 
     def __init__(self, config_path, **kwargs):
-        super(ListenerAgent, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.config = utils.load_config(config_path)
         self._agent_id = self.config.get('agentid', DEFAULT_AGENTID)
         self._message = self.config.get('message', DEFAULT_MESSAGE)
