@@ -399,7 +399,7 @@ class SqlLiteFuncts(DbDriver):
                 topics.append((row[0], row[1], row[2], meta))
             return topics
         except sqlite3.Error as e:
-            if e.message[0:13] == 'no such table':
+            if e.args[0][0:13] == 'no such table':
                 _log.warn("No such table : {}".format(self.agg_topics_table))
                 return []
             else:
@@ -419,7 +419,7 @@ class SqlLiteFuncts(DbDriver):
                 id_map[(row[1].lower(), row[2], row[3])] = row[0]
             return id_map
         except sqlite3.Error as e:
-            if e.message[0:13] == 'no such table':
+            if e.args[0][0:13] == 'no such table':
                 _log.warn("No such table : {}".format(self.agg_topics_table))
                 return {}
             else:

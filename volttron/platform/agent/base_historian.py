@@ -517,7 +517,7 @@ class BaseHistorianAgent(Agent):
             return
 
         query = Query(self.core)
-        self.instance_name = query.query(b'instance-name').get()
+        self.instance_name = query.query('instance-name').get()
 
         # Reset replace map.
         self._topic_replace_map = {}

@@ -597,5 +597,8 @@ def fix_sqlite3_datetime(sql=None):
     """
     if sql is None:
         import sqlite3 as sql
+
+    def parse(time_stamp_bytes):
+        return parse_timestamp_string(time_stamp_bytes.decode("utf-8"))
     sql.register_adapter(datetime, format_timestamp)
-    sql.register_converter("timestamp", parse_timestamp_string)
+    sql.register_converter("timestamp", parse)
