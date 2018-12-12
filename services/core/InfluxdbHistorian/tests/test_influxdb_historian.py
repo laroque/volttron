@@ -76,7 +76,7 @@ except ImportError:
 
 if HAS_INFLUXDB:
     from volttron.platform.dbutils import influxdbutils
-    from . fixtures import *
+    from fixtures import *
 
 
 
@@ -935,7 +935,7 @@ def test_query_topics_by_pattern(volttron_instance, influxdb_client):
     assert agent_uuid is not None
     assert volttron_instance.is_agent_running(agent_uuid)
 
-    pattern_1 = 'Building\/LAB\/Device.*'
+    pattern_1 = r'Building\/LAB\/Device.*'
     expected_1 = [{topic: topic.lower()} for topic in query_topics.values()]
 
     pattern_2 = 'Building.*MixedAir'

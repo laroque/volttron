@@ -67,7 +67,8 @@ extras_require = {
     'databases': [  # Support for all known databases
         'mysql-connector-python-rf',
         'pymongo',
-        'crate'
+        'crate',
+        'influxdb',
     ],
     'drivers': [
         'pymodbus',
@@ -106,5 +107,8 @@ extras_require = {
     ],
     'dnp3': [  # dnp3 agent requirements.
         'pydnp3'
+    ],
+    'influxdb': [  # influxdb historian requirements.
+        'influxdb'
     ],
 }
