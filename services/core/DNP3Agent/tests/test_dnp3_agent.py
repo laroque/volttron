@@ -193,7 +193,7 @@ class TestDNP3Agent:
     def set_point(agent, point_name, value):
         """Use DNP3Agent to set a point value for a DNP3 resource."""
         response = agent.vip.rpc.call(DNP3_AGENT_ID, 'set_point', point_name, value).get(timeout=10)
-        gevent.sleep(1)     # Give the Master time to receive an echoed point value back from the Outstation.
+        gevent.sleep(5)     # Give the Master time to receive an echoed point value back from the Outstation.
         return response
 
     @staticmethod
