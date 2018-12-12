@@ -140,7 +140,7 @@ class AuthService(Agent):
             with open(self._protected_topics_file) as fil:
                 # Use gevent FileObject to avoid blocking the thread
                 data = FileObject(fil, close=False).read()
-                self._protected_topics = jsonapi.loads(data) if data else {}
+                self._protected_topics = jsonapi.loadb(data) if data else {}
                 self._send_protected_update_to_pubsub(self._protected_topics)
         except Exception:
             _log.exception('error loading %s', self._protected_topics_file)
@@ -171,7 +171,7 @@ class AuthService(Agent):
         if self._is_connected:
             try:
                 # <recipient, subsystem, args, msg_id, flags>
-                self.core.socket.send_vip(b'', 'pubsub', frames, copy=False)
+                self.core.socket.send_vip(b'', b'pubsub', frames, copy=False)
             except VIPError as ex:
                 _log.error("Error in sending protected topics update to clear PubSub: " + str(ex))
 
