@@ -464,7 +464,7 @@ class TestMesaAgent:
             self.set_point(agent, "DCHD.WinTms (in)", True)
             assert False, "Input point with invalid value failed to cause an exception"
         except Exception as err:
-            assert str(err) == "dnp3.points.DNP3Exception(\"Received <type 'bool'> value for PointDefinition " \
+            assert str(err) == "dnp3.points.DNP3Exception(\"Received <class 'bool'> value for PointDefinition " \
                                "DCHD.WinTms (in) (30.1, index=91, type=Analog Input).\")"
 
     def test_set_points(self, run_master, agent, reset):

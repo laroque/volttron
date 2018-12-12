@@ -104,4 +104,7 @@ extras_require = {
         'pytest-timeout',
         'websocket-client',
     ],
+    'dnp3': [  # dnp3 agent requirements.
+        'pydnp3'
+    ],
 }
