@@ -128,14 +128,14 @@ class KeyStore(BaseJSONStore):
         """Get key and make sure it's type is str (not unicode)
 
         The json module returns all strings as unicode type, but base64
-        decode expects str type as input. The conversion from unicode
+        decode expects byte type as input. The conversion from unicode
         type to str type is safe in this case, because encode_key
         returns str type (ASCII characters only).
         """
         key = self.load().get(keyname, None)
         if key:
             try:
-                key = str(key)
+                key.encode('ascii')
             except UnicodeEncodeError:
                 _log.warning(
                     'Non-ASCII character found for key {} in {}'

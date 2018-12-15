@@ -198,7 +198,7 @@ class KeyDiscoveryAgent(Agent):
 
         frames = [op, address]
         try:
-            self._vip_socket.send_vip(b'', 'routing_table', frames, copy=False)
+            self._vip_socket.send_vip(b'', b'routing_table', frames, copy=False)
         except ZMQError as ex:
             # Try sending later
             _log.error("ZMQ error while sending external platform info to router: {}".format(ex))
