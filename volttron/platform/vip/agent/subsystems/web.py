@@ -62,7 +62,7 @@ class WebSubSystem(SubsystemBase):
         self._endpoints = {}
         self._ws_endpoint = {}
 
-        def onsetup(sender, **kqargs):
+        def onsetup(sender, **kwargs):
             rpc.export(self._opened, 'client.opened')
             rpc.export(self._closed, 'client.closed')
             rpc.export(self._message, 'client.message')

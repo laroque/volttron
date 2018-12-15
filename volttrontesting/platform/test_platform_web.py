@@ -125,7 +125,7 @@ class WebAgent(Agent):
         self.vip.web.register_path("/web", WEBROOT)
 
     def text(self, env, data):
-        ret = "200 OK", base64.b64encode("This is some text"), [
+        ret = "200 OK", base64.b64encode("This is some text").decode("ascii"), [
         ('Content-Type', 'text/plain')]
         _log.debug('returning: {}'.format(ret))
         return ret
