@@ -466,9 +466,9 @@ class Request (object):
             struct_size += 1
         self._data_format += struct_format
         # current_request.count += f.type[SIZE] * f.type[LENGTH]
-        self._count += struct_size / 2
+        self._count += struct_size // 2 # We need count to remain a int
         self._fields.append(field)
-        self._next_address += struct_size / 2
+        self._next_address += struct_size // 2 # We need count to remain a int
 
     def block_info(self):
         return self._name, self._table, self._address, self._count

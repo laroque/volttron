@@ -165,6 +165,7 @@ class Server (object):
         self.install_hook('modbus.Slave.handle_read_holding_registers_request', 'read_register')
         self.install_hook('modbus.Slave.handle_write_multiple_coils_request', 'write_coils')
         self.install_hook('modbus.Slave.handle_write_single_coil_request', 'write_coils')
+        # self.install_hook('modbus.Databank.on_error', 'print_error')
 
     def define_slave(self, slave_id, client_class, unsigned=True):
         """Add a Modbus Client Slave.
@@ -245,6 +246,10 @@ class Server (object):
     def write_coils(args):
         slave, request_pdu = args
         # logger.debug("Writing Coils: {0}-{1}".format(slave, request_pdu))
+
+    # @staticmethod
+    # def print_error(data_bank, exception, pdu):
+    #     pass
 
 
 class ServerProcess (multiprocessing.Process):
