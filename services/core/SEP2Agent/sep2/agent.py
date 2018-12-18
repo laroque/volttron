@@ -56,7 +56,7 @@ from .end_device import EndDevice, MUP, SEP2Renderer, sep2_time
 from datetime import datetime, timedelta
 from volttron.platform.agent import utils
 from volttron.platform.vip.agent import Agent, Core, RPC
-from . import __init__ as sep2
+import sep2
 import base64
 import logging
 import pytz
@@ -136,7 +136,7 @@ class SEP2Agent(Agent):
         self.timezone = timezone
         self.devices = {}
 
-        self.default_config = {"device_config": device_config,
+        self.default_config = {"devices": device_config,
                                "sep2_server_sfdi": sep2_server_sfdi,
                                "sep2_server_lfdi": sep2_server_lfdi,
                                "load_shed_device_category": load_shed_device_category,

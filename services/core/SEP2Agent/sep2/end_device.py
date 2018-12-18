@@ -53,7 +53,7 @@
 # }}}
 
 from datetime import datetime, timedelta
-from . import __init__ as sep2
+import sep2
 import calendar
 import logging
 import pytz
