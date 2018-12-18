@@ -338,7 +338,7 @@ class PlatformWrapper:
         auth_path = os.path.join(self.volttron_home, 'auth.json')
         try:
             with open(auth_path, 'r') as fd:
-                data = strip_comments(FileObject(fd, close=False).read())
+                data = strip_comments(FileObject(fd, close=False).read().decode('utf-8'))
                 if data:
                     auth = jsonapi.loads(data)
                 else:
