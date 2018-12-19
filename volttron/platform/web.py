@@ -258,7 +258,7 @@ class WebApplicationWrapper(object):
         status = '200 OK'
         headers = [('Content-type', 'text/plain')]
         start_response(status, headers)
-        return ""
+        return [b""]
 
     def client_opened(self, client, endpoint, identity):
 
@@ -524,7 +524,7 @@ class MasterWebService(Agent):
         @return:
         """
         start_response('302 Found', [('Location', '/index.html')])
-        return ['1']
+        return [b'1']
 
     def _allow(self, environ, start_response, data=None):
         _log.info('Allowing new vc instance to connect to server.')
@@ -553,15 +553,15 @@ class MasterWebService(Agent):
 
         start_response('200 OK',
                        [('Content-Type', 'application/json')])
-        return jsonapi.dumps(
+        return [jsonapi.dumpb(
             json_result(jsondata['id'], "Added")
-        )
+        )]
 
     def _get_discovery(self, environ, start_response, data=None):
         q = query.Query(self.core)
 
         self.instance_name = q.query('instance-name').get(timeout=60)
-        print("Discovery instance: {}".format(self.instance_name))
+        _log.debug("Discovery instance: {}".format(self.instance_name))
         addreses = q.query('addresses').get(timeout=60)
         external_vip = None
         for x in addreses:
@@ -584,7 +584,8 @@ class MasterWebService(Agent):
         return_dict['vip-address'] = external_vip
 
         start_response('200 OK', [('Content-Type', 'application/json')])
-        return jsonapi.dumps(return_dict)
+        _log.debug(f"Result of discovery: {return_dict}")
+        return [jsonapi.dumpb(return_dict)]
 
     def app_routing(self, env, start_response):
         """
@@ -663,7 +664,7 @@ class MasterWebService(Agent):
             if len(res) == 3:
                 status, response, headers = res
             start_response(status, headers)
-            return base64.b64decode(response)
+            return [base64.b64decode(response)]
         else:
             start_response("500 Programming Error",
                            [('Content-Type', 'text/html')])
@@ -689,7 +690,7 @@ class MasterWebService(Agent):
 
             start_response('200 OK',
                            [('Content-Type', 'application/json')])
-            return jsonapi.dumps(res)
+            return [jsonapi.dumpb(res)]
 
         # If this is a tuple then we know we are going to have a response
         # and a headers portion of the data.
@@ -707,13 +708,13 @@ class MasterWebService(Agent):
                                                  zlib.MAX_WBITS | 16)
                 data = gzip_compress.compress(response) + gzip_compress.flush()
                 start_response('200 OK', headers)
-                return data
+                return [data]
             else:
-                return response
+                return [response]
         else:
             start_response('200 OK',
                            [('Content-Type', 'application/json')])
-            return jsonapi.dumps(res)
+            return [jsonapi.dumpb(res)]
 
     def _sendfile(self, env, start_response, filename):
         from wsgiref.util import FileWrapper
@@ -734,7 +735,7 @@ class MasterWebService(Agent):
         ]
         start_response(status, response_headers)
 
-        return FileWrapper(open(filename, 'r'))
+        return FileWrapper(open(filename, 'rb'))
 
     @Core.receiver('onstart')
     def startupagent(self, sender, **kwargs):

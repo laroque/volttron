@@ -25,7 +25,7 @@ SQLITE_HISTORIAN_CONFIG = {
 }
 
 
-STANDARD_GET_TIMEOUT = 5
+STANDARD_GET_TIMEOUT = 30
 _log = logging.getLogger(__name__)
 
 

@@ -59,6 +59,7 @@ from .vip.agent import Agent, Core, RPC
 
 _log = logging.getLogger(__name__)
 
+UPDATE_TIMEOUT = 30.0
 
 def process_store(identity, store):
     """Parses raw store data and returns contents.
@@ -179,7 +180,7 @@ class ConfigStoreService(Agent):
             try:
                 self.vip.rpc.call(identity, "config.update",
                                   "DELETE_ALL", None,
-                                  trigger_callback=True).get(timeout=10.0)
+                                  trigger_callback=True).get(timeout=UPDATE_TIMEOUT)
             except errors.Unreachable:
                 _log.debug("Agent {} not currently running. Configuration update not sent.".format(identity))
             except RemoteError as e:
@@ -288,7 +289,7 @@ class ConfigStoreService(Agent):
         with agent_store_lock:
             try:
                 self.vip.rpc.call(identity, "config.initial_update",
-                                  agent_configs).get(timeout=10.0)
+                                  agent_configs).get(timeout=UPDATE_TIMEOUT)
             except errors.Unreachable:
                 _log.debug("Agent {} not currently running. Configuration update not sent.".format(identity))
             except RemoteError as e:
@@ -341,7 +342,7 @@ class ConfigStoreService(Agent):
         if send_update:
             with agent_store_lock:
                 try:
-                    self.vip.rpc.call(identity, "config.update", "DELETE", config_name, trigger_callback=trigger_callback).get(timeout=10.0)
+                    self.vip.rpc.call(identity, "config.update", "DELETE", config_name, trigger_callback=trigger_callback).get(timeout=UPDATE_TIMEOUT)
                 except errors.Unreachable:
                     _log.debug("Agent {} not currently running. Configuration update not sent.".format(identity))
                 except RemoteError as e:
@@ -422,7 +423,7 @@ class ConfigStoreService(Agent):
         if send_update:
             with agent_store_lock:
                 try:
-                    self.vip.rpc.call(identity, "config.update", action, config_name, contents=parsed, trigger_callback=trigger_callback).get(timeout=10.0)
+                    self.vip.rpc.call(identity, "config.update", action, config_name, contents=parsed, trigger_callback=trigger_callback).get(timeout=UPDATE_TIMEOUT)
                 except errors.Unreachable:
                     _log.debug("Agent {} not currently running. Configuration update not sent.".format(identity))
                 except RemoteError as e:

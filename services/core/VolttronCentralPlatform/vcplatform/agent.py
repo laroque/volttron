@@ -1420,7 +1420,7 @@ volttron-central-serverkey."""
 
         points = {}
 
-        for k, v in psutil.cpu_times_percent().__dict__.items():
+        for k, v in psutil.cpu_times_percent()._asdict().items():
             points['times_percent/' + k] = {'Readings': v,
                                             'Units': 'double'}
 
@@ -1430,7 +1430,7 @@ volttron-central-serverkey."""
             self.vip.pubsub.publish('pubsub', topic.format(), message=points)
 
         except Exception as e:
-            _log.warn("Failed to publish to topic {}".format(topic.format()))
+            _log.warning("Failed to publish to topic {}".format(topic.format()))
         finally:
             # The stats publisher publishes both to the local bus and the vc
             # bus the platform specific topics.
