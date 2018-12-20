@@ -620,8 +620,13 @@ class MasterWebService(Agent):
             _log.debug('Calling peer {} back with env={} data={}'.format(
                 peer, passenv, data
             ))
-            res = self.vip.rpc.call(peer, 'route.callback',
-                                    passenv, data).get(timeout=60)
+            try:
+                res = self.vip.rpc.call(peer, 'route.callback',
+                                        passenv, data).get(timeout=60)
+            except:
+                _log.exception(f"Error running agent callback {peer}:")
+                raise
+            _log.debug(f'Response from peer {peer}: {res}')
             if res_type == "jsonrpc":
                 return self.create_response(res, start_response)
             elif res_type == "raw":

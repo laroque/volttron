@@ -62,14 +62,16 @@ class WebSubSystem(SubsystemBase):
         self._endpoints = {}
         self._ws_endpoint = {}
 
-        rpc.export(self._opened, 'client.opened')
-        rpc.export(self._closed, 'client.closed')
-        rpc.export(self._message, 'client.message')
-        rpc.export(self._route_callback, 'route.callback')
+        def onsetup(sender, **kwargs):
+            rpc.export(self._opened, 'client.opened')
+            rpc.export(self._closed, 'client.closed')
+            rpc.export(self._message, 'client.message')
+            rpc.export(self._route_callback, 'route.callback')
 
         def onstop(sender, **kwargs):
             rpc.call(MASTER_WEB, 'unregister_all_agent_routes')
 
+        core.onstop.connect(onsetup, self)
         core.onstop.connect(onstop, self)
 
     def unregister_all_routes(self):
