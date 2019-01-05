@@ -71,8 +71,8 @@ class WebSubSystem(SubsystemBase):
         def onstop(sender, **kwargs):
             rpc.call(MASTER_WEB, 'unregister_all_agent_routes')
 
-        core.onstop.connect(onsetup, self)
         core.onstop.connect(onstop, self)
+        core.onsetup.connect(onsetup, self)
 
     def unregister_all_routes(self):
         self._rpc().call(MASTER_WEB, 'unregister_all_agent_routes')

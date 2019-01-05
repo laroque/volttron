@@ -622,7 +622,7 @@ class MasterWebService(Agent):
             ))
             try:
                 res = self.vip.rpc.call(peer, 'route.callback',
-                                        passenv, data).get(timeout=60)
+                                        passenv, data.decode('ascii')).get(timeout=60)
             except:
                 _log.exception(f"Error running agent callback {peer}:")
                 raise
