@@ -227,10 +227,10 @@ def publish_minute_data_for_two_hours(agent):
     # expection[datetime]={oat:b,mixed:c,damper:d}
     expectation = {}
 
-    for h in xrange(2):
+    for h in range(2):
         data_by_time = {}
 
-        for m in xrange(60):
+        for m in range(60):
             # Because timestamps in mongo are only concerned with the first
             #  three digits after the decimal we do this to give some
             # randomness here.
@@ -264,7 +264,10 @@ def publish_minute_data_for_two_hours(agent):
                 "damper_point": damper_reading}
 
             # now = '2015-12-02T00:00:00'
-            headers = {headers_mod.DATE: now_iso_string}
+            headers = {
+                headers_mod.DATE: now_iso_string,
+                headers_mod.TIMESTAMP: now_iso_string
+            }
 
             # Publish messages
             agent.vip.pubsub.publish(
@@ -330,7 +333,10 @@ def publish_fake_data(agent, now=None, value=None):
     print('NOW IS: ', now)
 
     # now = '2015-12-02T00:00:00'
-    headers = {headers_mod.DATE: now.isoformat()}
+    headers = {
+        headers_mod.DATE: format_timestamp(now),
+        headers_mod.TIMESTAMP: format_timestamp(now)
+    }
 
     # Publish messages
     agent.vip.pubsub.publish('pubsub', ALL_TOPIC, headers, all_message).get(
@@ -378,7 +384,10 @@ def test_insert_duplicate(volttron_instance, database_client):
         print('NOW IS: ', now)
 
         # now = '2015-12-02T00:00:00'
-        headers = {headers_mod.DATE: now.isoformat()}
+        headers = {
+            headers_mod.DATE: format_timestamp(now),
+            headers_mod.TIMESTAMP: format_timestamp(now)
+        }
 
         # Publish messages
         publisher.vip.pubsub.publish(
@@ -397,7 +406,12 @@ def test_insert_duplicate(volttron_instance, database_client):
 def publish_data(publisher, topic, message, now=None):
     if now is None:
         now = datetime.now()
-    headers = {headers_mod.DATE: now.isoformat()}
+
+    now = format_timestamp(now)
+    headers = {
+        headers_mod.DATE: now,
+        headers_mod.TIMESTAMP: now
+    }
 
     # Publish messages
     publisher.vip.pubsub.publish('pubsub', topic, headers, message).get(
@@ -637,7 +651,7 @@ def test_empty_result(volttron_instance, database_client):
         result = lister.vip.rpc.call(
             'platform.historian', 'query',
             topic=BASE_ANALYSIS_TOPIC[9:] + '/FluffyWidgets').get(timeout=5)
-        print ("query result:", result)
+        print("query result:", result)
         assert result == {}
     finally:
         volttron_instance.stop_agent(agent_uuid)
@@ -748,8 +762,8 @@ def test_data_rollup_insert(volttron_instance, database_client):
         # Publish data to message bus that should be
         # recorded in the mongo
         # database. All topics are new
-        now = datetime(year=2016, month=03, day=01, hour= 01, minute=01,
-                       second=01, microsecond=123, tzinfo=tzutc())
+        now = datetime(year=2016, month=3, day=1, hour= 1, minute=1,
+                       second=1, microsecond=123, tzinfo=tzutc())
         expected1 = publish_fake_data(publish_agent, now)
         expected2 = publish_fake_data(publish_agent, now + timedelta(
             minutes=1))
@@ -762,7 +776,7 @@ def test_data_rollup_insert(volttron_instance, database_client):
         result = publish_agent.vip.rpc.call('platform.historian', 'query',
             topic=query_points['oat_point'], count=20,
             order="FIRST_TO_LAST").get(timeout=10)
-        print result
+        print(result)
         gevent.sleep(6) #allow for periodic rollup function to catchup
         compare_query_results(db, expected1, expected2, expected3,
                               'oat_point', result)
@@ -838,7 +852,7 @@ def test_rollup_query_with_topic_pattern(volttron_instance, database_client):
             topic=query_points['damper_point'], count=20,
             start=query_start.isoformat(), end=query_end.isoformat(),
             order="FIRST_TO_LAST").get(timeout=10)
-        print result
+        print(result)
         compare_query_results(db, expected1, expected2, expected3,
                               'damper_point', result)
 
@@ -852,7 +866,7 @@ def test_rollup_query_with_topic_pattern(volttron_instance, database_client):
         #     start = query_start.isoformat(),
         #     end = query_end.isoformat(),
         #     order="FIRST_TO_LAST").get(timeout=10)
-        # print result
+        # print(result)
         # compare_query_results(db, expected1, expected2, expected3,
         #                       'oat_point', result)
         # verify_hourly_collection(db, expected1, expected2, expected3)
@@ -872,7 +886,7 @@ def test_rollup_query_with_topic_pattern(volttron_instance, database_client):
         #     start=query_start_day.isoformat(),
         #     end= query_end.isoformat(),
         #     order="FIRST_TO_LAST").get(timeout=10)
-        # print result
+        # print(result)
         #
         # compare_query_results(db, expected1, expected2, expected3,
         #                       'oat_point', result)
@@ -963,7 +977,7 @@ def test_rollup_query(volttron_instance, database_client):
             start = query_start.isoformat(),
             end = query_end.isoformat(),
             order="FIRST_TO_LAST").get(timeout=10)
-        print result
+        print(result)
         compare_query_results(db, expected1, expected2, expected3,
                               'oat_point', result)
         verify_hourly_collection(db, expected1, expected2, expected3)
@@ -975,7 +989,7 @@ def test_rollup_query(volttron_instance, database_client):
             start=query_start_day.isoformat(),
             end= query_end.isoformat(),
             order="LAST_TO_FIRST").get(timeout=10)
-        print result
+        print(result)
 
         compare_query_results(db, expected3, expected2, expected1,
                               'oat_point', result)
@@ -1459,7 +1473,7 @@ def test_insert_multiple_data_per_minute(volttron_instance,
             start = query_start.isoformat(),
             end = query_end.isoformat(),
             order="FIRST_TO_LAST").get(timeout=10)
-        print result
+        print(result)
         compare_query_results(db, expected1, expected2, None,
                               'oat_point', result)
         verify_hourly_collection(db, expected1, expected2)
@@ -1471,7 +1485,7 @@ def test_insert_multiple_data_per_minute(volttron_instance,
             start=query_start_day.isoformat(),
             end= query_end.isoformat(),
             order="FIRST_TO_LAST").get(timeout=10)
-        print result
+        print(result)
 
         compare_query_results(db, expected1, expected2, None,
                               'oat_point', result)
@@ -1514,7 +1528,7 @@ def verify_daily_collection(db, expected1, expected2, expected3=None):
     cursor = db['daily_data'].find({'topic_id': id})
     rows = list(cursor)
     assert len(rows[0]['data']) == 24 * 60
-    # print rows[0]['data']
+    # print(rows[0]['data'])
     # if it is same day and same minute
     if t1_hour_min == t2_hour_min:
         rolled_up_data1 = rows[0]['data'][
@@ -1551,7 +1565,7 @@ def verify_hourly_collection(db, expected1, expected2, expected3=None):
     cursor = db['hourly_data'].find({'topic_id': id})
     rows = list(cursor)
     assert len(rows[0]['data']) == 60
-    print rows[0]['data']
+    print(rows[0]['data'])
     if t1_hour == t2_hour:
         rolled_up_data1 = rows[0]['data'][expected1['datetime'].minute][0]
         rolled_up_data2 = rows[0]['data'][expected1['datetime'].minute][1]

@@ -80,7 +80,7 @@ class Suite(object):
             'meta_table_name': meta_table_name,
             'table_names': table_names,
         })
-        truncate_tables = table_names.values() + [meta_table_name]
+        truncate_tables = list(table_names.values()) + [meta_table_name]
         drop_tables = []
         for _, method in inspect.getmembers(self, inspect.ismethod):
             drop_tables.extend(getattr(method, 'drop_tables', []))
@@ -131,12 +131,12 @@ class Suite(object):
                     values[topic] = [(ts.isoformat(), value)]
                 ts += timedelta(seconds=1)
         assert driver.get_topic_map() == (id_map, name_map)
-        assert driver.query(id_name_map.keys(), id_name_map) == values
+        assert driver.query(list(id_name_map.keys()), id_name_map) == values
         start = datetime(year=2015, month=3, day=14, hour=9, minute=26,
                          second=0, microsecond=0, tzinfo=pytz.UTC)
         end = datetime(year=2015, month=3, day=14, hour=9, minute=27,
                          second=0, microsecond=0, tzinfo=pytz.UTC)
-        assert driver.query(id_name_map.keys(), id_name_map, start, end) == values
+        assert driver.query(list(id_name_map.keys()), id_name_map, start, end) == values
 
     def test_topic_name_case_change(self, driver):
         topic_id = driver.insert_topic('This/is/some/Topic')
@@ -192,14 +192,14 @@ class AggregationSuite(Suite):
                 driver.insert_data(ts, topic_id, value)
             ts += delta
         driver.commit()
-        assert driver.collect_aggregate(range(1, 4), 'sum', start, ts) == (14850.0, 300)
-        assert driver.collect_aggregate(range(1, 4), 'avg', start, ts) == (49.5, 300)
+        assert driver.collect_aggregate(list(range(1, 4)), 'sum', start, ts) == (14850.0, 300)
+        assert driver.collect_aggregate(list(range(1, 4)), 'avg', start, ts) == (49.5, 300)
         assert driver.collect_aggregate([1, 6], 'sum', start, ts) == (4950, 100)
         assert driver.collect_aggregate([1, 6], 'avg', start, ts) == (49.5, 100)
         start += delta
         ts = start + delta
-        assert driver.collect_aggregate(range(1, 4), 'sum', start, ts) == (3.0, 3)
-        assert driver.collect_aggregate(range(1, 4), 'avg', start, ts) == (1, 3)
+        assert driver.collect_aggregate(list(range(1, 4)), 'sum', start, ts) == (3.0, 3)
+        assert driver.collect_aggregate(list(range(1, 4)), 'avg', start, ts) == (1, 3)
         driver.create_aggregate_store('max', '1m')
         topic_id = driver.insert_agg_topic('aggregate/max/1m/topic', 'max', '1m')
         assert topic_id
@@ -244,7 +244,7 @@ class FauxConnection:
 
 class TestClosing:
     def test_closing_standarderror(self):
-        with pytest.raises(StandardError), basedb.closing(FauxConnection(StandardError)):
+        with pytest.raises(Exception), basedb.closing(FauxConnection(Exception)):
             pass
 
     def test_closing_exception(self):
@@ -256,7 +256,7 @@ class TestClosing:
             pass
 
     def test_closing_standarderror_subclass(self):
-        class SubclassedError(StandardError):
+        class SubclassedError(Exception):
             pass
         with basedb.closing(FauxConnection(SubclassedError)):
             pass

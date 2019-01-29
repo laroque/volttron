@@ -71,7 +71,7 @@ def broker():
     pull.bind('ipc:///tmp/volttron-platform-agent-publish')
     while True:
         message = pull.recv_multipart()
-        print message
+        print(message)
         pub.send_multipart(message)
 
 
@@ -93,7 +93,7 @@ def subscriber():
     sub.connect('ipc:///tmp/volttron-platform-agent-subscribe')
     sub.subscribe = ''
     while True:
-        print sub.recv_multipart()
+        print(sub.recv_multipart())
 
 @pytest.mark.slow
 @pytest.mark.zmq      

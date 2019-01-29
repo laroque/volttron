@@ -47,6 +47,7 @@ from volttron.platform.agent import utils
 from volttron.platform.messaging.health import Status, STATUS_BAD
 from volttron.platform.vip.agent import Agent, Core, RPC
 from volttron.platform.agent.utils import get_aware_utc_now
+from volttron.platform.scheduling import periodic
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -197,7 +198,7 @@ class AlertGroup(Agent):
     def onstart(self, sender, **kwargs):
         _log.info("Listening for alert group {}".format(self.group_name))
         config = self.config
-        for topic in config.iterkeys():
+        for topic in config.keys():
 
             # Optional config option with a list of points that
             # might not be published.
@@ -301,7 +302,7 @@ class AlertGroup(Agent):
 
         # Reset timeouts on volatile points
         if topic in self.point_ttl:
-            received_points = set(message[0].keys())
+            received_points = message[0].keys()
             expected_points = self.point_ttl[topic].keys()
             for point in expected_points:
                 if point in received_points:
@@ -387,7 +388,7 @@ class AlertGroup(Agent):
                              "alert agent configuration".format(parts))
 
 
-    @Core.periodic(1)
+    @Core.schedule(periodic(1))
     def decrement_ttl(self):
         """Periodic call
 
@@ -396,7 +397,7 @@ class AlertGroup(Agent):
         """
 
         topics_timedout = set()
-        for topic in self.wait_time.iterkeys():
+        for topic in self.wait_time.keys():
 
             # Send an alert if a topic hasn't been seen
             self.topic_ttl[topic] -= 1

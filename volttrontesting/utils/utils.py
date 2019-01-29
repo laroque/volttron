@@ -8,6 +8,7 @@ import gevent
 import pytest
 
 from volttron.platform.messaging import headers as headers_mod
+from volttron.platform.agent import utils
 
 
 def poll_gevent_sleep(max_seconds, condition=lambda: True, sleep_time=0.2):
@@ -41,7 +42,7 @@ def messages_contains_prefix(prefix, messages):
     :param messages:
     :return:
     """
-    return any(map(lambda x: x.startswith(prefix), messages.keys()))
+    return any([x.startswith(prefix) for x in list(messages.keys())])
 
 
 def get_rand_http_address():
@@ -90,9 +91,10 @@ def build_devices_header_and_message(points=['abc', 'def']):
         data[point] = random() * 10
         meta_data[point] = meta_templates[randint(0,len(meta_templates)-1)]
 
-    time1 = datetime.utcnow().isoformat(' ')
+    time1 = utils.format_timestamp( datetime.utcnow())
     headers = {
-        headers_mod.DATE: time1
+        headers_mod.DATE: time1,
+        headers_mod.TIMESTAMP: time1
     }
 
     return headers, [data, meta_data]
@@ -130,6 +132,6 @@ def validate_published_device_data(expected_headers, expected_message,
     assert headers and message
     assert expected_headers[headers_mod.DATE] == headers[headers_mod.DATE]
 
-    for k, v in expected_message[0].items():
+    for k, v in list(expected_message[0].items()):
         assert k in message[0]
         assert message[0][k] == pytest.approx(v, abs=1e-6)

@@ -41,13 +41,13 @@
 # }}}
 # }}}
 
-from __future__ import absolute_import
+
 
 import logging
 import sys
 import csv
 from ast import literal_eval
-from StringIO import StringIO
+from io import StringIO
 import requests
 from requests.auth import HTTPBasicAuth
 from volttron.platform.messaging.utils import Topic
@@ -55,6 +55,7 @@ from volttron.platform.messaging.utils import Topic
 from volttron.platform.vip.agent import Agent, Core
 from volttron.platform.agent import utils
 from volttron.platform.messaging import headers as headers_mod
+from volttron.platform.scheduling import periodic
 
 utils.setup_logging()
 __author__ = 'Kyle Monson'
@@ -89,7 +90,7 @@ class ExternalData(Agent):
         self.default_user = default_user
         self.default_password = default_password
 
-        self.periodic_greenlet = None
+        self.periodic = None
 
         self.default_config = {"interval": interval,
                                "global_topic_prefix": global_topic_prefix,
@@ -149,10 +150,10 @@ class ExternalData(Agent):
             _log.error("Error setting scrape interval, reverting to default of 300 seconds")
             interval = 300.0
 
-        if self.periodic_greenlet is not None:
-            self.periodic_greenlet.kill()
+        if self.periodic is not None:
+            self.periodic.cancel()
 
-        self.periodic_greenlet = self.core.periodic(interval, self._publish_data)
+        self.periodic = self.core.schedule(periodic(interval), self._publish_data)
 
 
     def _publish_data(self):
@@ -179,7 +180,7 @@ class ExternalData(Agent):
             try:
                 r = requests.get(url, **kwargs)
                 r.raise_for_status()
-            except StandardError as e:
+            except Exception as e:
                 _log.error("Failure to read from source {url} {reason}".format(url=url, reason=str(e)))
                 continue
 
@@ -190,7 +191,7 @@ class ExternalData(Agent):
                     self._handle_csv(headers, r, url, source_topic, source)
                 elif source_type.lower() == "raw":
                     self._handle_raw(headers, r, url, source_topic, source)
-            except StandardError as e:
+            except Exception as e:
                 _log.error("General failure during processing of source {url} {reason}".format(url=url, reason=str(e)))
 
 
@@ -232,7 +233,7 @@ class ExternalData(Agent):
                 if missing_key:
                     continue
 
-                if not isinstance(key_value, (str, unicode)) or not key_value:
+                if not isinstance(key_value, str) or not key_value:
                     dropped_rows = True
                     continue
 
@@ -285,7 +286,7 @@ class ExternalData(Agent):
                         row[parse_column] = value
                     except KeyError:
                         pass
-                    except StandardError:
+                    except Exception:
                         if value_string == "":
                             row[parse_column] = None
                 new_csv_data.append(row)

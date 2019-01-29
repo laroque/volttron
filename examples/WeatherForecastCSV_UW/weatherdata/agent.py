@@ -51,8 +51,9 @@ from volttron.platform.vip.agent import Agent, Core
 from volttron.platform.async import AsyncCall
 from volttron.platform.agent import utils
 from volttron.platform.vip.agent import *
+from volttron.platform.scheduling import periodic
 
-import settings
+from . import settings
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -134,7 +135,7 @@ class WeatherData(Agent):
                 while (now.minute % (poll_time/60) != 0):
                     now=datetime.datetime.now()
                 _log.debug("... Start periodic URL Request")   
-                self.weather = self.core.periodic(poll_time,self.weather_conditions,wait=0)       
+                self.weather = self.core.schedule(periodic(poll_time),self.weather_conditions)
                                     
         
         '''
@@ -251,10 +252,10 @@ Convert data downloaded
 '''
 def convert(_input):
     if isinstance(_input, dict):
-        return {convert(key): convert(value) for key, value in _input.iteritems()}
+        return {convert(key): convert(value) for key, value in _input.items()}
     elif isinstance(_input, list):
         return [convert(element) for element in _input]
-    elif isinstance(_input, unicode):
+    elif isinstance(_input, str):
         return _input.encode('utf-8')
     else:
         return _input

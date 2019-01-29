@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import
+
 
 import os
 import logging as _log
@@ -85,8 +85,8 @@ class Agent(object):
         self._version = version
 
         if identity is not None and not is_valid_identity(identity):
-            _log.warn('Deprecation warning')
-            _log.warn(
+            _log.warning('Deprecation warning')
+            _log.warning(
                 'All characters in {identity} are not in the valid set.'.format(
                     identity=identity))
 
@@ -100,7 +100,6 @@ class Agent(object):
         self.vip = Agent.Subsystems(self, self.core, heartbeat_autostart,
                                     heartbeat_period, enable_store, enable_web,
                                     enable_channel, enable_fncs)
-        self.core.setup()
         self.vip.rpc.export(self.core.version, 'agent.version')
 
 

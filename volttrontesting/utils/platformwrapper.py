@@ -1,4 +1,4 @@
-import ConfigParser as configparser
+import configparser as configparser
 import json
 import logging
 import os
@@ -15,10 +15,10 @@ from subprocess import CalledProcessError
 import gevent
 import gevent.subprocess as subprocess
 import requests
-from agent_additions import add_volttron_central
+from .agent_additions import add_volttron_central
 from gevent.fileobject import FileObject
 from gevent.subprocess import Popen
-from volttron.platform import packaging
+from volttron.platform import packaging, jsonapi
 from volttron.platform.agent import utils
 from volttron.platform.agent.utils import strip_comments
 from volttron.platform.aip import AIPplatform
@@ -29,7 +29,6 @@ from volttron.platform.vip.agent import Agent
 from volttron.platform.vip.agent.connection import Connection
 from volttrontesting.utils.utils import get_rand_http_address
 from volttrontesting.utils.utils import get_rand_tcp_address
-from volttron.platform.agent import json as jsonapi
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -104,7 +103,7 @@ PUBLISH_TO = RUN_DIR + '/publish'
 SUBSCRIBE_TO = RUN_DIR + '/subscribe'
 
 
-class PlatformWrapperError(StandardError):
+class PlatformWrapperError(Exception):
     pass
 
 
@@ -182,7 +181,7 @@ class PlatformWrapper:
         }
         self.volttron_root = VOLTTRON_ROOT
 
-        volttron_exe = subprocess.check_output(['which', 'volttron']).strip()
+        volttron_exe = subprocess.check_output(['which', 'volttron'], universal_newlines=True).strip()
 
         assert os.path.exists(volttron_exe)
         self.python = os.path.join(os.path.dirname(volttron_exe), 'python')
@@ -330,7 +329,7 @@ class PlatformWrapper:
             gevent.spawn(agent.core.run, event)  # .join(0)
             event.wait(timeout=2)
 
-            hello = agent.vip.hello().get(timeout=.5)
+            hello = agent.vip.hello().get(timeout=2.0)
             self.logit('Got hello response {}'.format(hello))
         agent.publickey = publickey
         return agent
@@ -339,7 +338,7 @@ class PlatformWrapper:
         auth_path = os.path.join(self.volttron_home, 'auth.json')
         try:
             with open(auth_path, 'r') as fd:
-                data = strip_comments(FileObject(fd, close=False).read())
+                data = strip_comments(FileObject(fd, close=False).read().decode('utf-8'))
                 if data:
                     auth = jsonapi.loads(data)
                 else:
@@ -362,7 +361,7 @@ class PlatformWrapper:
         return add_volttron_central(self)
 
     def add_capabilities(self, publickey, capabilities):
-        if isinstance(capabilities, basestring):
+        if isinstance(capabilities, str):
             capabilities = [capabilities]
         auth, auth_path = self._read_auth_file()
         cred = publickey
@@ -472,7 +471,7 @@ class PlatformWrapper:
             parser.set('volttron', 'instance-name',
                        instance_name)
         if self.mode == UNRESTRICTED:
-            with open(pconfig, 'wb') as cfg:
+            with open(pconfig, 'w') as cfg:
                 parser.write(cfg)
 
         elif self.mode == RESTRICTED:
@@ -484,7 +483,7 @@ class PlatformWrapper:
             print ("certsdir", certsdir)
             self.certsobj = certs.Certs(certsdir)
 
-            with closing(open(pconfig, 'wb')) as cfg:
+            with closing(open(pconfig, 'w')) as cfg:
                 cfg.write(PLATFORM_CONFIG_RESTRICTED.format(**config))
         else:
             raise PlatformWrapperError(
@@ -504,7 +503,7 @@ class PlatformWrapper:
         print('process environment: {}'.format(self.env))
         print('popen params: {}'.format(cmd))
         self.p_process = Popen(cmd, env=self.env, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+                               stderr=subprocess.PIPE, universal_newlines=True)
 
         assert self.p_process is not None
         # A None value means that the process is still running.
@@ -526,7 +525,7 @@ class PlatformWrapper:
 
         if not has_control:
             self.shutdown_platform()
-            raise "Couldn't connect to core platform!"
+            raise Exception("Couldn't connect to core platform!")
 
         if bind_web_address:
             times = 0
@@ -542,7 +541,7 @@ class PlatformWrapper:
                     gevent.sleep(0.1)
                     self.logit("Connection error found {}".format(e))
             if not has_discovery:
-                raise "Couldn't connect to discovery platform."
+                raise Exception("Couldn't connect to discovery platform.")
 
         self.use_twistd = use_twistd
 
@@ -554,7 +553,7 @@ class PlatformWrapper:
                 cfg.write(TWISTED_CONFIG.format(**config))
 
             tparams = [TWISTED_START, "-n", "smap", tconfig]
-            self.t_process = subprocess.Popen(tparams, env=self.env)
+            self.t_process = subprocess.Popen(tparams, env=self.env, universal_newlines=True)
             time.sleep(5)
 
     def is_running(self):
@@ -603,7 +602,7 @@ class PlatformWrapper:
         if vip_identity:
             cmd.extend(['--vip-identity', vip_identity])
 
-        res = subprocess.check_output(cmd, env=env)
+        res = subprocess.check_output(cmd, env=env, universal_newlines=True)
         assert res, "failed to install wheel:{}".format(wheel_file)
         agent_uuid = res.split(' ')[-2]
         self.logit(agent_uuid)
@@ -611,9 +610,6 @@ class PlatformWrapper:
         if start:
             self.start_agent(agent_uuid)
         return agent_uuid
-
-        return agent_uuid
-
 
     def install_multiple_agents(self, agent_configs):
         """
@@ -709,15 +705,16 @@ class PlatformWrapper:
                    "--volttron-root", self.volttron_root,
                    "--agent-source", agent_dir,
                    "--config", config_file,
-                   "--json"]
-
+                   "--json", ]
             if vip_identity:
                 cmd.extend(["--vip-identity", vip_identity])
             if start:
                 cmd.extend(["--start"])
             try:
-                response = subprocess.check_output(cmd)
+                response = subprocess.check_output(cmd,
+                                       stderr=subprocess.STDOUT, universal_newlines=True)
             except Exception as e:
+                _log.error(e.output)
                 _log.error(repr(e))
                 raise e
 
@@ -766,13 +763,13 @@ class PlatformWrapper:
         cmd = ['volttron-ctl']
         cmd.extend(['start', agent_uuid])
         p = Popen(cmd, env=self.env,
-                  stdout=sys.stdout, stderr=sys.stderr)
+                  stdout=sys.stdout, stderr=sys.stderr, universal_newlines=True)
         p.wait()
 
         # Confirm agent running
         cmd = ['volttron-ctl']
         cmd.extend(['status', agent_uuid])
-        res = subprocess.check_output(cmd, env=self.env)
+        res = subprocess.check_output(cmd, env=self.env, universal_newlines=True)
         # 776 TODO: Timing issue where check fails
         time.sleep(.1)
         self.logit("Subprocess res is {}".format(res))
@@ -793,7 +790,7 @@ class PlatformWrapper:
         try:
             cmd = ['volttron-ctl']
             cmd.extend(['stop', agent_uuid])
-            res = subprocess.check_output(cmd, env=self.env)
+            res = subprocess.check_output(cmd, env=self.env, universal_newlines=True)
         except CalledProcessError as ex:
             _log.error("Exception: {}".format(ex))
         return self.agent_pid(agent_uuid)
@@ -811,7 +808,7 @@ class PlatformWrapper:
         try:
             cmd = ['volttron-ctl']
             cmd.extend(['remove', agent_uuid])
-            res = subprocess.check_output(cmd, env=self.env)
+            res = subprocess.check_output(cmd, env=self.env, universal_newlines=True)
         except CalledProcessError as ex:
             _log.error("Exception: {}".format(ex))
         return self.agent_pid(agent_uuid)
@@ -839,7 +836,7 @@ class PlatformWrapper:
         cmd.extend(['status', agent_uuid])
         pid = None
         try:
-            res = subprocess.check_output(cmd, env=self.env)
+            res = subprocess.check_output(cmd, env=self.env, universal_newlines=True)
             try:
                 pidpos = res.index('[') + 1
                 pidend = res.index(']')
@@ -925,7 +922,7 @@ class PlatformWrapper:
         cmd = ['volttron-ctl']
         cmd.extend(['shutdown', '--platform'])
         try:
-            res = subprocess.check_output(cmd, env=self.env)
+            res = subprocess.check_output(cmd, env=self.env, universal_newlines=True)
         except CalledProcessError:
             if self.p_process is not None:
                 try:
@@ -961,7 +958,7 @@ class PlatformWrapper:
         cmd = ['volttron-ctl']
         cmd.extend(['shutdown', '--platform'])
         try:
-            res = subprocess.check_output(cmd, env=self.env)
+            res = subprocess.check_output(cmd, env=self.env, universal_newlines=True)
         except CalledProcessError:
             if self.p_process is not None:
                 try:

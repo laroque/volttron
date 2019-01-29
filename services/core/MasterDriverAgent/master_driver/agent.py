@@ -44,14 +44,14 @@ from volttron.platform.vip.agent import Agent, Core, RPC
 from volttron.platform.agent import utils
 from volttron.platform.agent import math_utils
 from volttron.platform.agent.known_identities import PLATFORM_DRIVER
-from driver import DriverAgent
+from .driver import DriverAgent
 import resource
 from datetime import datetime, timedelta
 import bisect
 import fnmatch
-from volttron.platform.agent import json as jsonapi
-from interfaces import DriverInterfaceError
-from driver_locks import configure_socket_lock, configure_publish_lock
+from volttron.platform import jsonapi
+from .interfaces import DriverInterfaceError
+from .driver_locks import configure_socket_lock, configure_publish_lock
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -313,7 +313,7 @@ class MasterDriverAgent(Agent):
             #Reset all scrape schedules
             self.freed_time_slots.clear()
             self.group_counts.clear()
-            for driver in self.instances.itervalues():
+            for driver in self.instances.values():
                 time_slot = self.group_counts[driver.group]
                 driver.update_scrape_schedule(time_slot, self.driver_scrape_interval,
                                               driver.group, self.group_offset_interval)
@@ -325,7 +325,7 @@ class MasterDriverAgent(Agent):
         self.publish_breadth_first = bool(config["publish_breadth_first"])
 
         #Update the publish settings on running devices.
-        for driver in self.instances.itervalues():
+        for driver in self.instances.values():
             driver.update_publish_types(self.publish_depth_first_all,
                                         self.publish_breadth_first_all,
                                         self.publish_depth_first,
@@ -347,7 +347,7 @@ class MasterDriverAgent(Agent):
 
         try:
             driver.core.stop(timeout=5.0)
-        except StandardError as e:
+        except Exception as e:
             _log.error("Failure during {} driver shutdown: {}".format(real_name, e))
 
         bisect.insort(self.freed_time_slots[driver.group], driver.time_slot)
@@ -395,7 +395,7 @@ class MasterDriverAgent(Agent):
         if not self.waiting_to_finish:
             #Start a new measurement
             self.current_test_start = datetime.now()
-            self.waiting_to_finish = set(self.instances.iterkeys())
+            self.waiting_to_finish = set(self.instances.keys())
             
         if topic not in self.waiting_to_finish:
             _log.warning(topic + " started twice before test finished, increase the length of scrape interval and rerun test")
@@ -579,10 +579,9 @@ class MasterDriverAgent(Agent):
 
         #Add to override patterns set
         self._override_patterns.add(pattern)
-        device_topic_actual = self.instances.keys()
         i = 0
 
-        for name in device_topic_actual:
+        for name in self.instances.keys():
             name = name.lower()
             i += 1
             if fnmatch.fnmatch(name, pattern):
@@ -771,7 +770,7 @@ class MasterDriverAgent(Agent):
     @RPC.export
     def forward_bacnet_cov_value(self, source_address, point_name, point_values):
         """Called by the BACnet Proxy to pass the COV value to the driver agent for publishing"""
-        for driver in self.instances.itervalues():
+        for driver in self.instances.values():
             if driver.interface.target_address == source_address:
                 driver.publish_cov_value(point_name, point_values)
 

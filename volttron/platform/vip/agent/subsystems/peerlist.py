@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import
+
 
 import logging
 import weakref
@@ -63,7 +63,7 @@ class PeerList(SubsystemBase):
     def list(self):
         socket = self.core().socket
         result = next(self._results)
-        socket.send_vip(b'', b'peerlist', [b'list'], result.ident)
+        socket.send_vip(b'', b'peerlist', [b'list'], result.ident.encode('utf-8'))
         return result
 
     __call__ = list
@@ -80,19 +80,19 @@ class PeerList(SubsystemBase):
             except IndexError:
                 _log.error('missing peerlist identity in %s operation', op)
                 return
-            getattr(self, 'on' + op).send(self, peer=peer)
+            getattr(self, 'on' + op.decode('utf-8')).send(self, peer=peer.decode('utf-8'))
         elif op == b'listing':
             try:
-                result = self._results.pop(bytes(message.id))
+                result = self._results.pop(bytes(message.id).decode('utf-8'))
             except KeyError:
                 return
-            result.set([bytes(arg) for arg in message.args[1:]])
+            result.set([bytes(arg).decode('utf-8') for arg in message.args[1:]])
         else:
             _log.error('unknown peerlist subsystem operation')
 
     def _handle_error(self, sender, message, error, **kwargs):
         try:
-            result = self._results.pop(bytes(message.id))
+            result = self._results.pop(bytes(message.id).decode('utf-8'))
         except KeyError:
             return
         result.set_exception(error)

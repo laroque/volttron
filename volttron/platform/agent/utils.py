@@ -54,11 +54,10 @@ import re
 import stat
 import time
 import yaml
-from volttron.platform import get_home, get_address
+from volttron.platform import get_home, get_address, jsonapi
 from dateutil.parser import parse
 from dateutil.tz import tzutc, tzoffset
 from tzlocal import get_localzone
-from volttron.platform.agent import json as jsonapi
 
 try:
     from ..lib.inotify.green import inotify, IN_MODIFY
@@ -153,7 +152,7 @@ def load_config(config_path):
         try:
             with open(config_path) as f:
                 return parse_json_config(f.read())
-        except StandardError as e:
+        except Exception as e:
             _log.error("Problem parsing agent configuration")
             raise
 
@@ -534,9 +533,11 @@ def watch_file(fullpath, callback):
         Not available on OS X/MacOS.
     """
     dirname, filename = os.path.split(fullpath)
+    filename = filename.encode('utf-8')
     if inotify is None:
         _log.warning("Runtime changes to: %s not supported on this platform.", fullpath)
     else:
+        _log.info("Added file watch for %s", fullpath)
         with inotify() as inot:
             inot.add_watch(dirname, IN_MODIFY)
             for event in inot:
@@ -578,7 +579,7 @@ def create_file_if_missing(path, permission=0o660, contents=None):
         fd = os.open(path, os.O_CREAT | os.O_WRONLY, permission)
         try:
             if contents:
-                os.write(fd, contents)
+                os.write(fd, contents if isinstance(contents, bytes) else contents.encode("utf-8"))
         finally:
             os.close(fd)
 
@@ -596,5 +597,8 @@ def fix_sqlite3_datetime(sql=None):
     """
     if sql is None:
         import sqlite3 as sql
+
+    def parse(time_stamp_bytes):
+        return parse_timestamp_string(time_stamp_bytes.decode("utf-8"))
     sql.register_adapter(datetime, format_timestamp)
-    sql.register_converter("timestamp", parse_timestamp_string)
+    sql.register_converter("timestamp", parse)

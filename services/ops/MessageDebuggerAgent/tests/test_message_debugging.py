@@ -232,5 +232,5 @@ class TestMessageDebugger:
         monitor_socket = zmq.Context().socket(zmq.SUB)
         monitor_socket_address = 'ipc://{}'.format('@' if sys.platform.startswith('linux') else '') + monitor_path
         monitor_socket.bind(monitor_socket_address)
-        monitor_socket.setsockopt_string(zmq.SUBSCRIBE, u"")
+        monitor_socket.setsockopt_string(zmq.SUBSCRIBE, "")
         return monitor_socket

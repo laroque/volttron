@@ -211,13 +211,13 @@ the same date over again.
 
 """
 
-from __future__ import absolute_import, print_function
+
 
 import logging
 import sqlite3
 import threading
 import weakref
-from Queue import Queue, Empty
+from queue import Queue, Empty
 from abc import abstractmethod
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -248,21 +248,21 @@ from volttron.platform.messaging.health import (STATUS_BAD,
 
 try:
     import ujson
-    from zmq.utils.jsonapi import dumps as _dumps, loads as _loads
+    from volttron.platform.jsonapi import dumps as _dumps, loads as _loads
 
     def dumps(data):
         try:
             return ujson.dumps(data, double_precision=15)
-        except:
+        except Exception:
             return _dumps(data)
 
     def loads(data_string):
         try:
             return ujson.loads(data_string, precise_float=True)
-        except:
+        except Exception:
             return _loads(data_string)
 except ImportError:
-    from zmq.utils.jsonapi import dumps, loads
+    from volttron.platform.jsonapi import dumps, loads
 
 from volttron.platform.agent import utils
 
@@ -288,7 +288,7 @@ def add_timing_data_to_header(headers, agent_id, phase):
 
     agent_timing_data[phase] = utils.format_timestamp(utils.get_aware_utc_now())
 
-    values = agent_timing_data.values()
+    values = list(agent_timing_data.values())
 
     if len(values) < 2:
         return 0.0
@@ -352,6 +352,7 @@ class BaseHistorianAgent(Agent):
                  message_publish_count=10000,
                  history_limit_days=None,
                  storage_limit_gb=None,
+                 sync_timestamp=False,
                  **kwargs):
 
         super(BaseHistorianAgent, self).__init__(**kwargs)
@@ -390,6 +391,7 @@ class BaseHistorianAgent(Agent):
         self.no_insert = False
         self.no_query = False
         self.instance_name = None
+        self._sync_timestamp = sync_timestamp
 
         self._current_status_context = {
             STATUS_KEY_CACHE_COUNT: 0,
@@ -515,7 +517,7 @@ class BaseHistorianAgent(Agent):
             return
 
         query = Query(self.core)
-        self.instance_name = query.query(b'instance-name').get()
+        self.instance_name = query.query('instance-name').get()
 
         # Reset replace map.
         self._topic_replace_map = {}
@@ -605,7 +607,7 @@ class BaseHistorianAgent(Agent):
         if self.no_insert:
             raise RuntimeError("Insert not supported by this historian.")
 
-        rpc_peer = bytes(self.vip.rpc.context.vip_message.peer)
+        rpc_peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug("insert called by {} with {} records".format(rpc_peer, len(records)))
 
         for r in records:
@@ -661,7 +663,7 @@ class BaseHistorianAgent(Agent):
         table_prefix = tables_def.get('table_prefix', None)
         table_prefix = table_prefix + "_" if table_prefix else ""
         if table_prefix:
-            for key, value in table_names.items():
+            for key, value in list(table_names.items()):
                 table_names[key] = table_prefix + table_names[key]
         table_names["agg_topics_table"] = table_prefix + \
             "aggregate_" + tables_def["topics_table"]
@@ -680,7 +682,7 @@ class BaseHistorianAgent(Agent):
         # Only if we have some topics to replace.
         if self._topic_replace_list:
             # if we have already cached the topic then return it.
-            if input_topic_lower in self._topic_replace_map.keys():
+            if input_topic_lower in self._topic_replace_map:
                 output_topic = self._topic_replace_map[input_topic_lower]
             else:
                 self._topic_replace_map[input_topic_lower] = input_topic
@@ -752,7 +754,7 @@ class BaseHistorianAgent(Agent):
         if self.gather_timing_data:
             add_timing_data_to_header(headers, self.core.agent_uuid or self.core.identity, "collected")
 
-        for point, item in data.iteritems():
+        for point, item in data.items():
             if 'Readings' not in item or 'Units' not in item:
                 _log.error("logging request for {topic} missing Readings "
                            "or Units".format(topic=topic))
@@ -828,7 +830,8 @@ class BaseHistorianAgent(Agent):
                       device):
         # Anon the topic if necessary.
         topic = self.get_renamed_topic(topic)
-        timestamp_string = headers.get(headers_mod.DATE, None)
+        timestamp_string = headers.get(headers_mod.SYNC_TIMESTAMP if self._sync_timestamp else headers_mod.TIMESTAMP,
+                                       headers.get(headers_mod.DATE))
         timestamp = get_aware_utc_now()
         if timestamp_string is not None:
             timestamp, my_tz = process_timestamp(timestamp_string, topic)
@@ -872,7 +875,7 @@ class BaseHistorianAgent(Agent):
         if self.gather_timing_data:
             add_timing_data_to_header(headers, self.core.agent_uuid or self.core.identity, "collected")
 
-        for key, value in values.iteritems():
+        for key, value in values.items():
             point_topic = device + '/' + key
             self._event_queue.put({'source': source,
                                    'topic': point_topic,
@@ -1328,7 +1331,7 @@ class BackupDatabase:
                 self._backup_cache[topic] = topic_id
 
             meta_dict = self._meta_data[(source, topic_id)]
-            for name, value in meta.iteritems():
+            for name, value in meta.items():
                 current_meta_value = meta_dict.get(name)
                 if current_meta_value != value:
                     c.execute('''INSERT OR REPLACE INTO metadata

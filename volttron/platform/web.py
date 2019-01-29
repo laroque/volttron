@@ -42,7 +42,7 @@ import os
 import re
 import requests
 import base64
-from urlparse import urlparse, urljoin
+from urllib.parse import urlparse, urljoin
 
 import gevent
 import gevent.pywsgi
@@ -56,7 +56,7 @@ import mimetypes
 
 from requests.packages.urllib3.connection import (ConnectionError,
                                                   NewConnectionError)
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .auth import AuthEntry, AuthFile, AuthFileEntryAlreadyExists
 from .vip.agent import Agent, Core, RPC
@@ -68,15 +68,15 @@ from .vip.socket import encode_key
 _log = logging.getLogger(__name__)
 
 
-class CouldNotRegister(StandardError):
+class CouldNotRegister(Exception):
     pass
 
 
-class DuplicateEndpointError(StandardError):
+class DuplicateEndpointError(Exception):
     pass
 
 
-class DiscoveryError(StandardError):
+class DiscoveryError(Exception):
     """ Raised when a different volttron central tries to register.
     """
     pass
@@ -258,7 +258,7 @@ class WebApplicationWrapper(object):
         status = '200 OK'
         headers = [('Content-type', 'text/plain')]
         start_response(status, headers)
-        return ""
+        return [b""]
 
     def client_opened(self, client, endpoint, identity):
 
@@ -434,7 +434,7 @@ class MasterWebService(Agent):
         """
         _log.debug('Registering route with endpoint: {}'.format(endpoint))
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug('Route is associated with peer: {}'.format(peer))
 
         if endpoint in self.endpoints:
@@ -454,7 +454,7 @@ class MasterWebService(Agent):
         """
 
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
 
         _log.info(
             'Registering agent route expression: {} peer: {} function: {}'
@@ -468,7 +468,7 @@ class MasterWebService(Agent):
     def unregister_all_agent_routes(self):
 
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
 
         _log.info('Unregistering agent routes for: {}'.format(peer))
         for regex in self.peerroutes[peer]:
@@ -491,7 +491,7 @@ class MasterWebService(Agent):
         _log.info('Registering path route: {}'.format(root_dir))
 
         # Get calling peer from the rpc context
-        peer = bytes(self.vip.rpc.context.vip_message.peer)
+        peer = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
 
         compiled = re.compile(regex)
         self.pathroutes[peer].append(compiled)
@@ -499,7 +499,7 @@ class MasterWebService(Agent):
 
     @RPC.export
     def register_websocket(self, endpoint):
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
+        identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug('Caller identity: {}'.format(identity))
         _log.debug('REGISTERING ENDPOINT: {}'.format(endpoint))
         if self.appContainer:
@@ -512,7 +512,7 @@ class MasterWebService(Agent):
 
     @RPC.export
     def unregister_websocket(self, endpoint):
-        identity = bytes(self.vip.rpc.context.vip_message.peer)
+        identity = bytes(self.vip.rpc.context.vip_message.peer).decode("utf-8")
         _log.debug('Caller identity: {}'.format(identity))
         self.appContainer.destroy_ws_endpoint(endpoint)
 
@@ -524,7 +524,7 @@ class MasterWebService(Agent):
         @return:
         """
         start_response('302 Found', [('Location', '/index.html')])
-        return ['1']
+        return [b'1']
 
     def _allow(self, environ, start_response, data=None):
         _log.info('Allowing new vc instance to connect to server.')
@@ -553,15 +553,15 @@ class MasterWebService(Agent):
 
         start_response('200 OK',
                        [('Content-Type', 'application/json')])
-        return jsonapi.dumps(
+        return [jsonapi.dumpb(
             json_result(jsondata['id'], "Added")
-        )
+        )]
 
     def _get_discovery(self, environ, start_response, data=None):
         q = query.Query(self.core)
 
         self.instance_name = q.query('instance-name').get(timeout=60)
-        print("Discovery instance: {}".format(self.instance_name))
+        _log.debug("Discovery instance: {}".format(self.instance_name))
         addreses = q.query('addresses').get(timeout=60)
         external_vip = None
         for x in addreses:
@@ -584,7 +584,8 @@ class MasterWebService(Agent):
         return_dict['vip-address'] = external_vip
 
         start_response('200 OK', [('Content-Type', 'application/json')])
-        return jsonapi.dumps(return_dict)
+        _log.debug(f"Result of discovery: {return_dict}")
+        return [jsonapi.dumpb(return_dict)]
 
     def app_routing(self, env, start_response):
         """
@@ -619,8 +620,13 @@ class MasterWebService(Agent):
             _log.debug('Calling peer {} back with env={} data={}'.format(
                 peer, passenv, data
             ))
-            res = self.vip.rpc.call(peer, 'route.callback',
-                                    passenv, data).get(timeout=60)
+            try:
+                res = self.vip.rpc.call(peer, 'route.callback',
+                                        passenv, data.decode('ascii')).get(timeout=60)
+            except:
+                _log.exception(f"Error running agent callback {peer}:")
+                raise
+            _log.debug(f'Response from peer {peer}: {res}')
             if res_type == "jsonrpc":
                 return self.create_response(res, start_response)
             elif res_type == "raw":
@@ -663,7 +669,7 @@ class MasterWebService(Agent):
             if len(res) == 3:
                 status, response, headers = res
             start_response(status, headers)
-            return base64.b64decode(response)
+            return [base64.b64decode(response)]
         else:
             start_response("500 Programming Error",
                            [('Content-Type', 'text/html')])
@@ -689,7 +695,7 @@ class MasterWebService(Agent):
 
             start_response('200 OK',
                            [('Content-Type', 'application/json')])
-            return jsonapi.dumps(res)
+            return [jsonapi.dumpb(res)]
 
         # If this is a tuple then we know we are going to have a response
         # and a headers portion of the data.
@@ -707,13 +713,13 @@ class MasterWebService(Agent):
                                                  zlib.MAX_WBITS | 16)
                 data = gzip_compress.compress(response) + gzip_compress.flush()
                 start_response('200 OK', headers)
-                return data
+                return [data]
             else:
-                return response
+                return [response]
         else:
             start_response('200 OK',
                            [('Content-Type', 'application/json')])
-            return jsonapi.dumps(res)
+            return [jsonapi.dumpb(res)]
 
     def _sendfile(self, env, start_response, filename):
         from wsgiref.util import FileWrapper
@@ -734,7 +740,7 @@ class MasterWebService(Agent):
         ]
         start_response(status, response_headers)
 
-        return FileWrapper(open(filename, 'r'))
+        return FileWrapper(open(filename, 'rb'))
 
     @Core.receiver('onstart')
     def startupagent(self, sender, **kwargs):
@@ -742,8 +748,8 @@ class MasterWebService(Agent):
         if not self.bind_web_address:
             _log.info('Web server not started.')
             return
-        import urlparse
-        parsed = urlparse.urlparse(self.bind_web_address)
+        import urllib.parse
+        parsed = urllib.parse.urlparse(self.bind_web_address)
         hostname = parsed.hostname
         port = parsed.port
 

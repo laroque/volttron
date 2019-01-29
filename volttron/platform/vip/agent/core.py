@@ -36,10 +36,9 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import, print_function
+
 
 from contextlib import contextmanager
-from datetime import datetime
 from errno import ENOENT
 import heapq
 import inspect
@@ -48,15 +47,15 @@ import os
 import sys
 import threading
 import time
-import urlparse
+import urllib.parse
 import uuid
+import warnings
 import weakref
 import signal
 
 import gevent.event
 from zmq import green as zmq
 from zmq.green import ZMQError, EAGAIN, ENOTSOCK, EADDRINUSE
-from volttron.platform.agent import json
 from zmq.utils.monitor import recv_monitor_message
 
 from volttron.platform import get_address
@@ -171,6 +170,7 @@ class BasicCore(object):
         self.onstop = Signal()
         self.onfinish = Signal()
         self.oninterrupt = None
+        self.tie_breaker = 0
         prev_int_signal = gevent.signal.getsignal(signal.SIGINT)
         # To avoid a child agent handler overwriting the parent agent handler
         if prev_int_signal in [None, signal.SIG_IGN, signal.SIG_DFL, signal.default_int_handler]:
@@ -191,15 +191,12 @@ class BasicCore(object):
             periodics.extend(
                 periodic.get(member) for periodic in annotations(
                     member, list, 'core.periodics'))
-            self._schedule.extend(
-                (deadline, ScheduledEvent(member, args, kwargs))
-                for deadline, args, kwargs in
-                annotations(member, list, 'core.schedule'))
+            for deadline, args, kwargs in annotations(member, list, 'core.schedule'):
+                self.schedule(deadline, member, *args, **kwargs)
             for name in annotations(member, set, 'core.signals'):
                 findsignal(self, owner, name).connect(member, owner)
 
         inspect.getmembers(owner, setup)
-        heapq.heapify(self._schedule)
 
         def start_periodics(sender, **kwargs):  # pylint: disable=unused-argument
             for periodic in periodics:
@@ -227,6 +224,7 @@ class BasicCore(object):
     def run(self, running_event=None):  # pylint: disable=method-hidden
         '''Entry point for running agent.'''
 
+        self._schedule_event = gevent.event.Event()
         self.setup()
         self.greenlet = current = gevent.getcurrent()
 
@@ -259,26 +257,26 @@ class BasicCore(object):
                     event.clear()
                 now = time.time()
                 while heap and now >= heap[0][0]:
-                    _, callback = heapq.heappop(heap)
+                    _, _, callback = heapq.heappop(heap)
                     greenlet = gevent.spawn(callback)
                     cur.link(lambda glt: greenlet.kill())
 
         self._stop_event = stop = gevent.event.Event()
-        self._schedule_event = gevent.event.Event()
         self._async = gevent.get_hub().loop.async()
         self._async.start(handle_async)
         current.link(lambda glt: self._async.stop())
 
         looper = self.loop(running_event)
-        looper.next()
+        next(looper)
         self.onsetup.send(self)
 
-        loop = looper.next()
+        loop = next(looper)
         if loop:
             self.spawned_greenlets.add(loop)
-        scheduler = gevent.spawn(schedule_loop)
+        scheduler = gevent.Greenlet(schedule_loop)
         if loop:
             loop.link(lambda glt: scheduler.kill())
+        self.onstart.connect(lambda *_, **__: scheduler.start())
         if not self.delay_onstart_signal:
             self.onstart.sendby(self.link_receiver, self)
         if not self.delay_running_event_set:
@@ -291,10 +289,10 @@ class BasicCore(object):
         except (gevent.GreenletExit, KeyboardInterrupt):
             pass
         scheduler.kill()
-        looper.next()
+        next(looper)
         receivers = self.onstop.sendby(self.link_receiver, self)
         gevent.wait(receivers)
-        looper.next()
+        next(looper)
         self.onfinish.send(self)
 
     def stop(self, timeout=None):
@@ -324,25 +322,25 @@ class BasicCore(object):
 
     def send_async(self, func, *args, **kwargs):
         result = gevent.event.AsyncResult()
-        async = result.hub.loop.async()
+        async_ = result.hub.loop.async_()
         results = [None, None]
 
         def receiver():
-            async.stop()
+            async_.stop()
             exc, value = results
             if exc is None:
                 result.set(value)
             else:
                 result.set_exception(exc)
 
-        async.start(receiver)
+        async_.start(receiver)
 
         def worker():
             try:
                 results[:] = [None, func(*args, **kwargs)]
             except Exception as exc:  # pylint: disable=broad-except
                 results[:] = [exc, None]
-            async.send()
+            async_.send()
 
         self.send(worker)
         return result
@@ -375,6 +373,11 @@ class BasicCore(object):
 
     @dualmethod
     def periodic(self, period, func, args=None, kwargs=None, wait=0):
+        warnings.warn(
+            'Use of the periodic() method is deprecated in favor of the '
+            'schedule() method with the periodic() generator. This '
+            'method will be removed in a future version.',
+            DeprecationWarning)
         greenlet = Periodic(period, args, kwargs, wait).get(func)
         self.spawned_greenlets.add(greenlet)
         greenlet.start()
@@ -382,6 +385,11 @@ class BasicCore(object):
 
     @periodic.classmethod
     def periodic(cls, period, args=None, kwargs=None, wait=0):  # pylint: disable=no-self-argument
+        warnings.warn(
+            'Use of the periodic() decorator is deprecated in favor of '
+            'the schedule() decorator with the periodic() generator. '
+            'This decorator will be removed in a future version.',
+            DeprecationWarning)
         return Periodic(period, args, kwargs, wait)
 
     @classmethod
@@ -394,11 +402,44 @@ class BasicCore(object):
 
     @dualmethod
     def schedule(self, deadline, func, *args, **kwargs):
-        deadline = utils.get_utc_seconds_from_epoch(deadline)
         event = ScheduledEvent(func, args, kwargs)
-        heapq.heappush(self._schedule, (deadline, event))
-        self._schedule_event.set()
+        try:
+            it = iter(deadline)
+        except TypeError:
+            self._schedule_callback(deadline, event)
+        else:
+            self._schedule_iter(it, event)
         return event
+
+    def get_tie_breaker(self):
+        self.tie_breaker += 1
+        return self.tie_breaker
+
+    def _schedule_callback(self, deadline, callback):
+        deadline = utils.get_utc_seconds_from_epoch(deadline)
+        heapq.heappush(self._schedule, (deadline, self.get_tie_breaker(), callback))
+        self._schedule_event.set()
+
+    def _schedule_iter(self, it, event):
+        def wrapper():
+            if event.canceled:
+                event.finished = True
+                return
+            try:
+                deadline = next(it)
+            except StopIteration:
+                event.function(*event.args, **event.kwargs)
+                event.finished = True
+            else:
+                self._schedule_callback(deadline, wrapper)
+                event.function(*event.args, **event.kwargs)
+
+        try:
+            deadline = next(it)
+        except StopIteration:
+            event.finished = True
+        else:
+            self._schedule_callback(deadline, wrapper)
 
     @schedule.classmethod
     def schedule(cls, deadline, *args, **kwargs):  # pylint: disable=no-self-argument
@@ -478,18 +519,18 @@ class Core(BasicCore):
         they are not already present'''
 
         def add_param(query_str, key, value):
-            query_dict = urlparse.parse_qs(query_str)
+            query_dict = urllib.parse.parse_qs(query_str)
             if not value or key in query_dict:
                 return ''
             # urlparse automatically adds '?', but we need to add the '&'s
             return '{}{}={}'.format('&' if query_str else '', key, value)
 
-        url = list(urlparse.urlsplit(self.address))
+        url = list(urllib.parse.urlsplit(self.address))
         if url[0] in ['tcp', 'ipc']:
             url[3] += add_param(url[3], 'publickey', self.publickey)
             url[3] += add_param(url[3], 'secretkey', self.secretkey)
             url[3] += add_param(url[3], 'serverkey', self.serverkey)
-            self.address = str(urlparse.urlunsplit(url))
+            self.address = str(urllib.parse.urlunsplit(url))
 
     def _set_public_and_secret_keys(self):
         if self.publickey is None or self.secretkey is None:
@@ -540,8 +581,8 @@ class Core(BasicCore):
         return keystore.public, keystore.secret
 
     def _get_keys_from_addr(self):
-        url = list(urlparse.urlsplit(self.address))
-        query = urlparse.parse_qs(url[3])
+        url = list(urllib.parse.urlsplit(self.address))
+        query = urllib.parse.parse_qs(url[3])
         publickey = query.get('publickey', [None])[0]
         secretkey = query.get('secretkey', [None])[0]
         serverkey = query.get('serverkey', [None])[0]
@@ -554,8 +595,9 @@ class Core(BasicCore):
     def register(self, name, handler, error_handler=None):
         self.subsystems[name] = handler
         if error_handler:
+            name_bytes = name.encode("utf-8")
             def onerror(sender, error, **kwargs):
-                if error.subsystem == name:
+                if error.subsystem == name_bytes:
                     error_handler(sender, error=error, **kwargs)
 
             self.onviperror.connect(onerror)
@@ -581,7 +623,7 @@ class Core(BasicCore):
         if self.reconnect_interval:
             self.socket.setsockopt(zmq.RECONNECT_IVL, self.reconnect_interval)
         if self.identity:
-            self.socket.identity = self.identity
+            self.socket.identity = self.identity.encode('utf-8')
         yield
 
         # pre-start
@@ -674,7 +716,7 @@ class Core(BasicCore):
                     #     pass
                 finally:
                     try:
-                        url = list(urlparse.urlsplit(self.address))
+                        url = list(urllib.parse.urlsplit(self.address))
                         if url[0] in ['tcp'] and sock is not None:
                             sock.close()
                         if self.socket is not None:
@@ -720,11 +762,12 @@ class Core(BasicCore):
                                           router=server, identity=identity)
                     continue
 
+                subsystem = subsystem.decode('utf-8')
                 try:
                     handle = self.subsystems[subsystem]
                 except KeyError:
                     _log.error('peer %r requested unknown subsystem %r',
-                               bytes(message.peer), subsystem)
+                               bytes(message.peer).encode("utf-8"), subsystem)
                     message.user = b''
                     message.args = list(router._INVALID_SUBSYSTEM)
                     message.args.append(message.subsystem)

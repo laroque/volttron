@@ -17,7 +17,7 @@ log = logging.getLogger(os.path.basename(__file__))
 # determine whether or not the script is being run from an activated environment
 # or not.  If we are then we need to call this script again from the correct
 # python interpreter.
-if not hasattr(sys, 'real_prefix'):
+if sys.base_prefix == sys.prefix:
     inenv = False
 else:
     inenv = True
@@ -33,7 +33,7 @@ if not inenv and not corrected:
     # Travis-CI puts the python in a little bit different location than
     # we do.
     if os.environ.get('CI') is not None:
-        correct_python =subprocess.check_output(['which', 'python']).strip()
+        correct_python =subprocess.check_output(['which', 'python'], universal_newlines=True).strip()
     else:
         correct_python = os.path.abspath(
             os.path.join(mypath, '../env/bin/python'))
@@ -49,7 +49,7 @@ if not inenv and not corrected:
     process.wait()
     sys.exit(process.returncode)
 
-from zmq.utils import jsonapi
+from volttron.platform import jsonapi
 from volttron.platform import get_address, get_home, get_volttron_root, \
     is_instance_running
 from volttron.platform.packaging import create_package, add_files_to_package
@@ -69,7 +69,7 @@ def identity_exists(opts, identity):
     cmds = [opts.volttron_control, "status"]
 
     process = subprocess.Popen(cmds, env=env, stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
+                               stderr=subprocess.PIPE, universal_newlines=True)
 
     (stdoutdata, stderrdata) = process.communicate()
 
@@ -119,7 +119,7 @@ def install_agent(opts, package, config):
     else:
         cfg = tempfile.NamedTemporaryFile()
         with open(cfg.name, 'w') as fout:
-            fout.write(yaml.safe_dump(config)) # jsonapi.dumps(config))
+            fout.write(yaml.safe_dump(config))
         config_file = cfg.name
 
     try:
@@ -141,8 +141,9 @@ def install_agent(opts, package, config):
     if opts.tag:
         cmds.extend(["--tag", opts.tag])
 
+
     process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                    stdout=subprocess.PIPE)
+                    stdout=subprocess.PIPE, universal_newlines=True)
     (output, errorout) = process.communicate()
 
     parsed = output.split("\n")
@@ -170,7 +171,7 @@ def install_agent(opts, package, config):
     if opts.start:
         cmds = [opts.volttron_control, "start", agent_uuid]
         process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
+                        stdout=subprocess.PIPE, universal_newlines=True)
         (outputdata, errordata) = process.communicate()
 
         # Expected output on standard out
@@ -185,7 +186,7 @@ def install_agent(opts, package, config):
             cmds.extend(["--priority", str(opts.priority)])
 
         process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
+                        stdout=subprocess.PIPE, universal_newlines=True)
         (outputdata, errordata) = process.communicate()
         # Expected output from standard out
         # Enabling 6bcee29b-7af3-4361-a67f-7d3c9e986419 listeneragent-3.2 with priority 50
@@ -199,7 +200,7 @@ def install_agent(opts, package, config):
 
         cmds = [opts.volttron_control, "status", agent_uuid]
         process = Popen(cmds, env=env, stderr=subprocess.PIPE,
-                        stdout=subprocess.PIPE)
+                        stdout=subprocess.PIPE, universal_newlines=True)
         (outputdata, errordata) = process.communicate()
 
         # 5 listeneragent-3.2 foo     running [10737]
@@ -212,10 +213,10 @@ def install_agent(opts, package, config):
     if opts.json:
         sys.stdout.write("%s\n" % json.dumps(output_dict, indent=4))
     if opts.csv:
-        keylen = len(output_dict.keys())
+        keylen = len(output_dict)
         keyline = ''
         valueline = ''
-        keys = output_dict.keys()
+        keys = list(output_dict.keys())
         for k in range(keylen):
             if k < keylen - 1:
                 keyline += "%s," % keys[k]
@@ -228,8 +229,9 @@ def install_agent(opts, package, config):
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(version=__version__)
+    parser = argparse.ArgumentParser()
 
+    parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument("-a", "--vip-address", default=get_address(),
                         help="vip-address to connect to.")
     parser.add_argument("-vh", "--volttron-home", default=get_home(),
@@ -240,7 +242,7 @@ if __name__ == '__main__':
                         help="source directory of the agent which is to be installed.")
     parser.add_argument("-i", "--vip-identity", default=None,
                         help="identity of the agent to be installed (unique per instance)")
-    parser.add_argument("-c", "--config", default=None, type=file,
+    parser.add_argument("-c", "--config", default=None, type=argparse.FileType('r'),
                         help="agent configuration file that will be packaged with the agent.")
     parser.add_argument("-wh", "--wheelhouse", default=None,
                         help="location of agents after they have been built")
@@ -279,7 +281,7 @@ if __name__ == '__main__':
         sys.exit(-10)
 
     if opts.volttron_home.endswith('/'):
-        log.warn("VOLTTRON_HOME should not have / on the end trimming it.")
+        log.warning("VOLTTRON_HOME should not have / on the end trimming it.")
         opts.volttron_home = opts.volttron_home[:-1]
 
     if not is_instance_running(opts.volttron_home):

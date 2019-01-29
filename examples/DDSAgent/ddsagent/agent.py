@@ -40,6 +40,7 @@ import datetime
 from math import sin, cos, pi
 from volttron.platform.vip.agent import Agent, RPC, Core
 from volttron.platform.agent import utils
+from volttron.platform.scheduling import periodic
 
 # The 'connector' api doesn't come with a nice
 # way to install itself so we have it added
@@ -58,7 +59,7 @@ class DDSAgent(Agent):
 
         config = utils.load_config(config_path)
 
-        for typename, type_config in config.iteritems():
+        for typename, type_config in config.items():
             participant_name = type_config['participant_name']
             xml_config_path = type_config['xml_config_path']
             publisher_name = type_config['publisher_name']
@@ -68,7 +69,7 @@ class DDSAgent(Agent):
             self.writer[typename] = connector.getOutput(publisher_name)
             self.reader[typename] = connector.getInput(subscriber_name)
 
-    @Core.periodic(1)
+    @Core.schedule(periodic(1))
     def publish_demo(self):
         """
         Publish a square that follows a circular path.

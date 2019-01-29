@@ -36,14 +36,14 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import print_function, absolute_import
+
 
 import argparse
 import errno
 import logging
 from logging import handlers
 import logging.config
-from urlparse import urlparse
+from urllib.parse import urlparse
 
 import os
 import resource
@@ -55,13 +55,16 @@ import uuid
 import signal
 
 import gevent
+import gevent.monkey
+gevent.monkey.patch_socket()
+gevent.monkey.patch_ssl()
 from gevent.fileobject import FileObject
 import zmq
 from zmq import green, ZMQError
 
 # Create a context common to the green and non-green zmq modules.
 green.Context._instance = green.Context.shadow(zmq.Context.instance().underlying)
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from . import aip
 from . import __version__
@@ -221,7 +224,7 @@ class Monitor(threading.Thread):
         self.sock = sock
 
     def run(self):
-        events = {value: name[6:] for name, value in vars(zmq).iteritems()
+        events = {value: name[6:] for name, value in vars(zmq).items()
                   if name.startswith('EVENT_') and name != 'EVENT_ALL'}
         log = logging.getLogger('vip.monitor')
         if log.level == logging.NOTSET:
@@ -289,13 +292,14 @@ class Router(BaseRouter):
 
     def setup(self):
         sock = self.socket
-        sock.identity = identity = str(uuid.uuid4())
+        identity = str(uuid.uuid4())
+        sock.identity = identity.encode("utf-8")
         _log.debug("ROUTER SOCK identity: {}".format(sock.identity))
         if self._monitor:
             Monitor(sock.get_monitor_socket()).start()
         sock.bind('inproc://vip')
         _log.debug('In-process VIP router bound to inproc://vip')
-        sock.zap_domain = 'vip'
+        sock.zap_domain = b'vip'
         addr = self.local_address
         if not addr.identity:
             addr.identity = identity
@@ -353,7 +357,7 @@ class Router(BaseRouter):
                 self._message_debugger_socket.connect(socket_path)
             # Publish the routed message, including the "topic" (status/direction), for use by MessageDebuggerAgent.
             frame_bytes = [topic]
-            frame_bytes.extend([frame if type(frame) is str else frame.bytes for frame in frames])
+            frame_bytes.extend([frame if type(frame) is bytes else frame.bytes for frame in frames])
             self._message_debugger_socket.send_pyobj(frame_bytes)
 
     def handle_subsystem(self, frames, user_id):
@@ -403,7 +407,7 @@ class Router(BaseRouter):
                     value = __version__
                 else:
                     value = None
-            frames[6:] = [b'', jsonapi.dumps(value)]
+            frames[6:] = [b'', jsonapi.dumpb(value)]
             frames[3] = b''
             return frames
         elif subsystem == b'pubsub':
@@ -468,7 +472,7 @@ class Router(BaseRouter):
         if name == 'external_rpc':
             # Reframe the frames
             sender, proto, usr_id, msg_id, subsystem, msg = frames[:6]
-            msg_data = jsonapi.loads(msg.bytes)
+            msg_data = jsonapi.loadb(msg.bytes)
             peer = msg_data['to_peer']
             # Send to destionation agent/peer
             # Form new frame for local
@@ -549,18 +553,17 @@ def start_volttron_process(opts):
     if opts.instance_name is None:
         if len(opts.vip_address) > 0:
             opts.instance_name = opts.vip_address[0]
-    import urlparse
 
     if opts.bind_web_address:
-        parsed = urlparse.urlparse(opts.bind_web_address)
+        parsed = urlparse(opts.bind_web_address)
         if parsed.scheme not in ('http', 'https'):
-            raise StandardError(
+            raise Exception(
                 'bind-web-address must begin with http or https.')
         opts.bind_web_address = config.expandall(opts.bind_web_address)
     if opts.volttron_central_address:
-        parsed = urlparse.urlparse(opts.volttron_central_address)
+        parsed = urlparse(opts.volttron_central_address)
         if parsed.scheme not in ('http', 'https', 'tcp'):
-            raise StandardError(
+            raise Exception(
                 'volttron-central-address must begin with tcp, http or https.')
         opts.volttron_central_address = config.expandall(
             opts.volttron_central_address)
@@ -569,7 +572,7 @@ def start_volttron_process(opts):
     # Log configuration options
     if getattr(opts, 'show_config', False):
         _log.info('volttron version: {}'.format(__version__))
-        for name, value in sorted(vars(opts).iteritems()):
+        for name, value in sorted(vars(opts).items()):
             _log.info("%s: %s" % (name, str(repr(value))))
 
     # Increase open files resource limit to max or 8192 if unlimited

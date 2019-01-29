@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import print_function
+
 
 from datetime import datetime as dt
 from datetime import timedelta
@@ -49,6 +49,7 @@ import sys
 from volttron.platform.agent import utils
 from volttron.platform.vip.agent import Agent, Core, RPC
 from volttron.platform.messaging import topics
+from volttron.platform.scheduling import periodic
 
 utils.setup_logging()
 _log = logging.getLogger(__name__)
@@ -68,7 +69,7 @@ def control_agent(config_path, **kwargs):
     """
     try:
         config = utils.load_config(config_path)
-    except StandardError, err:
+    except Exception as err:
         _log.error("Error loading configuration: {}".format(err))
         config = {}
     venagent_id = config.get('venagent_id')
@@ -141,7 +142,7 @@ class ControlAgentSim(Agent):
         self.vip.pubsub.subscribe(peer='pubsub', prefix=topics.OPENADR_EVENT, callback=self.receive_event)
         self.vip.pubsub.subscribe(peer='pubsub', prefix=topics.OPENADR_STATUS, callback=self.receive_status)
 
-        self.core.periodic(self.report_interval_secs, self.issue_rpcs)
+        self.core.schedule(periodic(self.report_interval_secs), self.issue_rpcs)
 
     def issue_rpcs(self):
         """Periodically issue RPCs, including report_sample_telemetry, to the VEN agent."""
@@ -219,7 +220,7 @@ class ControlAgentSim(Agent):
         if events_list:
             for event_dict in events_list:
                 _log.debug('\tevent_id {}:'.format(event_dict.get('event_id')))
-                for k, v in event_dict.iteritems():
+                for k, v in event_dict.items():
                     _log.debug('\t\t{}={}'.format(k, v))
         else:
             _log.debug('\tNo active events')
@@ -233,14 +234,14 @@ class ControlAgentSim(Agent):
         _log.debug('Requesting report parameters')
         param_dict = self.send_rpc('get_telemetry_parameters')
         if param_dict:
-            for key, val in param_dict.iteritems():
+            for key, val in param_dict.items():
                 try:
                     if type(val) == dict:
                         _log.debug('\t{}:'.format(key))
-                        for key2, val2 in val.iteritems():
+                        for key2, val2 in val.items():
                             if type(val2) == dict:
                                 _log.debug('\t\t{}:'.format(key2))
-                                for key3, val3 in val2.iteritems():
+                                for key3, val3 in val2.items():
                                     _log.debug('\t\t\t{}={}'.format(key3, val3))
                             else:
                                 _log.debug('\t\t{}={}'.format(key2, val2))

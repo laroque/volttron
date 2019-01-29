@@ -48,11 +48,11 @@ import sys
 from tzlocal import get_localzone
 import gevent
 import pytest
+from pytest import approx
 import re
 import pytz
 
 from volttron.platform import get_volttron_root, get_services_core
-from volttron.platform.agent import PublishMixin
 from volttron.platform.agent import utils
 from volttron.platform.jsonrpc import RemoteError
 from volttron.platform.messaging import headers as headers_mod
@@ -155,19 +155,13 @@ def get_table_names(config):
 
 
 @pytest.fixture(scope="module",
-                params=['volttron_2', 'volttron_3'])
+                params=['volttron_3'])
 def publish_agent(request, volttron_instance):
     # 1: Start a fake agent to publish to message bus
     print("**In setup of publish_agent volttron is_running {}".format(
         volttron_instance.is_running))
-    agent = None
-    if sqlite_platform == 'volttron_2':
-        if agent is None or not isinstance(agent, PublishMixin):
-            agent = PublishMixin(
-                volttron_instance.opts['publish_address'])
-    else:
-        if agent is None or isinstance(agent, PublishMixin):
-            agent = volttron_instance.build_agent()
+
+    agent = volttron_instance.build_agent()
 
     # 2: add a tear down method to stop the fake
     # agent that published to message bus
@@ -313,11 +307,12 @@ def test_sqlite_timeout(request, historian, publish_agent, query_agent,
                         }]
 
         # Create timestamp
-        now = datetime.utcnow().isoformat(' ')
+        now = utils.format_timestamp(datetime.utcnow())
 
         # now = '2015-12-02T00:00:00'
         headers = {
-            headers_mod.DATE: now
+            headers_mod.DATE: now,
+            headers_mod.TIMESTAMP: now
         }
         print("Published time in header: " + now)
         # Publish messages
@@ -333,9 +328,9 @@ def test_sqlite_timeout(request, historian, publish_agent, query_agent,
                                           order="LAST_TO_FIRST").get(timeout=100)
         print('Query Result', result)
         assert (len(result['values']) == 1)
-        (now_date, now_time) = now.split(" ")
+        (now_date, now_time) = now.split("T")
         assert result['values'][0][0] == now_date + 'T' + now_time + '+00:00'
-        assert (result['values'][0][1] == oat_reading)
+        assert (result['values'][0][1] == approx(oat_reading))
         assert set(result['metadata'].items()) == set(float_meta.items())
     finally:
         if agent_uuid:
@@ -362,10 +357,11 @@ def publish_devices_fake_data(publish_agent, time=None):
                     }]
     # Create timestamp
     if not time:
-        time = datetime.utcnow().isoformat('T') + "+00:00"
+        time = utils.format_timestamp(datetime.utcnow())
     # now = '2015-12-02T00:00:00'
     headers = {
-        headers_mod.DATE: time
+        headers_mod.DATE: time,
+        headers_mod.TIMESTAMP: time
     }
     print("Published time in header: " + time)
     # Publish messages

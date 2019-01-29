@@ -1,8 +1,8 @@
-from __future__ import absolute_import
+
 from datetime import datetime
 import logging
 import sys
-import urllib2
+import urllib.request, urllib.error, urllib.parse
 import socket
 from volttron.platform.vip.agent import Agent, Core
 from volttron.platform.agent import utils
@@ -147,7 +147,7 @@ class WeatherAgent(Agent):
                                                       'greenlet': periodic_greenlet}
             else:
                 _log.info("City, state, or request type invalid.")
-        except urllib2.URLError:
+        except urllib.error.URLError:
             _log.info("No internet connection?")
         except socket.timeout:
             _log.info("Connection timed out!")
@@ -165,21 +165,22 @@ class WeatherAgent(Agent):
             if self.current_publishes[topic_name]['freq'] > repeat_time:
                 self.change_publish_time_frequency(topic_name, repeat_time, wunderground_url)
             self.current_publishes[topic_name]['senders'].add(sender)
-        except urllib2.URLError:
+        except urllib.error.URLError:
             _log.info("Check internet connection")
         except socket.timeout:
             _log.info("Connection timed out!")
 
     def publish_weather_report(self, topic_name, parsed_weather_data):
-        now = datetime.utcnow().isoformat(' ') + 'Z'
+        now = utils.format_timestamp(datetime.utcnow())
         headers = {
             headers_mod.CONTENT_TYPE: headers_mod.CONTENT_TYPE.PLAIN_TEXT,
             headers_mod.DATE: now,
+            headers_mod.TIMESTAMP: now
         }
         self.vip.pubsub.publish('pubsub', topic_name, headers, json.dumps(parsed_weather_data))
 
     def retrieve_weather_data(self, url):
-        f = urllib2.urlopen(url, None, 5)
+        f = urllib.request.urlopen(url, None, 5)
         json_string = f.read()
         f.close()
         return json.loads(json_string)

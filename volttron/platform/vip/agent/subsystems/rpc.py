@@ -36,7 +36,7 @@
 # under Contract DE-AC05-76RL01830
 # }}}
 
-from __future__ import absolute_import
+
 
 import inspect
 import logging
@@ -47,7 +47,7 @@ import weakref
 
 import gevent.local
 from gevent.event import AsyncResult
-from volttron.platform.agent import json as jsonapi
+from volttron.platform import jsonapi
 
 from .base import SubsystemBase
 from ..errors import VIPError
@@ -76,10 +76,10 @@ class Dispatcher(jsonrpc.Dispatcher):
         self._results = ResultsDictionary()
 
     def serialize(self, json_obj):
-        return jsonapi.dumps(json_obj)
+        return jsonapi.dumpb(json_obj)
 
     def deserialize(self, json_string):
-        return jsonapi.loads(json_string)
+        return jsonapi.loadb(json_string)
 
     def batch_call(self, requests):
         methods = []
@@ -135,7 +135,7 @@ class Dispatcher(jsonrpc.Dispatcher):
             method = self.methods[name]
         except KeyError:
             if name == 'inspect':
-                return {'methods': self.methods.keys()}
+                return {'methods': list(self.methods)}
             elif name.endswith('.inspect'):
                 try:
                     method = self.methods[name[:-8]]
@@ -250,7 +250,7 @@ class RPC(SubsystemBase):
         ret_msg = dict()
         #_log.debug("EXT_RPC subsystem handler IN message {0}".format(message))
         op = message.args[0].bytes
-        rpc_msg = jsonapi.loads(message.args[1].bytes)
+        rpc_msg = jsonapi.loadb(message.args[1].bytes)
         try:
             #_log.debug("EXT_RPC subsystem handler IN message {0}, {1}".format(message.peer, rpc_msg))
             method_args = rpc_msg['args']
@@ -263,26 +263,25 @@ class RPC(SubsystemBase):
                 dispatch(bytes(msg), message) for msg in message.args) if response]
             #_log.debug("External RPC Resonses {}".format(responses))
             if responses:
-                message.user = ''
+                message.user = b''
                 try:
-                    message.peer = ''
+                    message.peer = b''
                     message.subsystem = 'external_rpc'
                     frames = []
                     op = b'send_platform'
                     frames.append(op)
-                    msg = jsonapi.dumps(dict(to_platform=rpc_msg['from_platform'],
+                    msg = jsonapi.dumpb(dict(to_platform=rpc_msg['from_platform'],
                                              to_peer=rpc_msg['from_peer'],
                                              from_platform=rpc_msg['to_platform'],
                                              from_peer=rpc_msg['to_peer'], args=responses))
                     frames.append(msg)
                 except KeyError:
                     _log.error("External RPC message did not contain proper message format")
-                message.args = jsonapi.dumps(ret_msg)
-                ret_msg = jsonapi.dumps(ret_msg)
+                message.args = jsonapi.dumpb(ret_msg)
                 #_log.debug("EXT_RPC subsystem handler OUT message {}".format(message))
                 try:
-                    self.core().socket.send_vip(b'', 'external_rpc', frames,
-                                                user=message.user, msg_id=message.id, copy=False)
+                    self.core().socket.send_vip(b'', b'external_rpc', frames,
+                                                user=message.user, msg_id=message.id.encode('utf-8'), copy=False)
                 except ZMQError as ex:
                     _log.error("ZMQ error: {}".format(ex))
                     pass
@@ -295,7 +294,7 @@ class RPC(SubsystemBase):
         responses = [response for response in (
             dispatch(bytes(msg), message) for msg in message.args) if response]
         if responses:
-            message.user = ''
+            message.user = b''
             message.args = responses
             try:
                 if self._isconnected:
@@ -305,7 +304,7 @@ class RPC(SubsystemBase):
                     _log.debug("Socket send on non socket {}".format(self.core().identity))
 
     def _handle_error(self, sender, message, error, **kwargs):
-        result = self._outstanding.pop(bytes(message.id), None)
+        result = self._outstanding.pop(message.id.bytes.decode("utf-8"), None)
         if isinstance(result, AsyncResult):
             result.set_exception(error)
         elif result:
@@ -319,7 +318,7 @@ class RPC(SubsystemBase):
 
     @export.classmethod
     def export(cls, name=None):   # pylint: disable=no-self-argument
-        if not isinstance(name, basestring):
+        if not isinstance(name, str):
             method, name = name, name.__name__
             annotate(method, set, 'rpc.exports', name)
             return method
@@ -337,11 +336,11 @@ class RPC(SubsystemBase):
                 result._weak_set = items   # pylint: disable=protected-access
             self._outstanding[ident] = items
         else:
-            ident = b''
+            ident = ''
         if request:
             if self._isconnected:
                 try:
-                    self.core().socket.send_vip(peer, 'RPC', [request], msg_id=ident)
+                    self.core().socket.send_vip(peer.encode('utf-8'), b'RPC', [request], msg_id=ident.encode('utf-8'))
                 except ZMQError as exc:
                     if exc.errno == ENOTSOCK:
                         _log.debug("Socket send on non socket {}".format(self.core().identity))
@@ -350,13 +349,13 @@ class RPC(SubsystemBase):
     def call(self, peer, method, *args, **kwargs):
         platform = kwargs.pop('external_platform', '')
         request, result = self._dispatcher.call(method, args, kwargs)
-        ident = '%s.%s' % (next(self._counter), hash(result))
+        ident = f'{next(self._counter)}.{hash(result)}'
         self._outstanding[ident] = result
 
         if platform == '':
             if self._isconnected:
                 try:
-                    self.core().socket.send_vip(peer, 'RPC', [request], msg_id=ident)
+                    self.core().socket.send_vip(peer, b'RPC', [request], msg_id=ident.encode('utf-8'))
                 except ZMQError as exc:
                     if exc.errno == ENOTSOCK:
                         _log.debug("Socket send on non socket {}".format(self.core().identity))
@@ -364,13 +363,13 @@ class RPC(SubsystemBase):
             frames = []
             op = b'send_platform'
             frames.append(op)
-            msg = jsonapi.dumps(dict(to_platform=platform, to_peer=peer,
-                                           from_platform='', from_peer='', args=[request]))
+            msg = jsonapi.dumpb(dict(to_platform=platform, to_peer=peer,
+                                     from_platform='', from_peer='', args=[request]))
             frames.append(msg)
             #_log.debug("RPC subsystem: External platform RPC msg: {}".format(frames))
             if self._isconnected:
                 try:
-                    self.core().socket.send_vip('', 'external_rpc', frames, msg_id=ident)
+                    self.core().socket.send_vip(b'', b'external_rpc', frames, msg_id=ident.encode('utf-8'))
                 except ZMQError as exc:
                     if exc.errno == ENOTSOCK:
                         _log.debug("Socket send on non socket {}".format(self.core().identity))
@@ -382,20 +381,20 @@ class RPC(SubsystemBase):
         request, result = self._dispatcher.call(method, args, kwargs)
         ident = '%s.%s' % (next(self._counter), hash(result))
         self._outstanding[ident] = result
-        #self.core().socket.send_vip(peer, 'RPC', [request], msg_id=ident)
+        #self.core().socket.send_vip(peer, b'RPC', [request], msg_id=ident)
         _log.debug("Args: {0}, Kwargs: {1}".format(args, kwargs))
 
         if platform_name is None:
-            self.core().socket.send_vip(peer, 'RPC', [request], msg_id=ident)
+            self.core().socket.send_vip(peer.encode('utf-8'), b'RPC', [request], msg_id=ident.encode('utf-8'))
         else:
             frames = []
             op = b'send_platform'
             frames.append(op)
-            msg = jsonapi.dumps(dict(to_platform=platform_name, to_peer=peer,
+            msg = jsonapi.dumpb(dict(to_platform=platform_name, to_peer=peer,
                                      from_platform='', from_peer='', args=[request]))
             frames.append(msg)
             # _log.debug("RPC subsystem: External platform RPC msg: {}".format(frames))
-            self.core().socket.send_vip('', 'external_rpc', frames, msg_id=ident)
+            self.core().socket.send_vip(b'', b'external_rpc', frames, msg_id=ident.encode('utf-8'))
         return result
 
     #__call__ = call
@@ -407,7 +406,7 @@ class RPC(SubsystemBase):
         if platform == '':
             if self._isconnected:
                 try:
-                    self.core().socket.send_vip(peer, 'RPC', [request])
+                    self.core().socket.send_vip(peer.encode('utf-8'), b'RPC', [request])
                 except ZMQError as exc:
                     if exc.errno == ENOTSOCK:
                         _log.debug("Socket send on non socket {}".format(self.core().identity))
@@ -415,20 +414,20 @@ class RPC(SubsystemBase):
             frames = []
             op = b'send_platform'
             frames.append(op)
-            msg = jsonapi.dumps(dict(to_platform=platform, to_peer=peer,
+            msg = jsonapi.dumpb(dict(to_platform=platform, to_peer=peer,
                                      from_platform='', from_peer='', args=[request]))
             frames.append(msg)
             # _log.debug("RPC subsystem: External platform RPC msg: {}".format(frames))
             if self._isconnected:
                 try:
-                    self.core().socket.send_vip('', 'extrenal_rpc', frames)
+                    self.core().socket.send_vip(b'', b'extrenal_rpc', frames)
                 except ZMQError as exc:
                     if exc.errno == ENOTSOCK:
                         _log.debug("Socket send on non socket {}".format(self.core().identity))
 
     @dualmethod
     def allow(self, method, capabilities):
-        if isinstance(capabilities, basestring):
+        if isinstance(capabilities, str):
             cap = set([capabilities])
         else:
             cap = set(capabilities)
@@ -455,7 +454,7 @@ class RPC(SubsystemBase):
 
         """
         def decorate(method):
-            if isinstance(capabilities, basestring):
+            if isinstance(capabilities, str):
                 annotate(method, set, 'rpc.allow_capabilities', capabilities)
             else:
                 for cap in capabilities:

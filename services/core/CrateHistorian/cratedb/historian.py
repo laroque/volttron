@@ -35,7 +35,7 @@
 # BATTELLE for the UNITED STATES DEPARTMENT OF ENERGY
 # under Contract DE-AC05-76RL01830
 # }}}
-from __future__ import absolute_import, print_function
+
 
 # ujson is significantly faster at dump/loading the data from/to the database
 # cache database, I use it in this agent to store/retrieve the string data that
@@ -55,7 +55,7 @@ try:
     def loads(data_string):
         return ujson.loads(data_string, precise_float=True)
 except ImportError:
-    from zmq.utils.jsonapi import dumps, loads
+    from volttron.platform.jsonapi import dumps, loads
 
 import logging
 import sys
@@ -63,7 +63,6 @@ from collections import defaultdict
 
 from crate.client.exceptions import ConnectionError, ProgrammingError
 from crate import client as crate_client
-from volttron.platform.agent import json as jsonapi
 
 from volttron.platform.dbutils.crateutils import (create_schema,
                                                   select_all_topics_query,
@@ -273,7 +272,7 @@ class CrateHistorian(BaseHistorian):
             try:
                 cur = cn.cursor()
                 cur.execute("SELECT * FROM sys.node_checks")
-                row = cur.next()
+                row = next(cur)
             except ProgrammingError as ex:
                 _log.error(repr(ex))
                 raise
