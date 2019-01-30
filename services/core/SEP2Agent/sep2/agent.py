@@ -294,7 +294,7 @@ class SEP2Agent(Agent):
         :return: Tuple of (Status Code, Response Data, Headers)
         """
         return (sep2.STATUS_CODES[200],
-                base64.b64encode(SEP2Renderer.render(render_dict)),
+                base64.b64encode(SEP2Renderer.render(render_dict)).decode('ascii'),
                 sep2.XML_HEADERS)
 
     @RPC.export

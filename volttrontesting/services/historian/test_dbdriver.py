@@ -223,7 +223,7 @@ class TestSqlite(AggregationSuite):
                                 cursor.execute('{} "{}"'.format(
                                     query, table.replace('"', '""')))
                             except sqlite3.OperationalError as exc:
-                                if not exc.message.startswith('no such table'):
+                                if not str(exc).startswith('no such table'):
                                     raise
                     clean('DELETE FROM', truncate_tables)
                     clean('DROP TABLE', drop_tables)

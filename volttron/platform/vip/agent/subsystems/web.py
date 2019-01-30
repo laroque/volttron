@@ -35,7 +35,7 @@
 # BATTELLE for the UNITED STATES DEPARTMENT OF ENERGY
 # under Contract DE-AC05-76RL01830
 # }}}
-
+import base64
 from collections import defaultdict
 import logging
 import weakref
@@ -195,6 +195,7 @@ class WebSubSystem(SubsystemBase):
             timeout=5)
 
     def _route_callback(self, env, data):
+        data = base64.b64decode(data)
         _log.debug('Routing callback env: {} data: {}'.format(env, data))
         fn = self._endpoints.get(env['PATH_INFO'])
         if fn:

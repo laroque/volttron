@@ -112,14 +112,20 @@ crate_historian = {
         }
     }
 }
-
+"""
 historians = [
     None,
     sqlite_historian,
     mysql_historian,
     mongo_historian,
     crate_historian
-]
+]"""
+historians = [None,
+              pytest.param(sqlite_historian, pytest.mark.tagging),
+              pytest.param(mysql_historian, pytest.mark.tagging),
+              pytest.param(mongo_historian, pytest.mark.tagging),
+              pytest.param(crate_historian, pytest.mark.tagging)
+              ]
 
 
 def setup_sqlite(config):
@@ -464,8 +470,9 @@ def test_tags_by_category_with_metadata(tagging_service, query_agent):
     assert len(result3[0]) == 3
 
 
-@pytest.mark.parametrize("historian_config", historians)
-@pytest.mark.tagging
+#@pytest.mark.parametrize("historian_config", historians)
+@pytest.mark.parametrize(historians)
+#@pytest.mark.tagging
 def test_insert_topic_tags(volttron_instance, tagging_service, query_agent,
                            historian_config):
     global connection_type, db_connection
@@ -533,7 +540,8 @@ def test_insert_topic_tags(volttron_instance, tagging_service, query_agent,
             volttron_instance.remove_agent(new_tagging_id)
 
 
-@pytest.mark.parametrize("historian_config", historians)
+#@pytest.mark.parametrize("historian_config", historians)
+@pytest.mark.parametrize(historians)
 @pytest.mark.tagging
 def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
                                    query_agent, historian_config):
@@ -656,7 +664,8 @@ def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
             volttron_instance.remove_agent(new_tagging_id)
 
 
-@pytest.mark.parametrize("historian_config", historians)
+#@pytest.mark.parametrize("historian_config", historians)
+@pytest.mark.parametrize(historians)
 @pytest.mark.tagging
 def test_insert_topic_tags_update(volttron_instance, tagging_service,
                                   query_agent, historian_config):

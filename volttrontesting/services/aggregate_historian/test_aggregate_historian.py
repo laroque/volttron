@@ -263,15 +263,17 @@ def query_agent(request, volttron_instance):
 # Fixtures for setup and teardown of sqlhistorian agent and aggregation agent
 @pytest.fixture(scope="module",
                 params=[
-                    mysql_skipif(mysql_aggregator),
+                    pytest.param(mysql_aggregator, marks=mysql_skipif),
                     sqlite_aggregator,
-                    pymongo_skipif(mongo_aggregator)
-                ])
+                    pytest.param(mongo_aggregator, marks=pymongo_skipif)
+                ]
+                )
 def aggregate_agent(request, volttron_instance):
     global db_connection, table_names, connection_type
     print("** Setting up test_sqlhistorian module **")
 
     # Fix sqlite db path
+    # request.param = sqlite_aggregator
     print("request param", request.param)
     connection_type = request.param['connection']['type']
     if connection_type == 'sqlite':
@@ -336,7 +338,7 @@ def cleanup(connection_type, truncate_tables):
     cleanup_function = globals()["cleanup_" + connection_type]
     cleanup_function(db_connection, truncate_tables)
 
-
+@pytest.mark.dev
 @pytest.mark.aggregator
 def test_get_supported_aggregations(aggregate_agent, query_agent):
     """

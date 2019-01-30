@@ -544,15 +544,15 @@ class AggregateHistorian(Agent):
                     unit, time_period))
         if unit == 'm':
             if period >= 60 and period % 60 == 0:
-                period /= 60
+                period //= 60
                 unit = 'h'
         if unit == 'h':
             if period >= 24 and period % 24 == 0:
-                period /= 24
+                period //= 24
                 unit = 'd'
         if unit == 'd':
             if period >= 7 and period % 7 == 0:
-                period /= 7
+                period //= 7
                 unit = 'w'
 
         return str(period) + unit

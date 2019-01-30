@@ -82,7 +82,7 @@ import re
 import pytz
 
 from volttron.platform import get_volttron_root, get_services_core
-from volttron.platform.agent import PublishMixin
+#from volttron.platform.agent import PublishMixin
 from volttron.platform.agent import utils
 from volttron.platform.jsonrpc import RemoteError
 from volttron.platform.messaging import headers as headers_mod
@@ -376,10 +376,10 @@ def query_agent(request, volttron_instance):
 # Fixtures for setup and teardown of historian agent
 @pytest.fixture(scope="module",
                 params=[
-                    crate_skipif(crate_platform),
-                    mysql_skipif(mysql_platform),
+                    pytest.param(crate_platform, marks=crate_skipif),
+                    pytest.param(mysql_platform, marks=mysql_skipif),
                     sqlite_platform,
-                    pymongo_skipif(mongo_platform)
+                    pytest.param(mongo_platform, marks=pymongo_skipif)
                 ])
 def historian(request, volttron_instance, query_agent):
     global db_connection, MICROSECOND_PRECISION, table_names, \
@@ -540,7 +540,7 @@ def test_basic_function(request, historian, publish_agent, query_agent,
                                       order="LAST_TO_FIRST").get(timeout=100)
     print('Query Result', result)
     assert (len(result['values']) == 1)
-    (now_date, now_time) = now.split(" ")
+    (now_date, now_time) = now.split("T")
     assert_timestamp(result['values'][0][0], now_date, now_time)
     assert (result['values'][0][1] == oat_reading)
     assert set(result['metadata'].items()) == set(float_meta.items())
@@ -1140,6 +1140,7 @@ def test_invalid_query(request, historian, publish_agent, query_agent,
                                  order="LAST_TO_FIRST").get(timeout=10)
     except Exception as error:
         print ("exception: {}".format(error))
+        err = str(error)
         assert "No route to host: platform.historian1" in str(error)
 
 

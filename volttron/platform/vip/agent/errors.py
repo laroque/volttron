@@ -70,7 +70,7 @@ class VIPError(Exception):
 
 class Unreachable(VIPError):
     def __str__(self):
-        return '%s: %s' % (super(Unreachable, self).__str__(), self.peer)
+        return '%s: %s' % (super(Unreachable, self).__str__().decode('utf-8'), self.peer.decode('utf-8'))
 
 
 class Again(VIPError):
