@@ -276,7 +276,6 @@ def test_health_stuff(request, historian, client_agent):
                                         message=all_message).get(timeout=10)
 
     gevent.sleep(2.0)
-
     status = client_agent.vip.rpc.call("platform.historian", "health.get_status").get(timeout=10)
 
     assert status["status"] == STATUS_BAD

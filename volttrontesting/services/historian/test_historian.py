@@ -376,10 +376,10 @@ def query_agent(request, volttron_instance):
 # Fixtures for setup and teardown of historian agent
 @pytest.fixture(scope="module",
                 params=[
-                    pytest.param(crate_platform, marks=crate_skipif),
-                    pytest.param(mysql_platform, marks=mysql_skipif),
+                    # pytest.param(crate_platform, marks=crate_skipif),
+                    # pytest.param(mysql_platform, marks=mysql_skipif),
                     sqlite_platform,
-                    pytest.param(mongo_platform, marks=pymongo_skipif)
+                    # pytest.param(mongo_platform, marks=pymongo_skipif)
                 ])
 def historian(request, volttron_instance, query_agent):
     global db_connection, MICROSECOND_PRECISION, table_names, \
@@ -1139,9 +1139,10 @@ def test_invalid_query(request, historian, publish_agent, query_agent,
                                  count=20,
                                  order="LAST_TO_FIRST").get(timeout=10)
     except Exception as error:
-        print ("exception: {}".format(error))
-        err = str(error)
+        print("exception: {}".format(error))
         assert "No route to host: platform.historian1" in str(error)
+
+
 
 
 @pytest.mark.historian
