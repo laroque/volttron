@@ -88,13 +88,16 @@ class Suite(object):
                 contextlib.closing(cls(params, tables_def)) as state.driver:
             yield state
 
-    @pytest.fixture
-    def driver(self, state):
+    def create_driver(self, state):
         driver = state.driver
         driver.setup_historian_tables()
         driver.record_table_definitions(
             state.table_names, state.meta_table_name)
         return driver
+
+    @pytest.fixture
+    def driver(self, state):
+        return self.create_driver(state)
 
     @contextlib.contextmanager
     def transact(self, truncate_tables, drop_tables):
@@ -170,9 +173,10 @@ class Suite(object):
 
 
 class AggregationSuite(Suite):
+
     @pytest.fixture
     def driver(self, state):
-        driver = super(AggregationSuite, self).driver(state)
+        driver = super(AggregationSuite, self).create_driver(state)
         driver.setup_aggregate_historian_tables(state.meta_table_name)
         return driver
 

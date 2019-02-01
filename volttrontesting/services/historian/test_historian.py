@@ -376,10 +376,10 @@ def query_agent(request, volttron_instance):
 # Fixtures for setup and teardown of historian agent
 @pytest.fixture(scope="module",
                 params=[
-                    pytest.param(crate_platform, marks=crate_skipif),
-                    pytest.param(mysql_platform, marks=mysql_skipif),
+                    # pytest.param(crate_platform, marks=crate_skipif),
+                    # pytest.param(mysql_platform, marks=mysql_skipif),
                     sqlite_platform,
-                    pytest.param(mongo_platform, marks=pymongo_skipif)
+                    # pytest.param(mongo_platform, marks=pymongo_skipif)
                 ])
 def historian(request, volttron_instance, query_agent):
     global db_connection, MICROSECOND_PRECISION, table_names, \
@@ -553,7 +553,7 @@ def test_basic_function(request, historian, publish_agent, query_agent,
                                       order="LAST_TO_FIRST").get(timeout=10)
     print('Query Result', result)
     assert (len(result['values']) == 1)
-    (now_date, now_time) = now.split(" ")
+    (now_date, now_time) = now.split("T")
     assert_timestamp(result['values'][0][0], now_date, now_time)
     assert (result['values'][0][1] == mixed_reading)
     assert set(result['metadata'].items()) == set(float_meta.items())
@@ -566,7 +566,7 @@ def test_basic_function(request, historian, publish_agent, query_agent,
                                       order="LAST_TO_FIRST").get(timeout=10)
     print('Query Result', result)
     assert (len(result['values']) == 1)
-    (now_date, now_time) = now.split(" ")
+    (now_date, now_time) = now.split("T")
     assert_timestamp(result['values'][0][0], now_date, now_time)
     assert (result['values'][0][1] == damper_reading)
     assert set(result['metadata'].items()) == set(percent_meta.items())

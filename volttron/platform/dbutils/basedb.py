@@ -65,7 +65,8 @@ def closing(obj):
         try:
             obj.close()
         except Exception as exc:
-            if exc.__class__.__module__ == 'exceptions':
+            # if exc.__class__.__module__ == 'exceptions':
+            if exc.__class__.__module__ == 'builtins':
                 # Don't ignore built-in exceptions because they likely indicate
                 # a bug that should stop execution. psycopg2.Error subclasses
                 # StandardError, so the module must also be checked. :-(
