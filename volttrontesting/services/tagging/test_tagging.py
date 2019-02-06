@@ -112,20 +112,20 @@ crate_historian = {
         }
     }
 }
-"""
+
 historians = [
     None,
     sqlite_historian,
-    mysql_historian,
-    mongo_historian,
-    crate_historian
-]"""
-historians = [None,
-              pytest.param(sqlite_historian, pytest.mark.tagging),
-              pytest.param(mysql_historian, pytest.mark.tagging),
-              pytest.param(mongo_historian, pytest.mark.tagging),
-              pytest.param(crate_historian, pytest.mark.tagging)
-              ]
+    # mysql_historian,
+    # mongo_historian,
+    # crate_historian
+]
+# historians = [None,
+#               pytest.param(sqlite_historian, pytest.mark.tagging),
+#               pytest.param(mysql_historian, pytest.mark.tagging),
+#               pytest.param(mongo_historian, pytest.mark.tagging),
+#               pytest.param(crate_historian, pytest.mark.tagging)
+#               ]
 
 
 def setup_sqlite(config):
@@ -470,9 +470,9 @@ def test_tags_by_category_with_metadata(tagging_service, query_agent):
     assert len(result3[0]) == 3
 
 
-#@pytest.mark.parametrize("historian_config", historians)
-@pytest.mark.parametrize(historians)
-#@pytest.mark.tagging
+@pytest.mark.parametrize("historian_config", historians)
+# @pytest.mark.parametrize(historians)
+@pytest.mark.tagging
 def test_insert_topic_tags(volttron_instance, tagging_service, query_agent,
                            historian_config):
     global connection_type, db_connection
@@ -540,8 +540,8 @@ def test_insert_topic_tags(volttron_instance, tagging_service, query_agent,
             volttron_instance.remove_agent(new_tagging_id)
 
 
-#@pytest.mark.parametrize("historian_config", historians)
-@pytest.mark.parametrize(historians)
+@pytest.mark.parametrize("historian_config", historians)
+# @pytest.mark.parametrize(historians)
 @pytest.mark.tagging
 def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
                                    query_agent, historian_config):
@@ -607,8 +607,8 @@ def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
                           'campus*/d*/p2': ['campus2/d2/p2', 'campus2/d1/p2',
                                             'campus1/d2/p2', 'campus1/d1/p2']}
         expected_err = {'asbaskuhdf/asdfasdf': 'No matching topic found'}
-        assert cmp(expected_err, result['error']) == 0
-        assert cmp(exepected_info, result['info']) == 0
+        assert expected_err == result['error']
+        assert exepected_info == result['info']
 
         result1 = query_agent.vip.rpc.call(new_tagging_vip_id,
                                            'get_tags_by_topic',
@@ -664,8 +664,8 @@ def test_insert_topic_pattern_tags(volttron_instance, tagging_service,
             volttron_instance.remove_agent(new_tagging_id)
 
 
-#@pytest.mark.parametrize("historian_config", historians)
-@pytest.mark.parametrize(historians)
+@pytest.mark.parametrize("historian_config", historians)
+# @pytest.mark.parametrize(historians)
 @pytest.mark.tagging
 def test_insert_topic_tags_update(volttron_instance, tagging_service,
                                   query_agent, historian_config):
@@ -853,7 +853,7 @@ def test_insert_tags_invalid_tag_error(tagging_service, query_agent):
             tags={'t1': 1, 't2': 'val'}).get(timeout=10)
         pytest.fail("Expecting exception for invalid tags but got none")
     except Exception as e:
-        assert e.exc_info['exc_type'] == 'ValueError'
+        assert e.exc_info['exc_type'] == 'builtins.ValueError'
         assert e.message == 'Invalid tag name:t2'
 
 
@@ -1477,7 +1477,7 @@ def test_topic_by_tags_condition_errors(volttron_instance, tagging_service,
     except RemoteError as e:
         assert e.message == 'Invalid tag minValue at line number 1 and ' \
                             'column number 0'
-        assert e.exc_info['exc_type'] == 'ValueError'
+        assert e.exc_info['exc_type'] == 'builtins.ValueError'
 
     # Missing parenthesis
     try:

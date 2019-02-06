@@ -187,7 +187,7 @@ class SQLiteTaggingService(BaseTaggingService):
         except Exception as e:
             err_message = "Initialization of " + table_name + \
                           " table failed with exception: {}" \
-                          "Stopping tagging service agent. ".format(e.args)
+                          "Stopping tagging service agent. ".format(str(e))
         if err_message:
             _log.error(err_message)
             self.vip.health.set_status(STATUS_BAD,
@@ -221,13 +221,11 @@ class SQLiteTaggingService(BaseTaggingService):
                     "kind VARCHAR NOT NULL, "
                     "description VARCHAR)".format(
                         self.tags_table))
-
-        with open(file_path, 'r') as content_file:
-            csv_str = content_file.read()
-        # csv.DictReader uses first line in file for column headings
-        # by default
-        dr = csv.DictReader(csv_str.splitlines())  # comma is default delimiter
-        to_db = [(i['name'], i['kind'], i['description'].decode('utf8')) for i in dr]
+        to_db = []
+        with open(file_path, 'r', encoding='utf-8') as content_file:
+            dr = csv.DictReader(content_file)
+            for row in dr:
+                to_db.append((row['name'], row['kind'], row['description']))
         self.sqlite_utils.execute_many(
             "INSERT INTO {} (name, kind, description) "
             "VALUES (?, ?, ?);".format(self.tags_table),
@@ -267,7 +265,7 @@ class SQLiteTaggingService(BaseTaggingService):
         with open(file_path, 'r') as content_file:
             csv_str = content_file.read()
         dr = csv.DictReader(csv_str.splitlines())
-        to_db = [(i['name'], i['description'].decode('utf8')) for i in dr]
+        to_db = [(i['name'], i['description']) for i in dr]
         _log.debug("Categories in: {}".format(to_db))
         self.sqlite_utils.execute_many(
             "INSERT INTO {} (name, description) "
@@ -283,8 +281,8 @@ class SQLiteTaggingService(BaseTaggingService):
             "tag VARCHAR NOT NULL,"
             "PRIMARY KEY (category, tag))".format(self.category_tags_table))
         _log.debug("created {} table".format(self.category_tags_table))
-
-        with open(file_path, 'r') as content_file:
+        # TODO look for decoding issues here
+        with open(file_path, 'r', encoding='utf-8') as content_file:
             txt_str = content_file.read()
         to_db = []
         if txt_str:
@@ -497,8 +495,8 @@ class SQLiteTaggingService(BaseTaggingService):
         result['info'] = dict()
         result['error'] = dict()
         _log.debug("IN INSERT tags {}".format(tags))
-        for topic_pattern, topic_tags in tags.items():
-            for tag_name, tag_value in topic_tags.items():
+        for topic_pattern, topic_tags in list(tags.items()):
+            for tag_name, tag_value in list(topic_tags.items()):
                 if tag_name not in self.valid_tags:
                     raise ValueError("Invalid tag name:{}".format(tag_name))
                 if tag_name == 'id':
@@ -567,7 +565,8 @@ class SQLiteTaggingService(BaseTaggingService):
             offset_statement = ' \nOFFSET ' + str(skip)
 
         real_query = query + order_by + limit_statement + offset_statement
-        _log.debug("#Real Query: \n" + real_query)
+        # TODO
+        _log.error("#Real Query: \n" + real_query)
         conn = None
         cursor = None
         if "REGEXP" in real_query:
