@@ -431,10 +431,8 @@ class BaseTaggingService(Agent):
                 raise ValueError("Invalid data type ({}) for "
                                  "param or_condition.  Expecting list or "
                                  "dict".format(type(or_condition)))
-
             condition = self._process_and_or_param(and_condition,
                                                    or_condition)
-
         ast = parse_query(condition, self.valid_tags, self.tag_refs)
         return self.query_topics_by_tags(ast=ast, skip=skip, count=count,
                                          order=order)
