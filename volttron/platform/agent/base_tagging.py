@@ -415,10 +415,6 @@ class BaseTaggingService(Agent):
         :rtype: list
         """
 
-        _log.error(and_condition)
-        _log.error(or_condition)
-        _log.error(condition)
-
         if not (and_condition or or_condition or condition):
             raise ValueError("Please provide a valid query criteria using "
                              "one or more of the api parameters(and_condition,"
@@ -435,12 +431,8 @@ class BaseTaggingService(Agent):
                 raise ValueError("Invalid data type ({}) for "
                                  "param or_condition.  Expecting list or "
                                  "dict".format(type(or_condition)))
-            _log.error('CONDITION')
             condition = self._process_and_or_param(and_condition,
                                                    or_condition)
-
-        # TODO things are already messed up here
-
         ast = parse_query(condition, self.valid_tags, self.tag_refs)
         return self.query_topics_by_tags(ast=ast, skip=skip, count=count,
                                          order=order)
