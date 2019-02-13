@@ -610,10 +610,8 @@ class SqlLiteFuncts(DbDriver):
         :return: sqlite query
         :rtype str
         """
-
         query = SqlLiteFuncts._get_compound_query(topic_tags_table, tup,
                                                   tag_refs)
-
         # Verify for parent tag finally. if present convert to subquery
         # Process parent tag
         # Convert
@@ -694,7 +692,6 @@ class SqlLiteFuncts(DbDriver):
                           'like':'REGEXP'}
         prefix = 'SELECT topic_prefix FROM {} WHERE '.format(topic_tags_table)
         # _log.debug("In get sqlite query condition. tup: {}".format(tup))
-
         if tup is None:
             return tup
         if not isinstance(tup[1], tuple):
