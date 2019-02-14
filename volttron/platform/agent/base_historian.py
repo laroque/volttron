@@ -1061,6 +1061,7 @@ class BaseHistorianAgent(Agent):
                 if self._history_limit_days is not None:
                     last_element = to_publish_list[-1]
                     last_time_stamp = last_element["timestamp"]
+                    _log.error(last_time_stamp)
                     history_limit_timestamp = last_time_stamp - self._history_limit_days
 
                 try:
@@ -1403,7 +1404,10 @@ class BackupDatabase:
                         WHERE ROWID IN
                         (SELECT ROWID FROM outstanding
                           ORDER BY ts LIMIT ?)''', (submit_size,))
-            self._record_count -= c.rowcount
+            if self._record_count < c.rowcount:
+                self._record_count = 0
+            else:
+                self._record_count -= c.rowcount
         else:
             temp = list(successful_publishes)
             temp.sort()
