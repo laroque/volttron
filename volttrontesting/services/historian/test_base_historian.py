@@ -285,10 +285,11 @@ def test_health_stuff(request, historian, client_agent):
                                         message=all_message).get(timeout=10)
 
     gevent.sleep(2.0)
+
     status = client_agent.vip.rpc.call("platform.historian", "health.get_status").get(timeout=10)
 
-    assert status["status"] == STATUS_BAD
     assert status["context"][STATUS_KEY_BACKLOGGED]
+    assert status["status"] == STATUS_BAD
     assert status["context"][STATUS_KEY_CACHE_COUNT] > 0
     alert_publish = alert_publishes[-1]
     assert alert_publish.status == STATUS_BAD
@@ -373,7 +374,6 @@ def fail_historian(request, volttron_instance):
                                           backup_storage_limit_gb=0.0001)  # 100K
     yield agent
     agent.core.stop()
-
 
 @pytest.mark.historian
 def test_failing_historian(request, fail_historian, client_agent):

@@ -645,7 +645,7 @@ class Core(BasicCore):
                 self.socket.identity
             ))
 
-            self.stop(timeout=5.0)
+            self.stop(timeout=10.0)
 
         def hello():
             state.ident = ident = b'connect.hello.%d' % state.count

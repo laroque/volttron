@@ -1061,7 +1061,6 @@ class BaseHistorianAgent(Agent):
                 if self._history_limit_days is not None:
                     last_element = to_publish_list[-1]
                     last_time_stamp = last_element["timestamp"]
-                    _log.error(last_time_stamp)
                     history_limit_timestamp = last_time_stamp - self._history_limit_days
 
                 try:
@@ -1077,7 +1076,6 @@ class BaseHistorianAgent(Agent):
                 if not self._successful_published:
                     self._send_alert({STATUS_KEY_PUBLISHING: False}, "historian_not_publishing")
                     break
-
 
                 backupdb.remove_successfully_published(
                     self._successful_published, self._submit_size_limit)
@@ -1797,7 +1795,6 @@ class BaseQueryHistorianAgent(Agent):
                 start = time_parser.parse(start)
             if start and start.tzinfo is None:
                 start = start.replace(tzinfo=pytz.UTC)
-
         if end is not None:
             try:
                 end = parse_timestamp_string(end)

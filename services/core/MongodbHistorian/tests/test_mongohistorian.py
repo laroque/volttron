@@ -120,9 +120,9 @@ def test_can_connect(database_client):
     """
     db = database_client[mongo_connection_params()['database']]
     result = db.test.insert_one({'x': 1})
-    assert result > 0
+    assert result.inserted_id
     result = db.test.insert_one({'here': 'Data to search on'})
-    assert result > 0
+    assert result.inserted_id
 
     result = db.test.find_one({'x': 1})
     assert result['x'] == 1
@@ -445,9 +445,8 @@ def test_analysis_topic(volttron_instance, database_client):
         assert 'FluffyWidgets' in topic_list[0]
 
         result = lister.vip.rpc.call('platform.historian', 'query',
-                                     topic=BASE_ANALYSIS_TOPIC[
-                                           9:] + '/FluffyWidgets').get(
-            timeout=5)
+                                     topic=BASE_ANALYSIS_TOPIC[9:]
+                                           + '/FluffyWidgets').get(timeout=5)
         assert result is not None
         assert len(result['values']) == 1
         assert isinstance(result['values'], list)
@@ -544,8 +543,7 @@ def test_basic_function(volttron_instance, database_client):
                                             count=20,
                                             order="LAST_TO_FIRST").get(
             timeout=100)
-        assert expected['datetime'].isoformat()[:-3] + '000+00:00' == \
-               result['values'][0][0]
+        assert expected['datetime'].isoformat()[:-3] + '000+00:00' == result['values'][0][0]
         assert result['values'][0][1] == expected['oat_point']
 
         result = publish_agent.vip.rpc.call('platform.historian', 'query',
@@ -996,7 +994,6 @@ def test_rollup_query(volttron_instance, database_client):
                               'oat_point', result)
         verify_daily_collection(db, expected3, expected2, expected1)
 
-
     finally:
         if agent_uuid:
             volttron_instance.stop_agent(agent_uuid)
@@ -1173,6 +1170,7 @@ def test_combined_results_from_rollup_and_raw_data(volttron_instance,
             volttron_instance.remove_agent(agent_uuid)
 
 
+@pytest.mark.dev
 @pytest.mark.historian
 @pytest.mark.mongodb
 @pytest.mark.skipif(not HAS_PYMONGO, reason='No pymongo driver')
@@ -1210,7 +1208,7 @@ def test_combined_results_rollup_and_raw_data_with_count(volttron_instance,
         config = mongo_agent_config()
         config['periodic_rollup_initial_wait'] = 0.1
         config['rollup_query_end'] = 1
-        config['periodic_rollup_frequency'] = 1
+        config['periodic_rollup_frequency'] = 0.1
         config['rollup_query_start'] = publish_t2.strftime(
             '%Y-%m-%dT%H:%M:%S.%f')
         config['initial_rollup_start_time'] = publish_t2.strftime(

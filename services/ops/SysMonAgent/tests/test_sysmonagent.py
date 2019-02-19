@@ -49,6 +49,7 @@ import pytest
 
 import gevent
 
+from volttron.platform import get_ops
 from volttrontesting.utils.utils import poll_gevent_sleep
 
 _test_config = {

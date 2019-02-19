@@ -105,17 +105,17 @@ def test_broker(): #broker_test():
     
     time.sleep(2)
 #     pub.send_multipart(['topic1', 'Hello world1'])
-    pub.send_multipart(['topic1', 'Hello world1'])
+    pub.send_multipart([b'topic1', b'Hello world1'])
     time.sleep(2)
-    pub.send_multipart(['foo', 'bar'])
+    pub.send_multipart([b'foo', b'bar'])
     time.sleep(2)
-    pub.send_multipart(['topic2', 'Goodbye'])
+    pub.send_multipart([b'topic2', b'Goodbye'])
     time.sleep(2)
-    pub.send_multipart(['platform', 'Hello from platform'])
+    pub.send_multipart([b'platform', b'Hello from platform'])
     time.sleep(2)
-    pub.send_multipart(['topic1', 'Hello world1'])
+    pub.send_multipart([b'topic1', b'Hello world1'])
     time.sleep(2)
-    pub.send_multipart(['platform/shutdown', 'Goodbye'])
+    pub.send_multipart([b'platform/shutdown', b'Goodbye'])
 
 if __name__ == '__main__':
     test_broker()
