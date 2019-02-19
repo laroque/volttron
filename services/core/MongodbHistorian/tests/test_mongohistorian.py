@@ -1169,8 +1169,6 @@ def test_combined_results_from_rollup_and_raw_data(volttron_instance,
             volttron_instance.stop_agent(agent_uuid)
             volttron_instance.remove_agent(agent_uuid)
 
-
-@pytest.mark.dev
 @pytest.mark.historian
 @pytest.mark.mongodb
 @pytest.mark.skipif(not HAS_PYMONGO, reason='No pymongo driver')

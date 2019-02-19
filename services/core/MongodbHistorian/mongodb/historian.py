@@ -66,10 +66,8 @@ from volttron.utils.docs import doc_inherit
 try:
     import ujson
 
-
     def dumps(data):
         return ujson.dumps(data, double_precision=15)
-
 
     def loads(data_string):
         return ujson.loads(data_string, precise_float=True)
@@ -601,7 +599,7 @@ class MongodbHistorian(BaseHistorian):
 
         values = defaultdict(list)
         pool = ThreadPool(5)
-        # TODO check stuff here
+
         try:
 
             # Query for one topic at a time in a loop instead of topic_id
