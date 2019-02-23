@@ -288,8 +288,8 @@ def test_health_stuff(request, historian, client_agent):
 
     status = client_agent.vip.rpc.call("platform.historian", "health.get_status").get(timeout=10)
 
-    assert status["context"][STATUS_KEY_BACKLOGGED]
     assert status["status"] == STATUS_BAD
+    assert status["context"][STATUS_KEY_BACKLOGGED]
     assert status["context"][STATUS_KEY_CACHE_COUNT] > 0
     alert_publish = alert_publishes[-1]
     assert alert_publish.status == STATUS_BAD
@@ -324,7 +324,7 @@ class FailureHistorian(BaseHistorian):
 
     def publish_to_historian(self, to_publish_list):
         if self.publish_fail:
-            raise StandardError("Failed to publish.")
+            raise Exception("Failed to publish.")
 
         self.seen.extend(to_publish_list)
         self.report_all_handled()
@@ -347,18 +347,18 @@ class FailureHistorian(BaseHistorian):
 
     def historian_setup(self):
         if self.setup_fail:
-            raise StandardError("Failed to setup.")
+            raise Exception("Failed to setup.")
 
         self.setup_run = True
 
     def record_table_definitions(self, meta_table_name):
         if self.record_fail:
-            raise StandardError("Failed to record table definitions")
+            raise Exception("Failed to record table definitions")
         self.record_run = True
 
     def historian_teardown(self):
         if self.teardown_fail:
-            raise StandardError("Failed to teardown.")
+            raise Exception("Failed to teardown.")
 
         self.teardown_run = True
 

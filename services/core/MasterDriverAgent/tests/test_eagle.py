@@ -180,15 +180,15 @@ response_dict = {
 
 def handle(env, start_response):
     try:
-        length = env['CONTENT_LENGTH']
+        length = int(env['CONTENT_LENGTH'])
         data = env['wsgi.input']
         data = data.read(length)
-        data = data.replace(' ', '')
+        data = data.replace(b' ', b'')
     except KeyError:
         data = None
 
     start_response('200 OK', [('Content-Type', 'text/html')])
-    return response_dict[data]
+    return response_dict[str(data, 'utf-8')]
 
     return handle
 

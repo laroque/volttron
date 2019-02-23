@@ -412,14 +412,14 @@ class CrateHistorian(BaseHistorian):
         args = [topic]
         if start and end and start == end:
             where_clauses.append("ts = ?")
-            args.append(start)
+            args.append(start.replace(tzinfo=None))
         else:
             if start:
                 where_clauses.append("ts >= ?")
-                args.append(start)
+                args.append(start.replace(tzinfo=None))
             if end:
                 where_clauses.append("ts < ?")
-                args.append(end)
+                args.append(end.replace(tzinfo=None))
 
         where_statement = ' AND '.join(where_clauses)
 
@@ -434,7 +434,7 @@ class CrateHistorian(BaseHistorian):
             count = 100
 
         if count > 1000:
-            _log.warn("Limiting count to <= 1000")
+            _log.warning("Limiting count to <= 1000")
             count = 1000
 
         limit_statement = 'LIMIT ?'
