@@ -303,6 +303,7 @@ class BasicCore(object):
 
         if gevent.get_hub() is self._stop_event.hub:
             return halt()
+
         return self.send_async(halt).get()
 
     def _on_sigint_handler(self, signo, *_):
@@ -322,7 +323,7 @@ class BasicCore(object):
 
     def send_async(self, func, *args, **kwargs):
         result = gevent.event.AsyncResult()
-        async_ = result.hub.loop.async_()
+        async_ = gevent.hub.get_hub().loop.async_()
         results = [None, None]
 
         def receiver():

@@ -329,7 +329,7 @@ class PlatformWrapper:
             gevent.spawn(agent.core.run, event)  # .join(0)
             event.wait(timeout=2)
 
-            hello = agent.vip.hello().get(timeout=12)
+            hello = agent.vip.hello().get(timeout=10)
             self.logit('Got hello response {}'.format(hello))
         agent.publickey = publickey
         return agent
@@ -952,7 +952,6 @@ class PlatformWrapper:
             pid = self.agent_pid(agnt['uuid'])
             if pid is not None and int(pid) > 0:
                 running_pids.append(int(pid))
-
         # First try and nicely shutdown the platform, which should clean all
         # of the agents up automatically.
         cmd = ['volttron-ctl']

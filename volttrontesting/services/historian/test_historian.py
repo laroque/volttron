@@ -98,7 +98,7 @@ try:
     crate_path = get_services_core("CrateHistorian")
 
     sys.path.insert(0, crate_path)
-    import crate_historian
+    from services.core import CrateHistorian
     from volttron.platform.dbutils import crateutils as crate_utils
     # Once we fix the tests this will be able to be tested here.
     HAS_CRATE_CONNECTOR = True
@@ -376,8 +376,8 @@ def query_agent(request, volttron_instance):
 # Fixtures for setup and teardown of historian agent
 @pytest.fixture(scope="module",
                 params=[
-                    pytest.param(crate_platform, marks=crate_skipif),
-                    # pytest.param(mysql_platform, marks=mysql_skipif),
+                    # pytest.param(crate_platform, marks=crate_skipif),
+                    pytest.param(mysql_platform, marks=mysql_skipif),
                     # sqlite_platform,
                     # pytest.param(mongo_platform, marks=pymongo_skipif)
                 ])
