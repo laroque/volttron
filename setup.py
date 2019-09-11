@@ -50,27 +50,27 @@ with open('volttron/platform/__init__.py') as file:
     else:
         raise RuntimeError('Unable to find version string in {}.'.format(file.name))
 
-if __name__ == '__main__':
-    setup(
-        name = 'volttron',
-        version = __version__,
-        description = 'Agent Execution Platform',
-        author = 'Volttron Team',
-        author_email = 'volttron@pnnl.gov',
-        url = 'https://github.com/VOLTTRON/volttron',
-        packages = find_packages('.'),
-        install_requires = install_requires,
-        extras_require = extras_require,
-        entry_points = {
-            'console_scripts': [
-                'volttron = volttron.platform.main:_main',
-                'volttron-ctl = volttron.platform.control:_main',
-                'volttron-pkg = volttron.platform.packaging:_main',
-                'volttron-cfg = volttron.platform.config:_main',
-                'vctl = volttron.platform.control:_main',
-                'vpkg = volttron.platform.packaging:_main',
-                'vcfg = volttron.platform.config:_main',
-            ]
-        },
-        zip_safe = False,
-    )
+#if __name__ == '__main__':
+setup(
+    name = 'volttron',
+    version = __version__,
+    description = 'Agent Execution Platform',
+    author = 'Volttron Team',
+    author_email = 'volttron@pnnl.gov',
+    url = 'https://github.com/VOLTTRON/volttron',
+    packages = find_packages('.'),
+    install_requires = install_requires,
+    extras_require = extras_require,
+    entry_points = {
+        'console_scripts': [
+            'volttron = volttron.platform.main:_main',
+            'volttron-ctl = volttron.platform.control:_main',
+            'volttron-pkg = volttron.platform.packaging:_main',
+            'volttron-cfg = volttron.platform.config:_main',
+            'vctl = volttron.platform.control:_main',
+            'vpkg = volttron.platform.packaging:_main',
+            'vcfg = volttron.platform.config:_main',
+        ]
+    },
+    zip_safe = False,
+)
