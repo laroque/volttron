@@ -13,6 +13,7 @@
     http_proxy: ""
   tasks:
 
+    #TODO the organization needs to be a variable, and it should probably default to volttron
     - name: Initialize git variables for downloading repository without git
       set_fact:
         git_branch: remote-platforms
