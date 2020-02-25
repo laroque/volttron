@@ -40,6 +40,8 @@ virtual environment should be used for subsequent bootstraps whenever
 there are significant changes. The system's Python need only be used on
 the initial bootstrap.
 
+.. _building-steps-for-zmq:
+
 Steps for ZMQ
 ~~~~~~~~~~~~~
 
@@ -51,6 +53,7 @@ Steps for ZMQ
 
 Proceed to `Testing the Installation`_.
 
+.. _building-steps-for-rmq:
 
 Steps for RabbitMQ
 ~~~~~~~~~~~~~~~~~~

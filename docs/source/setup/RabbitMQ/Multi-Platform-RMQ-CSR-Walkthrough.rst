@@ -40,8 +40,8 @@ Virtual Machine Setup
 The first step in creating a VOLTTRON instance is to make sure the machine is ready for VOLTTRON.  Each machine
 should have its hostname setup.  For this walkthrough, the hostnames "central", "node-zmq" and "node-rmq" will be used.
 
-For Central and Node-RMQ follow the instructions :ref:`Building-VOLTTRON#steps-for-rabbitmq`.  For Node-ZMQ use
-:ref:`Building-VOLTTRON#steps-for-zmq`.
+For Central and Node-RMQ follow the instructions :ref:`_building-steps-for-rmq`.  For Node-ZMQ use
+:ref:`_building-steps-for-zmq`.
 
 Instance Setup
 --------------
@@ -59,7 +59,7 @@ Central Instance Setup
 
 .. note::
 
-  This instance must have been bootstrapped using --rabbitmq see :ref:`Building-VOLTTRON#steps-for-rabbitmq`.
+  This instance must have been bootstrapped using --rabbitmq see :ref:`building-steps-for-rmq`.
 
 Next step would be to configure the instance to have a web interface to accept/deny incoming certificate signing
 requests from other instances. Additionally, we will need to install a Volttron Central agent, Volttron Central
@@ -292,7 +292,7 @@ Node-RMQ Instance Setup
 
 .. note::
 
-  This instance must have been bootstrapped using --rabbitmq see :ref:`Building-VOLTTRON#steps-for-rabbitmq`.
+  This instance must have been bootstrapped using --rabbitmq see :ref:`building-steps-for-rmq`.
 
 Using "vcfg" command, install Volttron Central Platform agent, a master driver agent with fake driver. The instance
 name is set to "collector2".
