@@ -778,7 +778,7 @@ def confirm_volttron_home():
         prompt = '\nIs this the volttron you are attempting to setup?'
         if not prompt_response(prompt, valid_answers=y_or_n, default='Y') in y:
             print(
-                '\nPlease execute with VOLTRON_HOME=/your/path volttron-cfg to '
+                '\nPlease execute with VOLTTRON_HOME=/your/path volttron-cfg to '
                 'modify VOLTTRON_HOME.\n')
             exit(1)
 
