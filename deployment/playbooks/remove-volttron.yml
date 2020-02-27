@@ -20,13 +20,19 @@
         - "{{ volttron_home }}"
         - "{{ volttron_root }}"
         - "{{ host_config }}"
-        - "{{ my_ansible_vitualenv }}"
         - "{{ ansible_env.HOME }}/rabbitmq_server"
         - "{{ ansible_env.HOME }}/.volttron_rmq_home"
         - "{{ ansible_env.HOME }}/.volttron_instances"
         - "{{ ansible_env.HOME }}/ansible_logging.log"
         - "{{ ansible_env.HOME }}/logfile.log"
         - "{{ ansible_env.HOME }}/configs"
-        - "{{ ansible_env.HOME }}/volttron.tar.gz"
+        - "{{ ansible_env.HOME }}/volttron-source.tar.gz"
 
-
+    # now remove the custom ansible venv
+    - name: reset ansible python
+      set_fact:
+        ansible_python_interpreter: "{{ original_ansible_python_interpreter }}"
+    - name: Remove ansible venv
+      file:
+        state: absent
+        path: "{{ my_ansible_vitualenv }}"

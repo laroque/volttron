@@ -1,34 +1,31 @@
-  - name: check for host configuration files
-    local_action: stat path="{{ local_configs_dir }}"
+  - name: check locally for configuration root directory
+    local_action:
+      module: stat
+      path: "{{ deployment_config_root }}"
     register: directory_check
     ignore_errors: True
+    run_once: True
     vars:
       ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
-  - debug:
-      var: directory_check
-
-  - debug:
-      var: local_remote_config_file
-
-  - name: ensure remote configs dir
+  - name: ensure remote has configs dir
     file:
       path: "{{ host_configs_dir }}"
       state: directory
       mode: 0755
 
-  - name: copy configs
+  - name: copy configs dir to remote
     copy:
       # Note the / on the end means we don't want the containing folder
       # only the files underneath.  So ignore 'sigma1' if it was the
       # host.
-      src: "{{ local_configs_dir }}/"
+      src: "{{ deployment_platform_config_dir }}/"
       dest: "{{ host_configs_dir }}"
       mode: 0644
     when: directory_check.stat.exists
 
   - name: Copy host config to remote
     copy:
-      src: "{{ local_remote_config_file }}"
+      src: "{{ deployment_platform_config_file }}"
       dest: "{{ host_config }}"
       mode: 0644

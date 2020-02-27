@@ -12,91 +12,81 @@
     # Ansible will use this path on remote hosts to run the interpreter with.
     ansible_python_interpreter: /usr/bin/python3
   tasks:
-    #- include_tasks: includes/common.yml
+    - name: ensure that the host OS is a supported system
+      assert:
+        that:
+          - (ansible_distribution == "Ubuntu" and
+             ansible_distribution_major_version | int >= 18 and
+             ansible_distribution_major_version | int < 20)
+            or
+            (ansible_distribution == "Debian" and
+             ansible_distribution_major_version | int >= 9 and
+             ansible_distribution_major_version | int < 10)
+        fail_msg: "the system ({{ ansible_distribution }} : {{ansible_distribution_major_version }}) is not supported"
+        success_msg: "system is supported"
 
-    #TODO the organization needs to be a variable, and it should probably default to volttron
-    - name: Initialize git variables for downloading repository without git
-      set_fact:
-        git_branch: remote-platforms
-        git_organization: craig8
-
-    #TODO BHL: this step is expected to be very sensitive to the OS
-    #          package names differ between ubuntu versions and/or to debian
-#    - name: Update apt cache
-#      become: yes
-#      become_method: sudo
-#      apt:
-#        update-cache: yes
-#        autoclean: yes
-    - name: Install base software
+    - name: install system packages
       become: yes
       become_method: sudo
-      apt:
-        #update_cache: yes
-        state: present
-        name: #"{{item}}"
-      #loop:
-          - "build-essential"
-          - "git"
-          - "python3-dev"
-          - "python3-venv"
-          - "libssl-dev"
-          - "libevent-dev"
-          - libzmq3-dev
+      block:
+      #TODO BHL: this step is expected to be very sensitive to the OS
+      #          package names differ between ubuntu versions and/or to debian
+      - name: Install base software
+        apt:
+          state: present
+          name:
+            - build-essential
+            - git
+            - python3-dev
+            - python3-venv
+            - libssl-dev
+            - libevent-dev
+            - libzmq3-dev
 
-    - name: Installing extra system level things for rabbit.
-      become: yes
-      become_method: sudo
-      when: messagebus == "rmq"
-      apt:
-        name: "{{item}}"
-        state: present
-      loop:
-          - "apt-transport-https"
-          - "libwxbase3.0-0v5"
-          - "libwxgtk3.0-0v5"
-          - "libsctp1"
+      - name: Installing extra system level things for rabbit.
+        when: message_bus == "rmq"
+        apt:
+          state: present
+          name:
+            - apt-transport-https
+            - libwxbase3.0-0v5
+            - libwxgtk3.0-0v5
+            - libsctp1
 
-    - name: Adding apt_key for erlang solutions
-      become: yes
-      become_method: sudo
-      when: messagebus == "rmq"
-      apt_key:
-        url: https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
-        state: present
+      - name: Adding apt_key for erlang solutions
+        when: message_bus == "rmq"
+        apt_key:
+          url: https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
+          state: present
 
-    - name: Adding apt repo for erlang
-      become: yes
-      become_method: sudo
-      when: messagebus == "rmq"
-      apt_repository:
-        update_cache: yes
-        repo: deb https://packages.erlang-solutions.com/ubuntu bionic contrib
-        state: present
-        filename: erlang.solutions.list
+      - name: Adding apt repo for erlang
+        when: message_bus == "rmq"
+        apt_repository:
+          update_cache: yes
+          repo: deb https://packages.erlang-solutions.com/ubuntu bionic contrib
+          state: present
+          filename: erlang.solutions.list
 
-    - name: Install erlang requirements
-      become: yes
-      become_method: sudo
-      when: messagebus == "rmq"
-      apt:
-        update_cache: yes
-        name: "{{item}}"
-        state: present
-      loop:
-        - "erlang-base"
-        - "erlang-diameter"
-        - "erlang-eldap"
-        - "erlang-ssl"
-        - "erlang-crypto"
-        - "erlang-asn1"
-        - "erlang-public-key"
-        - "erlang-nox"
+      - name: Install erlang requirements
+        when: message_bus == "rmq"
+        apt:
+          update_cache: yes
+          state: present
+          name:
+            - "erlang-base"
+            - "erlang-diameter"
+            - "erlang-eldap"
+            - "erlang-ssl"
+            - "erlang-crypto"
+            - "erlang-asn1"
+            - "erlang-public-key"
+            - "erlang-nox"
+    ## end of system package install block
 
     - name: Download volttron repository tarball
       get_url:
-        url: https://github.com/{{ git_organization }}/volttron/archive/{{ git_branch }}.tar.gz
-        dest: "/tmp/volttron-{{ inventory_hostname }}.tar.gz"
+        url: https://github.com/{{ volttron_git_organization }}/{{ volttron_git_repo }}/archive/{{ volttron_git_branch }}.tar.gz
+        dest: "/tmp/volttron-{{ volttron_git_branch }}.tar.gz"
         force: yes
 
     - name: Stat volttron dir
@@ -106,43 +96,52 @@
 
     - name: Stat tar file
       stat:
-        path: "/tmp/volttron-{{ inventory_hostname }}.tar.gz"
+        path: "/tmp/volttron-{{ volttron_git_branch }}.tar.gz"
         get_checksum: yes
       register: new_tar_stat
 
     - name: Stat old tar
       stat:
-        path: "{{ ansible_env.HOME }}/volttron-{{ inventory_hostname }}.tar.gz"
+        path: "{{ ansible_env.HOME }}/volttron-source.tar.gz"
         get_checksum: yes
       register: old_tar_stat
 
-    - name: Should reset
+    - name: Check if volttron source is updated
       set_fact:
         redo_volttron: "{{ (not volttron_path_stat.stat.exists or not old_tar_stat.stat.exists or (new_tar_stat.stat.checksum != old_tar_stat.stat.checksum)) }}"
 
-    - name: Move new file
-      command: mv "/tmp/volttron-{{ inventory_hostname }}.tar.gz" "{{ ansible_env.HOME }}/volttron-{{ inventory_hostname }}.tar.gz"
+    - name: "[re]establish volttron source directory"
       when: redo_volttron
+      block:
+      - name: Move new file
+        command: mv "/tmp/volttron-{{ volttron_git_branch }}.tar.gz" "{{ ansible_env.HOME }}/volttron-source.tar.gz"
 
-    - name: Remove volttron dir if exists
-      command: rm -rf {{ volttron_root }}
-      when: redo_volttron
+      - name: Remove volttron source root dir if exists
+        file:
+          path: "{{ volttron_root }}"
+          state: absent
 
-    - name: make sure hostname folder exists
-      file:
-        path: "{{ ansible_env.HOME }}/{{ inventory_hostname }}"
-        state: directory
+      - name: Create a path to unarchive into
+        file:
+          path: "/tmp/volttron_source"
+          state: absent
+      - name: Create a path to unarchive into
+        file:
+          path: "/tmp/volttron_source"
+          state: directory
+      - name: Extract source archive
+        unarchive:
+          src: "{{ ansible_env.HOME }}/volttron-source.tar.gz"
+          dest: "/tmp/volttron_source"
+          remote_src: yes
 
-    - name: Extract archive
-      unarchive:
-        src: "{{ ansible_env.HOME }}/volttron-{{ inventory_hostname }}.tar.gz"
-        dest: "{{ ansible_env.HOME }}/{{ inventory_hostname }}/"
-        remote_src: yes
-      when: redo_volttron
-
-    - name: rename folder
-      command: mv "{{ ansible_env.HOME }}/{{ inventory_hostname }}/volttron-{{git_branch}}" "{{ volttron_root }}"
-      when: redo_volttron
+      - name: Place source tree at volttron root
+        command: mv "/tmp/volttron_source/{{volttron_git_repo}}-{{volttron_git_branch}}" "{{ volttron_root }}"
+      - name: Cleanup unarchive artifacts
+        file:
+          path: "/tmp/volttron_source"
+          state: absent
+    ## end of block to update volttron source
 
     - name: Bootstrap the python3 environment
       command:
@@ -151,31 +150,29 @@
         creates: "{{ volttron_root }}/env"
 
     - name: Test if pika installed
-      shell: "cd {{ volttron_root }} && env/bin/pip list --disable-pip-version-check --format legacy| grep -F gevent-pika | wc -l"
-      args:
+      shell:
+        cmd: "env/bin/pip list --disable-pip-version-check --format legacy| grep -F gevent-pika | wc -l"
         chdir: "{{ volttron_root }}"
       register: already_installed_pika
-
     - name: Boostrap rmq environment
-      when: (messagebus == "rmq" and "0" not in already_installed_pika.stdout)
+      when: (message_bus == "rmq" and "0" not in already_installed_pika.stdout)
       command:
         cmd: "env/bin/python bootstrap.py --rabbitmq"
         chdir: "{{ volttron_root }}"
 
-    - name: Test if ws4py is installed (test if web has been installed)
-      raw: "cd {{ volttron_root }} && env/bin/pip list --disable-pip-version-check --format legacy| grep -F ws4py | wc -l"
-      args:
+    - name: Test if ws4py is installed
+      shell:
+        cmd: "env/bin/pip list --disable-pip-version-check --format legacy| grep -F ws4py | wc -l"
         chdir: "{{ volttron_root }}"
       register: web_enabled
-
     - name: Enabling web packages for environment
-      when: (enable_web is defined and enable_web == True) # and "0" not in web_enabled.stdout)
+      when: (enable_web == True and "0" not in web_enabled.stdout)
       command:
         cmd: "{{ volttron_root }}/env/bin/python bootstrap.py --web"
         chdir: "{{ volttron_root }}"
 
     - name: Enabling master driver packages for environment
-      when: (enable_drivers is defined and enable_drivers == True)
+      when: (enable_drivers == True)
       command:
         cmd: "{{ volttron_root }}/env/bin/python bootstrap.py --drivers"
         chdir: "{{ volttron_root }}"
@@ -183,19 +180,15 @@
     - name: Install extra requirements for this instance
       pip:
         virtualenv: "{{ansible_env.HOME}}/volttron/env"
-        name: "{{ item }}"
-      with_items: "{{ extra_requirements }}"
+        name: "{{ extra_requirements }}"
       environment:
-        # This module doesn't use the http_proxy as the env instead it uses the
-        # capitalized one
-        # reference https://docs.ansible.com/ansible/latest/modules/pip_module.html
         HTTP_PROXY: "{{ http_proxy }}"
-      when: extra_requirments is defined and extra_requirements != []
+      when: (extra_requirements | length) > 0
 
-    - set_fact:
-        local_remote_config_file: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/{{inventory_hostname}}.yml"
-        local_configs_dir: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/configs"
-        python3: "{{lookup('env','DEPLOYMENT_ROOT')}}/env/bin/python"
+    #- set_fact:
+    #    local_remote_config_file: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/{{inventory_hostname}}.yml"
+    #    local_configs_dir: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/configs"
+    #    python3: "{{lookup('env','DEPLOYMENT_ROOT')}}/env/bin/python"
 
     - include_tasks: includes/ansible_venv.yml
     - include_tasks: includes/copy_configs.yml
