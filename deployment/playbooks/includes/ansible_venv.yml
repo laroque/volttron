@@ -1,5 +1,5 @@
 ---
-- name: "Raspbian-specific ansible venv packages"
+- name: Raspbian-specific ansible venv packages
   pip:
     virtualenv: "{{ my_ansible_vitualenv }}"
     virtualenv_command: /usr/bin/python3 -m venv
@@ -17,8 +17,8 @@
      - pyyaml
      - psutil
      - zmq
-     - 'netifaces==0.10.9'
-     - 'deepdiff'
+     - netifaces==0.10.9
+     - deepdiff
 
 # Sets the ansible interpreter to be the one that
 # is used for the rest of the tasks.

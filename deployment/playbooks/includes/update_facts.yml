@@ -8,6 +8,6 @@
 
 - name: Create fact file
   template:
-    owner: "{{ ansible_user_id }}"
+    owner: "{{ ansible_user }}"
     src: templates/instance.fact
     dest: /etc/ansible/facts.d/instance.fact

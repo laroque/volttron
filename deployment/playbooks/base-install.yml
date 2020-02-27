@@ -44,7 +44,7 @@
             - libzmq3-dev
 
       - name: Installing extra system level things for rabbit.
-        when: messagebus == "rmq"
+        when: message_bus == "rmq"
         apt:
           state: present
           name:
@@ -54,13 +54,13 @@
             - libsctp1
 
       - name: Adding apt_key for erlang solutions
-        when: messagebus == "rmq"
+        when: message_bus == "rmq"
         apt_key:
           url: https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
           state: present
 
       - name: Adding apt repo for erlang
-        when: messagebus == "rmq"
+        when: message_bus == "rmq"
         apt_repository:
           update_cache: yes
           repo: deb https://packages.erlang-solutions.com/ubuntu bionic contrib
@@ -68,7 +68,7 @@
           filename: erlang.solutions.list
 
       - name: Install erlang requirements
-        when: messagebus == "rmq"
+        when: message_bus == "rmq"
         apt:
           update_cache: yes
           state: present
@@ -86,7 +86,7 @@
     - name: Download volttron repository tarball
       get_url:
         url: https://github.com/{{ volttron_git_organization }}/{{ volttron_git_repo }}/archive/{{ volttron_git_branch }}.tar.gz
-        dest: "/tmp/volttron-{{ inventory_hostname }}.tar.gz"
+        dest: "/tmp/volttron-{{ volttron_git_branch }}.tar.gz"
         force: yes
 
     - name: Stat volttron dir
@@ -96,17 +96,17 @@
 
     - name: Stat tar file
       stat:
-        path: "/tmp/volttron-{{ inventory_hostname }}.tar.gz"
+        path: "/tmp/volttron-{{ volttron_git_branch }}.tar.gz"
         get_checksum: yes
       register: new_tar_stat
 
     - name: Stat old tar
       stat:
-        path: "{{ ansible_env.HOME }}/volttron-{{ inventory_hostname }}.tar.gz"
+        path: "{{ ansible_env.HOME }}/volttron-source.tar.gz"
         get_checksum: yes
       register: old_tar_stat
 
-    - name: Should reset
+    - name: Check if volttron source is updated
       set_fact:
         redo_volttron: "{{ (not volttron_path_stat.stat.exists or not old_tar_stat.stat.exists or (new_tar_stat.stat.checksum != old_tar_stat.stat.checksum)) }}"
 
@@ -114,26 +114,33 @@
       when: redo_volttron
       block:
       - name: Move new file
-        command: mv "/tmp/volttron-{{ inventory_hostname }}.tar.gz" "{{ ansible_env.HOME }}/volttron-{{ inventory_hostname }}.tar.gz"
+        command: mv "/tmp/volttron-{{ volttron_git_branch }}.tar.gz" "{{ ansible_env.HOME }}/volttron-source.tar.gz"
 
-      - name: Remove volttron dir if exists
+      - name: Remove volttron source root dir if exists
         file:
           path: "{{ volttron_root }}"
           state: absent
 
-      - name: make sure hostname folder exists
+      - name: Create a path to unarchive into
         file:
-          path: "{{ ansible_env.HOME }}/{{ inventory_hostname }}"
+          path: "/tmp/volttron_source"
+          state: absent
+      - name: Create a path to unarchive into
+        file:
+          path: "/tmp/volttron_source"
           state: directory
-
-      - name: Extract archive
+      - name: Extract source archive
         unarchive:
-          src: "{{ ansible_env.HOME }}/volttron-{{ inventory_hostname }}.tar.gz"
-          dest: "{{ ansible_env.HOME }}/{{ inventory_hostname }}/"
+          src: "{{ ansible_env.HOME }}/volttron-source.tar.gz"
+          dest: "/tmp/volttron_source"
           remote_src: yes
 
-      - name: rename folder
-        command: mv "{{ ansible_env.HOME }}/{{ inventory_hostname }}/volttron-{{volttron_git_branch}}" "{{ volttron_root }}"
+      - name: Place source tree at volttron root
+        command: mv "/tmp/volttron_source/{{volttron_git_repo}}-{{volttron_git_branch}}" "{{ volttron_root }}"
+      - name: Cleanup unarchive artifacts
+        file:
+          path: "/tmp/volttron_source"
+          state: absent
     ## end of block to update volttron source
 
     - name: Bootstrap the python3 environment
@@ -148,7 +155,7 @@
         chdir: "{{ volttron_root }}"
       register: already_installed_pika
     - name: Boostrap rmq environment
-      when: (messagebus == "rmq" and "0" not in already_installed_pika.stdout)
+      when: (message_bus == "rmq" and "0" not in already_installed_pika.stdout)
       command:
         cmd: "env/bin/python bootstrap.py --rabbitmq"
         chdir: "{{ volttron_root }}"
@@ -178,10 +185,10 @@
         HTTP_PROXY: "{{ http_proxy }}"
       when: (extra_requirements | length) > 0
 
-    - set_fact:
-        local_remote_config_file: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/{{inventory_hostname}}.yml"
-        local_configs_dir: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/configs"
-        python3: "{{lookup('env','DEPLOYMENT_ROOT')}}/env/bin/python"
+    #- set_fact:
+    #    local_remote_config_file: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/{{inventory_hostname}}.yml"
+    #    local_configs_dir: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/configs"
+    #    python3: "{{lookup('env','DEPLOYMENT_ROOT')}}/env/bin/python"
 
     - include_tasks: includes/ansible_venv.yml
     - include_tasks: includes/copy_configs.yml
@@ -190,7 +197,7 @@
       become: True
       become_method: sudo
       file:
-        owner: "{{ ansible_user_id }}"
+        owner: "{{ ansible_user }}"
         recurse: yes
         path: "/etc/ansible/facts.d"
         state: "directory"
