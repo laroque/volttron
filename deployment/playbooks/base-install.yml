@@ -173,6 +173,7 @@
     - debug:
         msg: "extra requirements {{ extra_requirements }} "
 
+    #TODO this when logic doesn't work yet
     - name: Install extra requirements for this instance
       pip:
         virtualenv: "{{ansible_env.HOME}}/volttron/env"
