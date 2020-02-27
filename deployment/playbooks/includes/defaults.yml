@@ -22,9 +22,11 @@
     my_ansible_vitualenv: "{{ my_ansible_vitualenv | default('{{ansible_env.HOME }}/ansible_venv') }}"
     my_ansible_python_interpreter: "{{ my_ansible_vitualenv | default('{{ansible_env.HOME }}/ansible_venv')}}/bin/python"
 
-## the following facts must be set in separate tasks because they build on each other
+## the following facts must be set in separate tasks because they build on earlier facts
 ## NOTE: ansible does not consider paths relative to CWD, these paths must be absolute
 ##       (or in the tree of the playbook in a default searched location)
+- set_fact:
+    original_ansible_python_interpreter: "{{ ansible_python_interpreter }}"
 - set_fact:
     # absolute path to configurations directory for all deployments in inventory
     deployment_config_root: "{{ deployment_config_root | default( lookup('env', 'DEPLOYMENT_ROOT') ) }}"
