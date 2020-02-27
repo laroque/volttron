@@ -170,21 +170,13 @@
         cmd: "{{ volttron_root }}/env/bin/python bootstrap.py --drivers"
         chdir: "{{ volttron_root }}"
 
-    - debug:
-        msg: "extra requirements {{ extra_requirements }} "
-
-    #TODO this when logic doesn't work yet
     - name: Install extra requirements for this instance
       pip:
         virtualenv: "{{ansible_env.HOME}}/volttron/env"
-        name: extra_requirements
+        name: "{{ extra_requirements }}"
       environment:
-        # This module doesn't use the http_proxy as the env instead it uses the
-        # capitalized one
-        # reference https://docs.ansible.com/ansible/latest/modules/pip_module.html
         HTTP_PROXY: "{{ http_proxy }}"
-      when: (extra_requirements | bool)
-    - pause:
+      when: (extra_requirements | length) > 0
 
     - set_fact:
         local_remote_config_file: "{{lookup('env','DEPLOYMENT_ROOT')}}/{{inventory_hostname}}/{{inventory_hostname}}.yml"
@@ -198,7 +190,7 @@
       become: True
       become_method: sudo
       file:
-        owner: "{{ ansible_user }}"
+        owner: "{{ ansible_user_id }}"
         recurse: yes
         path: "/etc/ansible/facts.d"
         state: "directory"
