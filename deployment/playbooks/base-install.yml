@@ -149,24 +149,24 @@
         chdir: "{{ volttron_root }}"
         creates: "{{ volttron_root }}/env"
 
-    - name: Test if pika installed
-      shell:
-        cmd: "env/bin/pip list --disable-pip-version-check --format legacy| grep -F gevent-pika | wc -l"
-        chdir: "{{ volttron_root }}"
-      register: already_installed_pika
+    #- name: Test if pika installed
+    #  shell:
+    ##    cmd: "env/bin/pip list --disable-pip-version-check --format legacy| grep -F gevent-pika | wc -l"
+    #    chdir: "{{ volttron_root }}"
+    #  register: already_installed_pika
     - name: Boostrap rmq environment
-      when: (message_bus == "rmq" and "0" not in already_installed_pika.stdout)
+      when: (message_bus == "rmq") # and "0" not in already_installed_pika.stdout)
       command:
         cmd: "env/bin/python bootstrap.py --rabbitmq"
         chdir: "{{ volttron_root }}"
 
-    - name: Test if ws4py is installed
-      shell:
-        cmd: "env/bin/pip list --disable-pip-version-check --format legacy| grep -F ws4py | wc -l"
-        chdir: "{{ volttron_root }}"
-      register: web_enabled
+    #- name: Test if ws4py is installed
+    #  shell:
+    #    cmd: "env/bin/pip list --disable-pip-version-check --format legacy| grep -F ws4py | wc -l"
+    #    chdir: "{{ volttron_root }}"
+    #  register: web_enabled
     - name: Enabling web packages for environment
-      when: (enable_web == True and "0" not in web_enabled.stdout)
+      when: (enable_web == True) # and "0" not in web_enabled.stdout)
       command:
         cmd: "{{ volttron_root }}/env/bin/python bootstrap.py --web"
         chdir: "{{ volttron_root }}"
