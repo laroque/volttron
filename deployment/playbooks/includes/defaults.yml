@@ -28,14 +28,15 @@
 - set_fact:
     original_ansible_python_interpreter: "{{ ansible_python_interpreter }}"
 - set_fact:
-    # absolute path to configurations directory for all deployments in inventory
-    deployment_config_root: "{{ deployment_config_root | default( lookup('env', 'DEPLOYMENT_ROOT') ) }}"
+    ## absolute path to configurations directory for all deployments in inventory
+    deployment_config_root: "{{ deployment_config_root | default(inventory_dir) }}"
+    #deployment_config_root: "{{ deployment_config_root | default( lookup('env', 'DEPLOYMENT_ROOT') ) }}"
 - set_fact:
-    # absolute path to configurations directory specific to this node in the inventory
+    ## absolute path to configurations directory specific to this node in the inventory
     deployment_host_config_dir: "{{ deployment_host_config_dir | default( deployment_config_root + '/' + inventory_hostname ) }}"
 - set_fact:
-    # absolute path to the agent configurations directory specific to this node
+    ## absolute path to the agent configurations directory specific to this node
     deployment_platform_config_dir: "{{ deployment_platform_config_dir | default( deployment_host_config_dir + '/' + '/configs') }}"
 - set_fact:
-    # absolute path to the platform configuration file for this node
+    ## absolute path to the platform configuration file for this node
     deployment_platform_config_file: "{{ deployment_platform_config_file | default( deployment_host_config_dir + '/' + inventory_hostname + '.yml' ) }}"
