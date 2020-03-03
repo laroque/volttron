@@ -330,7 +330,8 @@ def _get_cli_args() -> ImmutableDict:
     return ImmutableDict(
         tags={}, listtags=False, listtasks=False, listhosts=False, syntax=False, connection='ssh',
         module_path=None, forks=10,
-        remote_user='xxx', private_key_file=None,
+        #remote_user='xxx',
+        private_key_file=None,
         ssh_common_args=None, ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None,
         # become=True,
         # become_method='sudo',
