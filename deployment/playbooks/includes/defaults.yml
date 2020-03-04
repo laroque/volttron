@@ -30,7 +30,6 @@
 - set_fact:
     ## absolute path to configurations directory for all deployments in inventory
     deployment_config_root: "{{ deployment_config_root | default(inventory_dir) }}"
-    #deployment_config_root: "{{ deployment_config_root | default( lookup('env', 'DEPLOYMENT_ROOT') ) }}"
 - set_fact:
     ## absolute path to configurations directory specific to this node in the inventory
     deployment_host_config_dir: "{{ deployment_host_config_dir | default( deployment_config_root + '/' + inventory_hostname ) }}"
