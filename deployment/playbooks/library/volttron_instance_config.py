@@ -222,6 +222,7 @@ class VolttronInstanceModule(AnsibleModule):
             logger().debug("in start_volttron instance already running")
             return
 
+        ##TODO: shouldn't we be setting VOLTTRON_HOME based on ansible facts?
         cmd = [self._volttron_executable, '-L', 'examples/rotatinglog.py']
         proc = subprocess.Popen(cmd,
                                 stdout=open('/dev/null', 'w'),
@@ -229,6 +230,10 @@ class VolttronInstanceModule(AnsibleModule):
                                 preexec_fn=os.setpgrp,
                                 cwd=self._vroot)
 
+        ##TODO:
+        logger().debug("start volltron with command: {}".format(cmd))
+        logger().debug("calling from cwd: <{}>".format(self._vroot))
+        logger().debug("pid <{}>".format(proc.pid))
         if not self._wait_for_state(InstanceState.RUNNING, timeout=30):
             self.fail_json(msg=f"{failure_message}: Failed to start volttron", stdout=open('logfile.log').read())
 
@@ -260,13 +265,16 @@ class VolttronInstanceModule(AnsibleModule):
     def _wait_for_state(self, expected_state, timeout=10):
         countdown = timeout
         current_state = self._instance_state
-        while current_state is not expected_state and countdown > 0:
+        ##TODO:
+        logger().debug("initial state is '{}'; waiting for state '{}'".format(current_state, expected_state))
+        while current_state != expected_state and countdown > 0:
             sleep(1)
             countdown -= 1
             self.__discover_current_state__()
+            logger().debug("new state is now '{}'".format(self._instance_state))
             if self._instance_state == expected_state:
-                break
                 logger().debug("it took roughly <{}> seconds to reach desired state".format(timeout-countdown))
+                break
 
         return self._instance_state == expected_state
 
@@ -403,6 +411,9 @@ class VolttronInstanceModule(AnsibleModule):
 
         logger().debug(f"_discover_current_state: {self._instance_state}")
         # endregion
+        ##TODO: this return shouldn't be here like this... what the heck is the rest of this method, did a `def` line get
+        ##       deleted between these blocks?.... Presumably we need this logic somewhere.
+        return
 
         # Read expected hosts file and translate that into what will go into the main volttron config
         with open(self._host_config_file) as fp:

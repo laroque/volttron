@@ -118,8 +118,8 @@ def do_volttron_up(hosts_path, options):
         configs_path = os.path.join(os.path.dirname(v), "configs")
         if not os.path.isdir(configs_path):
             sys.stderr.write(f"No configuration files for host {h}")
-        else:
-            sys.stdout.write(f"{h} has configurations {configs_path}")
+        #else:
+            #sys.stdout.write(f"{h} has configurations {configs_path}")
         # if os.path.isdir(configs_path):
         #     extra_vars['host_config_dir'] = configs_path
         #     var_manager.set_host_variable(h, "host_config_dir", configs_path)
