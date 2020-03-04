@@ -143,6 +143,8 @@ class VolttronInstanceModule(AnsibleModule):
         self.exit_json(changed=True, agents_state=self._agents_status)
 
     def handle_install_agent_phase(self):
+        ##TODO:
+        logger().debug("in install_agent_phase")
 
         self.__start_volttron__("handle_install_agent_phase")
 
