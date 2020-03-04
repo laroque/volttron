@@ -8,15 +8,9 @@
   tasks:
     - include_tasks: includes/defaults.yml
 
-- hosts: all
-#  become: yes
-#  become_method: sudo
+- name: Start VOLTTRON
+  hosts: all
   gather_facts: True
-  environment:
-    VOLTTRON_HOME: "{{ volttron_home }}"
-    VOLTTRON_ROOT: "{{ volttron_root }}"
-    # CONFIG: "{{ host_configs_dir }}"
-    HOST_CONFIG: "{{ host_config }}"
   tasks:
     - include_tasks: includes/common.yml
 

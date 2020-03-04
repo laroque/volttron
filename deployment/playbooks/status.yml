@@ -1,16 +1,8 @@
 ---
 - import_playbook: includes/ensure_host_keys.yml
 
-- hosts: all
-#  become: yes
-#  become_method: sudo
-  environment:
-    VOLTTRON_HOME: "{{ ansible_env.HOME }}/.volttron"
-    VOLTTRON_ROOT: "{{ ansible_env.HOME }}/volttron"
-    HOST_CONFIG: "{{ ansible_env.HOME }}/host.config.yml"
-  vars:
-    # Ansible will use this path on remote hosts to run the interpreter with.
-    ansible_python_interpreter: /usr/bin/python3
+- name: VOLTTRON Status
+  hosts: all
   tasks:
     - include_tasks: includes/common.yml
 

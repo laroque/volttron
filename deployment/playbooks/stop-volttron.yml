@@ -1,12 +1,13 @@
 ---
 - import_playbook: includes/ensure_host_keys.yml
 
-- hosts: all
+- name: Stop VOLTTRON
+  hosts: all
   tasks:
     - include_tasks: includes/common.yml
     - name: Configure VOLTTRON Instances
       volttron_instance_config:
-        config_file: "{{ host_config }}/host.config.yml"
+        config_file: "{{ host_config }}"
         state: "STOPPED"
         phase: "NONE"
       register: instance_state

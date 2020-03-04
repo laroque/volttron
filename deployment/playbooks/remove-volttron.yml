@@ -1,6 +1,7 @@
 - import_playbook: includes/ensure_host_keys.yml
 
-- hosts: all
+- name: Remove VOLTTRON
+  hosts: all
   tasks:
     - include_tasks: includes/common.yml
 
