@@ -229,7 +229,7 @@ class VolttronInstanceModule(AnsibleModule):
                                 preexec_fn=os.setpgrp,
                                 cwd=self._vroot)
 
-        if not self._wait_for_state(InstanceState.RUNNING):
+        if not self._wait_for_state(InstanceState.RUNNING, timeout=30):
             self.fail_json(msg=f"{failure_message}: Failed to start volttron", stdout=open('logfile.log').read())
 
     def __stop_volttron__(self, failure_message=''):
@@ -266,6 +266,7 @@ class VolttronInstanceModule(AnsibleModule):
             self.__discover_current_state__()
             if self._instance_state == expected_state:
                 break
+                logger().debug("it took roughly <{}> seconds to reach desired state".format(timeout-countdown))
 
         return self._instance_state == expected_state
 
