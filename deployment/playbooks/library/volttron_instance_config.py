@@ -144,14 +144,20 @@ class VolttronInstanceModule(AnsibleModule):
 
     def handle_install_agent_phase(self):
         ##TODO:
-        logger().debug("in install_agent_phase")
+        logger().debug("in install_agent_phase 1")
 
         self.__start_volttron__("handle_install_agent_phase")
+        ##TODO:
+        logger().debug("in install_agent_phase 2")
 
         self.__status_all_agents__()
         diff = DeepDiff(self._host_config_current, self._host_config_expected)
         requires_restart = False
+        ##TODO:
+        logger().debug("in install_agent_phase 3")
         if diff:
+            ##TODO:
+            logger().debug("in install_agent phase 3.1 dif is true")
             requires_restart = True
             self._write_volttron_config(self._host_config_expected['config'])
 
@@ -159,11 +165,17 @@ class VolttronInstanceModule(AnsibleModule):
             logger().debug("instance is running but requires a restart")
             self.__stop_volttron__("install agent phase instance requires restart")
 
+        ##TODO:
+        logger().debug("in install_agent phase 4 start volttron")
         self.__start_volttron__("install agent phase starting volttron")
 
+
+        ##TODO:
+        logger().debug("in install_agent phase 5 volttron started")
         for identity, spec in self._agents_config.items():
             self._install_agent(identity, spec)
 
+        logger().debug("in install_agent phase 6")
         self.exit_json(msg="What I am done")
         # if self._instance_state == InstanceState.RUNNING:
         #     self.exit_json(changed=changed, msg="VOLTTRON has started")
