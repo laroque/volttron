@@ -27,9 +27,10 @@ import yaml
 
 class VolttronInstanceModule(AnsibleModule):
     def __init__(self, **kwargs):
+        logger().warning("BHL in VIM init") #TODO
         super(VolttronInstanceModule, self).__init__(**kwargs)
 
-        # VOLTTRON cannot be ran as root.
+        # VOLTTRON cannot be run as root.
         if os.geteuid() == 0:
             self.fail_json(msg="Cannot use this module in root context.")
             return
@@ -80,10 +81,16 @@ class VolttronInstanceModule(AnsibleModule):
 
     def _write_multi_platform_file(self):
         current_content = {}
+        logger().warning("in _write_multi_platform_file: check for file") ##TODO
         if os.path.isfile(self._multiplatform_file):
+            logger().warning("in _write_multi_platform_file: load file") ##TODO
             current_content = json.loads(open(self._multiplatform_file).read())
         expected_content = {}
+        logger().warning("in _write_multi_platform_file: update expected_content") ##TODO
         for host, v in self._all_hosts.items():
+            logger().warning(f"in _write_multi_platform_file: update expected_content for {host}") ##TODO
+            logger().warning(" "*8 + f"value keys: {v.keys()}") ##TODO
+            logger().warning(" "*8 + f"full host entry: {v}") ##TODO
             if v['instance']['expected'].get('participate-in-multiplatform'):
                 expected_content[host] = {
                     "instance-name": v['instance']['expected']['config']['instance-name'],
@@ -119,6 +126,7 @@ class VolttronInstanceModule(AnsibleModule):
         self.exit_json(**results)
 
     def handle_external_connection_phase(self):
+        logger().warning("in handle external connections phase, step 0")
         changed = self._write_multi_platform_file()
         ##TODO
         logger().warning("in handle external connections phase, step 1")
@@ -155,7 +163,9 @@ class VolttronInstanceModule(AnsibleModule):
 
         self.__start_volttron__("handle_install_agent_phase")
 
-        self.__status_all_agents__()
+        #self.__status_all_agents__()
+        status_of_all_agents = self.__status_all_agents__()
+        #status_all_agents = self.__status_all_agents() #TODO BHL
         diff = DeepDiff(self._host_config_current, self._host_config_expected)
         requires_restart = False
         if diff:
@@ -168,8 +178,11 @@ class VolttronInstanceModule(AnsibleModule):
 
         self.__start_volttron__("install agent phase starting volttron")
 
+        logger().warning(f"agents to install (BHL): {self._agents_config.keys()}") ##TODO: BHL
+        logger().warning(f"status_all_agents (BHL): {status_of_all_agents.keys()}") ##TODO:BHL
 
         for identity, spec in self._agents_config.items():
+            logger().warning(f"installing agent {identity} - BHL") ##TODO:BHL
             self._install_agent(identity, spec)
 
         self.exit_json(msg="install agent phase complete")
@@ -409,7 +422,8 @@ class VolttronInstanceModule(AnsibleModule):
         # endregion
         ##TODO: BHL -this return shouldn't be here like this... what the heck is the rest of this method, did a `def` line get
         ##       deleted between these blocks?.... Presumably we need this logic somewhere.
-        return
+        #return
+        logger().warning("HOW OFTEN AM I BHL HERE")
 
         # Read expected hosts file and translate that into what will go into the main volttron config
         with open(self._host_config_file) as fp:
@@ -613,15 +627,25 @@ class VolttronInstanceModule(AnsibleModule):
         # needs to be last
         cmd.extend([agent_spec['source']])
         logger().debug(f"Commands are {cmd}")
+        logger().debug(f"BHL cmds are {cmd}") ##BHL
+        cmd.extend(['--debug']) ##BHL
 
-        response = subprocess.run(cmd, cwd=self._vroot,
+        ##TODO: BHL - the issue here is that the cmd is not run in a shell so env vars don't expand
+        ##            we should be very clear about what is being passed into the env (ie, what is allowed in the yaml)
+        response = subprocess.run(['/bin/bash', '-c', ' '.join(cmd)], cwd=self._vroot,
+                                  env={'VOLTTRON_ROOT': self._vroot, 'VOLTTRON_HOME': self._vhome},
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if response.returncode != 0:
             logger().debug(f"Something failed spectacularly during install for idenitity {identity}")
             logger().debug(f"STDOUT\n{response.stdout}")
             logger().debug(f"STDERR\n{response.stdout}")
+            logger().warning(f"BHL - failed cmd was [{' '.join(cmd)}]") ##TODO: BHL
+            self.fail_json(msg=f"failed while attempting to install identity '{identity}' with stdout: {response.stdout} and stderr: {response.stderr}'")
+            logger().warning("BHL I don't think I'll get here") ##TODO BHL
             return
+        else:
+            logger().warning("BHL installed '{identity}'") ##TODO BHL
 
         logger().debug(f"Installed {identity}")
         logger().debug(f"STDOUT\n{response.stdout}")
@@ -927,6 +951,8 @@ def main():
     if module.phase == InstallPhaseEnum.AGENT_INSTALL:
         module.handle_install_agent_phase()
     elif module.phase == InstallPhaseEnum.ALLOW_EXTERNAL_CONNECTIONS:
+        ##TODO:
+        logger().debug(f"in phase agent allow extern")
         module.handle_external_connection_phase()
     elif module.phase == InstallPhaseEnum.START_AGENTS:
         module.handle_start_agent_phase()
