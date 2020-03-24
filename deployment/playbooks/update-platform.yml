@@ -12,6 +12,8 @@
     # Ansible will use this path on remote hosts to run the interpreter with.
     ansible_python_interpreter: /usr/bin/python3
   tasks:
+    ##TODO add support for specifying to copy the local repo (including unmerged)
+    ##     otherwise, to dev you have to specify a branch and keep pushing to it
     - name: Download volttron repository tarball
       get_url:
         url: https://github.com/{{ volttron_git_organization }}/{{ volttron_git_repo }}/archive/{{ volttron_git_branch }}.tar.gz
