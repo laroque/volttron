@@ -29,8 +29,6 @@
       become: yes
       become_method: sudo
       block:
-      #TODO BHL: this step is expected to be very sensitive to the OS
-      #          package names differ between ubuntu versions and/or to debian
       - name: Install base software
         apt:
           state: present

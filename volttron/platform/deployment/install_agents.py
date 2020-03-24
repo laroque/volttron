@@ -77,6 +77,8 @@ def install_requirements(agent_source):
 
     if os.path.exists(req_file):
         _log.info(f"Installing requirements for agent from {req_file}.")
+        _log.warning(f"BHL EXE is: {sys.executable}") ##TODO: BHL
+        print(f"BHL EXE is: {sys.executable}") ##TODO: BHL
         cmds = ["pip", "install", "-r", req_file]
         try:
             execute_command(cmds, logger=_log,

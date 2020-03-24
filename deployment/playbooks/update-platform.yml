@@ -72,6 +72,7 @@
           state: absent
     ## end of block to update volttron source
 
+    ##TODO: omg these can't all use a different python
     - name: Bootstrap the python3 environment
       command:
         cmd: "python3 bootstrap.py"
@@ -81,7 +82,7 @@
     - name: Boostrap rmq environment
       when: (message_bus == "rmq")
       command:
-        cmd: "env/bin/python bootstrap.py --rabbitmq"
+        cmd: "{{ volttron_root }}/env/bin/python bootstrap.py --rabbitmq"
         chdir: "{{ volttron_root }}"
 
     - name: Enabling web packages for environment
@@ -104,7 +105,12 @@
         HTTP_PROXY: "{{ http_proxy }}"
       when: (extra_requirements | length) > 0
 
+    ## TODO: This should not be part of updating the platform, it should
+    ## be part of the initial platform install
     - include_tasks: includes/ansible_venv.yml
+
+    ## TODO: This should not be part of platform setup, these are required
+    ## for agent configuration, should be copied/updated there.
     - include_tasks: includes/copy_configs.yml
 
     - include_tasks: includes/update_facts.yml

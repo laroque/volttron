@@ -1,3 +1,4 @@
+  #TODO: is this the desired logic here? Right now if there's no configs dir local (for agent configurations) we create an empty dir on the remote and create no errors.
   - name: check locally for configuration root directory
     local_action:
       module: stat
@@ -6,6 +7,8 @@
     ignore_errors: True
     run_once: True
     vars:
+      ## we changed pythons to install deps on the remotes, need
+      ## to set back because we're deleagting to localhost
       ansible_python_interpreter: "{{ ansible_playbook_python }}"
 
   - name: ensure remote has configs dir
