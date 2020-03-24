@@ -77,12 +77,10 @@ def install_requirements(agent_source):
 
     if os.path.exists(req_file):
         _log.info(f"Installing requirements for agent from {req_file}.")
-        _log.warning(f"BHL EXE is: {sys.executable}") ##TODO: BHL
         ##TODO: is this sufficiently portable?
         python_dir = os.path.dirname(sys.executable)
         pip_exe = os.path.join(python_dir, "pip")
         pip_exe = pip_exe if os.path.exists(pip_exe) else "pip"
-        _log.warning(f"BHL pip EXE is: {pip_exe}") ##TODO: BHL
         cmds = [pip_exe, "install", "-r", req_file]
         try:
             execute_command(cmds, logger=_log,
