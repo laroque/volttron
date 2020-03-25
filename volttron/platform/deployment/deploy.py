@@ -102,39 +102,20 @@ def do_volttron_up(hosts_path, options):
         for x in missing_config_files:
             sys.stderr.write(f"\t{x}\n")
         sys.exit(1)
-    #
-    # loader = DataLoader()
-    # inventory = InventoryManager(loader=loader, sources=hosts_path)
-    # var_manager = VariableManager(loader=loader, inventory=inventory,
-    #                               version_info=CLI.version_info(gitinfo=False))
-    #
+
     # Path environment available on the local system to copy files to
     # the target environments.
     os.environ['DEPLOYMENT_ROOT'] = os.path.dirname(hosts_path)
     for h, v in config_files.items():
         extra_vars = dict(host_install_file=v)
-        #var_manager.set_host_variable(h, "host_install_file", v)
-        #var_manager.get_vars()
         configs_path = os.path.join(os.path.dirname(v), "configs")
         if not os.path.isdir(configs_path):
             sys.stderr.write(f"No configuration files for host {h}")
-        #else:
-            #sys.stdout.write(f"{h} has configurations {configs_path}")
-        # if os.path.isdir(configs_path):
-        #     extra_vars['host_config_dir'] = configs_path
-        #     var_manager.set_host_variable(h, "host_config_dir", configs_path)
-        # else:
-        #     sys.stderr.write(f"WARNING: configs directory {configs_path} does not exist")
-        #var_manager.eextra_vars = extra_vars
-    # assert cfg['all']['hosts'], f"Invalid agents specified in {hosts_path}"
-    # assert cfg['']
     # Get all host facts from all the different hosts
     results = get_all_facts_from_all_hosts(options)
 
-    pbex = _get_executor(options.hosts_file, None, "volttron-instance", limit=options.limit,
+    pbex = _get_executor(options.hosts_file, None, "update-agents", limit=options.limit,
                          extra_vars={'volttron_host_facts': results})
-                         #variable_manager=var_manager, inventory=inventory)
-    # print(pbex._variable_manager.get_vars())
 
     results = pbex.run()
 
