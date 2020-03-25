@@ -12,5 +12,9 @@
       check_mode: True
       register: instance_state
 
-    - debug:
+    ##TODO: something is wrong in the current/expected state comparison,
+    #       it shows that it will change when it should not
+    ##TODO: installed historian is not running but reported state is RUNNING
+    - name: display instance states
+      debug:
         var: instance_state
