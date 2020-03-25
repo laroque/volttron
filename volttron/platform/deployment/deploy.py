@@ -212,15 +212,7 @@ def do_volttron_down(options):
 
 
 def do_init_systems(options):
-
-    sudo_password = None
-    if not options.no_sudo_pass:
-        while not sudo_password:
-            sudo_password = prompt_response("SUDO Password: ", echo=False, mandatory=True)
-            if sudo_password:
-                break
-
-    pbex = _get_executor(options.hosts_file, sudo_password, "base-install", limit=options.limit)
+    pbex = _get_executor(options.hosts_file, None, "install-platform", limit=options.limit)
 
     results = pbex.run()
 

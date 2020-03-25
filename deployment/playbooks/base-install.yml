@@ -90,4 +90,4 @@
         path: "/etc/ansible/facts.d"
         state: "directory"
 
-- import_playbook: update-platform.yml
+#- import_playbook: update-platform.yml

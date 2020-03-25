@@ -5,8 +5,10 @@
   serial: yes # serial is a play-level variable, we must update client's known_host serially
   tasks:
     - name: ensure host keys condition
+      when: (skip_hostkey_check is not defined or skip_hostkey_check == False)
       block:
       - name: get ssh known_host values
+        changed_when: false
         local_action: "shell ssh-keyscan -p {{ ansible_port | default(22) }} {{ ansible_host }}"
         register: sshKnownHostEntry
         vars:
@@ -21,7 +23,3 @@
           name: "{{ sshKnownHostEntry.stdout.split(' ')[0] }}"
           key: "{{ sshKnownHostEntry.stdout }}"
           path: "~/.ssh/known_hosts"
-      when: (skip_hostkey_check is not defined or skip_hostkey_check == False)
-
-      #- name: now gather facts
-      #  setup: ~
