@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- {{{
 # vim: set fenc=utf-8 ft=python sw=4 ts=4 sts=4 et:
 #
-# Copyright 2017, Battelle Memorial Institute.
+# Copyright 2019, Battelle Memorial Institute.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,7 +54,7 @@ PLATFORM_MARKET_SERVICE = 'platform.market'
 
 CONTROL = 'control'
 CONTROL_CONNECTION = 'control.connection'
-MASTER_WEB = 'master.web'
+MASTER_WEB = 'master_web'
 CONFIGURATION_STORE = 'config.store'
 PLATFORM_DRIVER = 'platform.driver'
 

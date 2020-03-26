@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*- {{{
 # vim: set fenc=utf-8 ft=python sw=4 ts=4 sts=4 et:
 #
-# Copyright 2017, Battelle Memorial Institute.
+# Copyright 2019, Battelle Memorial Institute.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,13 +58,11 @@ from volttron.platform.agent.known_identities import VOLTTRON_CENTRAL_PLATFORM, 
     CONTROL
 
 # Can't use zmq.utils.jsonapi because it is missing the load() method.
-try:
-    import simplejson as jsonapi
-except ImportError:
-    import json as jsonapi
+from volttron.platform import jsonapi
 
-from .agent.utils import is_valid_identity, get_messagebus, \
-    get_platform_instance_name
+from .agent.utils import (is_valid_identity,
+                          get_messagebus,
+                          get_platform_instance_name)
 from volttron.platform import get_home
 from .packages import UnpackedPackage
 from .vip.agent import Agent
@@ -106,32 +104,33 @@ _level_map = {7: logging.DEBUG,  # LOG_DEBUG
 def log_entries(name, agent, pid, level, stream):
     log = logging.getLogger(name)
     extra = {'processName': agent, 'process': pid}
-    for line in (l.rstrip('\r\n') for l in stream):
-        if line[0:1] == '{' and line[-1:] == '}':
-            try:
-                obj = jsonapi.loads(line)
+    for l in stream:
+        for line in l.splitlines():
+            if line.startswith('{') and line.endswith('}'):
                 try:
-                    obj['args'] = tuple(obj['args'])
-                except (KeyError, TypeError, ValueError):
+                    obj = jsonapi.loads(line)
+                    try:
+                        obj['args'] = tuple(obj['args'])
+                    except (KeyError, TypeError, ValueError):
+                        pass
+                    record = logging.makeLogRecord(obj)
+                except Exception:
                     pass
-                record = logging.makeLogRecord(obj)
-            except Exception:
-                pass
-            else:
-                if record.name in log.manager.loggerDict:
-                    if not logging.getLogger(
-                            record.name).isEnabledFor(record.levelno):
+                else:
+                    if record.name in log.manager.loggerDict:
+                        if not logging.getLogger(
+                                record.name).isEnabledFor(record.levelno):
+                            continue
+                    elif not log.isEnabledFor(record.levelno):
                         continue
-                elif not log.isEnabledFor(record.levelno):
+                    record.remote_name, record.name = record.name, name
+                    record.__dict__.update(extra)
+                    log.handle(record)
                     continue
-                record.remote_name, record.name = record.name, name
-                record.__dict__.update(extra)
-                log.handle(record)
-                continue
-        if line[0:1] == '<' and line[2:3] == '>' and line[1:2].isdigit():
-            yield _level_map.get(int(line[1]), level), line[3:]
-        else:
-            yield level, line
+            if line[0:1] == '<' and line[2:3] == '>' and line[1:2].isdigit():
+                yield _level_map.get(int(line[1]), level), line[3:]
+            else:
+                yield level, line
 
 
 def log_stream(name, agent, pid, path, stream):
@@ -180,7 +179,7 @@ class ExecutionEnvironment(object):
     def execute(self, *args, **kwargs):
         try:
             self.env = kwargs.get('env', None)
-            self.process = subprocess.Popen(*args, **kwargs)
+            self.process = subprocess.Popen(*args, **kwargs, universal_newlines=True)
         except OSError as e:
             if e.filename:
                 raise
@@ -206,18 +205,18 @@ class AIPplatform(object):
                 os.makedirs(path, 0o755)
 
     def finish(self):
-        for exeenv in self.agents.itervalues():
+        for exeenv in self.agents.values():
             if exeenv.process.poll() is None:
                 exeenv.process.send_signal(signal.SIGINT)
-        for exeenv in self.agents.itervalues():
+        for exeenv in self.agents.values():
             if exeenv.process.poll() is None:
                 exeenv.process.terminate()
-        for exeenv in self.agents.itervalues():
+        for exeenv in self.agents.values():
             if exeenv.process.poll() is None:
                 exeenv.process.kill()
 
     def shutdown(self):
-        for agent_uuid in self.agents.iterkeys():
+        for agent_uuid in self.agents.keys():
             _log.debug("Stopping agent UUID {}".format(agent_uuid))
             self.stop_agent(agent_uuid)
         event = gevent.event.Event()
@@ -229,10 +228,9 @@ class AIPplatform(object):
         finally:
             agent.core.stop()
             task.kill()
-        _log.debug("I'm done with aip shutdown")
 
     def brute_force_platform_shutdown(self):
-        for agent_uuid in self.agents.iterkeys():
+        for agent_uuid in list(self.agents.keys()):
             _log.debug("Stopping agent UUID {}".format(agent_uuid))
             self.stop_agent(agent_uuid)
         # kill the platform
@@ -254,7 +252,7 @@ class AIPplatform(object):
 
     def autostart(self):
         agents, errors = [], []
-        for agent_uuid, agent_name in self.list_agents().iteritems():
+        for agent_uuid, agent_name in self.list_agents().items():
             try:
                 priority = self._agent_priority(agent_uuid)
             except EnvironmentError as exc:
@@ -328,7 +326,7 @@ class AIPplatform(object):
             agent_name = self.agent_name(agent_uuid)
             name_template = agent_name + "_{n}"
         else:
-            with open(identity_template_filename, 'rb') as fp:
+            with open(identity_template_filename, 'r') as fp:
                 name_template = fp.read(64)
 
             rm_id_template = True
@@ -354,7 +352,7 @@ class AIPplatform(object):
 
         identity_filename = os.path.join(agent_path, "IDENTITY")
 
-        with open(identity_filename, 'wb') as fp:
+        with open(identity_filename, 'w') as fp:
             fp.write(final_identity)
 
         _log.info("Agent {uuid} setup to use VIP ID {vip_identity}".format(
@@ -416,7 +414,7 @@ class AIPplatform(object):
         return results
 
     def get_all_agent_identities(self):
-        return self.get_agent_identity_to_uuid_mapping().keys()
+       return list(self.get_agent_identity_to_uuid_mapping().keys())
 
     def _get_available_agent_identity(self, name_template):
         all_agent_identities = self.get_all_agent_identities()
@@ -469,11 +467,11 @@ class AIPplatform(object):
 
     def active_agents(self):
         return {agent_uuid: execenv.name
-                for agent_uuid, execenv in self.agents.iteritems()}
+                for agent_uuid, execenv in self.agents.items()}
 
     def clear_status(self, clear_all=False):
         remove = []
-        for agent_uuid, execenv in self.agents.iteritems():
+        for agent_uuid, execenv in self.agents.items():
             if execenv.process.poll() is not None:
                 if clear_all:
                     remove.append(agent_uuid)
@@ -486,7 +484,7 @@ class AIPplatform(object):
 
     def status_agents(self):
         return [(agent_uuid, agent_name, self.agent_status(agent_uuid))
-                for agent_uuid, agent_name in self.active_agents().iteritems()]
+                for agent_uuid, agent_name in self.active_agents().items()]
 
     def tag_agent(self, agent_uuid, tag):
         tag_file = os.path.join(self.install_dir, agent_uuid, 'TAG')
@@ -510,7 +508,7 @@ class AIPplatform(object):
         if '/' in agent_uuid or agent_uuid in ['.', '..']:
             raise ValueError('invalid agent')
         identity_file = os.path.join(self.install_dir, agent_uuid, 'IDENTITY')
-        with ignore_enoent, open(identity_file, 'r') as file:
+        with ignore_enoent, open(identity_file, 'rt') as file:
             return file.readline(64)
 
     def agent_tag(self, agent_uuid):
@@ -570,8 +568,8 @@ class AIPplatform(object):
         failed_terms = resmon.check_hard_resources(hard_reqs)
         if failed_terms:
             msg = '\n'.join('  {}: {} ({})'.format(
-                term, hard_reqs[term], avail)
-                            for term, avail in failed_terms.iteritems())
+                            term, hard_reqs[term], avail)
+                                for term, avail in failed_terms.items())
             _log.error('hard resource requirements not met:\n%s', msg)
             raise ValueError('hard resource requirements not met')
         requirements = execreqs.get('requirements', {})
@@ -587,8 +585,8 @@ class AIPplatform(object):
         except ResourceError as exc:
             errmsg, failed_terms = exc.args
         msg = '\n'.join('  {}: {} ({})'.format(
-            term, requirements.get(term, '<unset>'), avail)
-                        for term, avail in failed_terms.iteritems())
+                         term, requirements.get(term, '<unset>'), avail)
+                        for term, avail in failed_terms.items())
         _log.error('%s:\n%s', errmsg, msg)
         raise ValueError(errmsg)
 
@@ -615,8 +613,6 @@ class AIPplatform(object):
                 execreqs_json, exc)
             _log.error(msg)
             raise ValueError(msg)
-        _log.warning('missing execution requirements: %s', execreqs_json)
-        return {}
 
     def start_agent(self, agent_uuid):
         name = self.agent_name(agent_uuid)
@@ -699,11 +695,11 @@ class AIPplatform(object):
         proc = execenv.process
         _log.info('agent %s has PID %s', agent_path, proc.pid)
         gevent.spawn(log_stream, 'agents.stderr', name, proc.pid, argv[0],
-                     log_entries('agents.log', name, proc.pid, logging.ERROR,
-                                 proc.stderr))
+                      log_entries('agents.log', name, proc.pid, logging.ERROR,
+                                  proc.stderr))
         gevent.spawn(log_stream, 'agents.stdout', name, proc.pid, argv[0],
-                     ((logging.INFO, line.rstrip('\r\n'))
-                      for line in proc.stdout))
+                   ((logging.INFO, line) for line in (l.splitlines() for l
+                      in proc.stdout)))
 
         return self.agent_status(agent_uuid)
 
@@ -739,6 +735,6 @@ class AIPplatform(object):
         return execenv.process.poll()
 
     def agent_uuid_from_pid(self, pid):
-        for agent_uuid, execenv in self.agents.iteritems():
+        for agent_uuid, execenv in self.agents.items():
             if execenv.process.pid == pid:
                 return agent_uuid if execenv.process.poll() is None else None
