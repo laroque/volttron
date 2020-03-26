@@ -115,6 +115,8 @@ to install beyond those required for "vanilla" VOLTTRON. Multiple packaging argu
 
     --postgres: Install Psycopg (postgres)
 
+    --recipes: Install ansible for direct CLI use and use in deploy subcommands
+
     --testing: Install testing infrastructure dependencies - Mock (mock), PyTest (pytest), PyTest-timeout
         (pytest-timeout), Websocket-Client (websocket-client)
 

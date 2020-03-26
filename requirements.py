@@ -116,6 +116,9 @@ extras_require = {
     'postgres': [  # numpy and pandas for applications
         'psycopg2-binary'
     ],
+    'recipes': [ # ansible for executing playbooks in the recipes system
+        'ansible',
+    ],
     'testing': [  # Testing infrastructure dependencies
         'mock',
         'pytest',
