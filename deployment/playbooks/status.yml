@@ -6,6 +6,8 @@
   tasks:
     - include_tasks: includes/common.yml
 
+    - include_tasks: includes/update_facts.yml
+
     - name: Retrieving Status
       volttron_instance_config:
         config_file: "{{ host_config }}"
