@@ -75,6 +75,7 @@
           state: absent
     ## end of block to update volttron source
 
+    ##TODO this should support an arbitrary number of bootstrap flags
     - name: Bootstrap the python3 environment
       command:
         cmd: "python3 bootstrap.py"

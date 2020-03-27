@@ -98,6 +98,7 @@ def install_agent_directory(opts, package, agent_config):
     :param agent_config:
     :return:
     """
+    ## Build a wheel for the agent
     if not os.path.isfile(os.path.join(opts.install_path, "setup.py")):
         _log.error("Agent source must contain a setup.py file.")
         sys.exit(-10)
@@ -110,7 +111,9 @@ def install_agent_directory(opts, package, agent_config):
     if not os.path.isfile(opts.package):
         _log.error("The wheel file for the agent was unable to be created.")
         sys.exit(-10)
+    ## end of build wheel
 
+    _log.warning("BHL checking if anget exists") ##TODO
     agent_exists = False
     volttron_control = os.path.join(get_volttron_root(), "env/bin/vctl")
     if opts.vip_identity is not None:
@@ -124,10 +127,12 @@ def install_agent_directory(opts, package, agent_config):
             # Note we don't remove the agent here because if we do that will
             # not allow us to update without losing the keys.  The
             # install_agent method either installs or upgrades the agent.
+    _log.warning(f"BHL agent exists check resulted in {agent_exists}") ##TODO
 
     if agent_config is None:
         agent_config = {}
 
+    ## TODO BHL what? why do we write our dict to a file just to read it back
     # if not a dict then config should be a filename
     if not isinstance(agent_config, dict):
         config_file = agent_config
