@@ -111,7 +111,10 @@ class VolttronInstanceModule(AnsibleModule):
     def handle_status(self):
 
         logger().debug("Inside handle_status")
+        logger().debug("BHL diff")
         logger().debug(f"current is:\n{json.dumps(self._host_config_current, indent=2)}\nexpected:\n{json.dumps(self._host_config_expected, indent=2)}")
+        ##TODO the diff logic here isn't working because the two dicts aren't
+        ##     populated equivalently, current status is incomplete
         diff = DeepDiff(self._host_config_current, self._host_config_expected)
 
         results = dict(changed = False,
@@ -299,81 +302,6 @@ class VolttronInstanceModule(AnsibleModule):
         with open(volttron_config_file, 'w') as fp:
             config_parser.write(fp)
 
-        #
-        #
-        #
-        # host_config_cpy = {}
-        # if host_config_dict is not None:
-        #     host_config_cpy = host_config_dict.copy()
-        # host_config_cpy.pop("participate-in-multiplatform", None)
-        #
-        # logger().debug(f"Building config from:\n{json.dumps(host_config_cpy, indent=2)}")
-        # cfg_loc = os.path.join(volttron_home, 'config')
-        # had_config = False
-        # changed = False
-        # if not os.path.isdir(volttron_home):
-        #     os.makedirs(volttron_home)
-        # else:
-        #     if os.path.isfile(cfg_loc):
-        #         had_config = True
-        #
-        # parser = ConfigParser()
-        #
-        # if had_config:
-        #     parser.read(cfg_loc)
-        #
-        # vc_address = None
-        # vc_serverkey = None
-        # vip_address = None
-        # bind_web_address = None
-        #
-        # if had_config:
-        #     vc_address = _get_option_no_error(parser,
-        #                                       'volttron',
-        #                                       'voltttron-central-address')
-        #     vc_serverkey = _get_option_no_error(parser,
-        #                                         'volttron',
-        #                                         'voltttron-central-serverkey')
-        #     vip_address = _get_option_no_error(parser, 'volttron', 'vip-address')
-        #     bind_web_address = _get_option_no_error(parser,
-        #                                             'volttron', 'bind-web-address')
-        # else:
-        #     changed = True
-        #     parser.add_section('volttron')
-        #     for k, v in host_config_cpy.items():
-        #         parser.set('volttron', k, str(v))
-        #
-        # if not had_config:
-        #     if 'volttron_central_addres' not in host_config_cpy:
-        #         _remove_option_no_error(parser, 'volttron', 'volttron-central-address')
-        #     else:
-        #         parser.set('volttron', 'volttron-central-address',
-        #                    host_config_cpy['volttron_central_address'])
-        #
-        #     if 'volttron_central_serverkey' not in host_config_cpy:
-        #         _remove_option_no_error(parser, 'volttron',
-        #                                 'volttron-central-serverkey')
-        #     else:
-        #         parser.set('volttron', 'volttron-central-serverkey',
-        #                    host_config_cpy['volttron_central_serverkey'])
-        #
-        #     if 'vip_address' not in host_config_cpy:
-        #         _remove_option_no_error(parser, 'volttron', 'vip-address')
-        #     else:
-        #         parser.set('volttron', 'vip-address',
-        #                    host_config_cpy['vip_address'])
-        #
-        #     # if not host_config_dict['enable_web']:
-        #     #     _remove_option_no_error(parser, 'volttron', 'bind-web-address')
-        #     # elif not host_config_dict['bind_web_address']:
-        #     #     _remove_option_no_error(parser, 'volttron', 'bind-web-address')
-        #     # else:
-        #     #     parser.set('volttron', 'bind-web-address',
-        #     #                host_config_dict['bind_web_address'])
-        #
-        # parser.write(open(cfg_loc, 'w'))
-        # return changed
-
     def __discover_current_state(self):
         """
         Determine the state of volttron on target system.  The function determines
@@ -386,7 +314,10 @@ class VolttronInstanceModule(AnsibleModule):
 
         :return:
         """
-        logger().warning("BHL handling status: about to discover current state") ##TODO remove
+
+        ##TODO: this function does way more than is described (and probably too much).
+        ## it populates both the current and expected state dictionaries. They currently
+        ## do not have logic to populate the same complete set of keys.
 
         # region verify correct paths available for the system
         # if the volttron path doesn't exist yet then then we know the user
@@ -543,7 +474,7 @@ class VolttronInstanceModule(AnsibleModule):
 
         with open(os.path.join(self._vhome, "keystore")) as fp:
             keystore = json.loads(fp.read())
-            self._host_config_expected['serverkey'] = keystore['public']
+            self._serverkey = keystore['public']
         logger().debug("HOSTCONFIGEXPECTED:")
         logger().debug(f"{json.dumps(self._host_config_expected, indent=2)}")
         if 'volttron-central-instance' in self._host_config_expected:
@@ -551,7 +482,7 @@ class VolttronInstanceModule(AnsibleModule):
             # use as local and then modify to use other instance if necessary
             vc_config_specs = {
                 'volttron-central-address': self._host_config_expected['config']['bind-web-address'],
-                'volttron-central-serverkey': self._host_config_expected['serverkey']
+                'volttron-central-serverkey': self._serverkey,
             }
             if vc_instance != self._host_config_expected['config']['instance-name']:
                 if vc_instance not in self._all_hosts:
@@ -596,6 +527,7 @@ class VolttronInstanceModule(AnsibleModule):
                 data = json.loads(fp.read())
                 self._serverkey = data['public']
         # endregion
+
         logger().debug(f"HOST CONFIG CURRENT:\n{json.dumps(self._host_config_current, indent=2)}")
         logger().debug(f"HOST CONFIG EXPECTED:\n{json.dumps(self._host_config_expected, indent=2)}")
 
