@@ -1,5 +1,7 @@
 - import_playbook: includes/ensure_host_keys.yml
 
+##TODO this playbook will fail if volttron is running, should either run down or do so on some condition
+
 - name: Remove VOLTTRON
   hosts: all
   tasks:

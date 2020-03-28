@@ -110,8 +110,6 @@
 
     - include_tasks: includes/ansible_venv.yml
 
-    ## TODO: This should not be part of platform setup, these are required
-    ##       for agent configuration, should be copied/updated there.
-    #- include_tasks: includes/copy_configs.yml
+    - include_tasks: includes/copy_configs.yml
 
     - include_tasks: includes/update_facts.yml

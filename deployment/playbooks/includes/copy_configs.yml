@@ -1,4 +1,5 @@
   #TODO: is this the desired logic here? Right now if there's no configs dir local (for agent configurations) we create an empty dir on the remote and create no errors.
+  #TODO in the example this file contains platform configuration data (bus, vip, etc.); this is partially redundant with the inventory file, which is bad... is one defunct, can they be merged and where?
   - name: check locally for configuration root directory
     local_action:
       module: stat
