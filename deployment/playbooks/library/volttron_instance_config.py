@@ -1114,41 +1114,6 @@ def encode_key(key):
     return base64.urlsafe_b64encode(key)[:-1].decode("ASCII")
 
 
-def has_bootstrapped(volttron_path):
-    return os.path.exists(os.path.join(volttron_path, 'env/bin/python'))
-
-
-def python(volttron_path):
-    return os.path.join(volttron_path, 'env', 'bin', 'python')
-
-
-def is_loopback(vip_address):
-    ip = vip_address.strip().lower().split("tcp://")[1]
-    addr = ipaddress.ip_address(ip)
-    return addr.is_loopback
-
-
-def is_ip_private(vip_address):
-    """ Determines if the passed vip_address is a private ip address or not.
-
-    :param vip_address: A valid ip address.
-    :return: True if an internal ip address.
-    """
-    ip = vip_address.strip().lower().split("tcp://")[1]
-
-
-    # https://en.wikipedia.org/wiki/Private_network
-
-    priv_lo = re.compile("^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
-    priv_24 = re.compile("^10\.\d{1,3}\.\d{1,3}\.\d{1,3}$")
-    priv_20 = re.compile("^192\.168\.\d{1,3}.\d{1,3}$")
-    priv_16 = re.compile("^172.(1[6-9]|2[0-9]|3[0-1]).[0-9]{1,3}.[0-9]{1,3}$")
-
-    return priv_lo.match(ip) is not None or priv_24.match(
-        ip) is not None or priv_20.match(ip) is not None or priv_16.match(
-        ip) is not None
-
-
 def ip4_addresses():
     ip_list = []
     for interface in interfaces():
@@ -1345,41 +1310,6 @@ def build_volttron_configfile(volttron_home, host_config_dict:dict):
 # endregion
 
 
-# def update_agents(agents_config_dict: dict):
-#     agents_state = get_agents_state(agents_config_dict)
-#     # all_installed_agents = set(agents_state.keys())
-#     found_agents = set()
-#     not_installed = set()
-#
-#     for identity, v in agents_state.items():
-#         # If agent hasn't been installed but user wants the agent then go ahead and install it
-#         if v['state'] == AgentState.NOT_INSTALLED.name and identity in agents_config_dict:
-#             install_results = install_agent(identity, agents_config_dict[identity])
-#
-#     agents_state_after = get_agents_state(agents_config_dict)
-#
-#     # for id, agent_spec in agents_config_dict.items():
-#     #     logger().debug(f"{id} => {agent_spec}")
-#     #     if id in agents_state:
-#     #         found_agents.add(id)
-#     #         state = AgentState(agents_state[id]['state'])
-#     #         if state == AgentState.NOT_INSTALLED:
-#     #             install_agent(id, agent_spec)
-#     agents_state_after = self.__discover_agents_status(agents_config_dict)
-#     return agents_state, agents_state_after
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # def do_install_and_remove_agents_phase(agents_config_dict: dict, reinstall: bool = False):
 #
@@ -1403,10 +1333,7 @@ def build_volttron_configfile(volttron_home, host_config_dict:dict):
 #     #     fp.write(json.dumps(volttron_host_dict, indent=2))
 
 
-# def do_start_tag_agents(ageent_config_dict):
-#     pass
-#
-#
+
 # def persist_facts():
 #     instance_state = get_instance_state()
 #     parser = ConfigParser()
