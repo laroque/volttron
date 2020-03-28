@@ -13,6 +13,12 @@
         config_file: "{{ host_config }}"
       check_mode: True
       register: instance_state
+      ignore_errors: yes
+    - name: retrieve status error print
+      when: instance_state.failed
+      debug:
+        msg: "{{ instance_state.msg.split('\\n') }}"
+      failed_when: true
 
     ##TODO: something is wrong in the current/expected state comparison,
     #       it shows that it will change when it should not
