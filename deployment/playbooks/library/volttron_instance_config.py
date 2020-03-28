@@ -925,22 +925,16 @@ def main():
     logger().debug("Before module instantiation")
     logger().debug(f"ENV: {os.environ}")
 
-    module = VolttronInstanceModule(argument_spec=dict(
-        volttron_home=dict(required=False, default=expand_all("~/.volttron")),
-        volttron_root=dict(required=False, default=expand_all("~/volttron")),
-        config_file=dict(required=True),
-        phase=dict(choices=InstallPhaseEnum.__members__.keys()),
-        # instance_name=dict(default=socket.gethostname()),
-        # vip_address=dict(default=None),
-        # bind_web_address=dict(default=None),
-        # volttron_central_address=dict(default=None),
-        # volttron_central_serverkey=dict(default=None),
-        # Only binds when this flag is set to true.
+    argument_spec=dict(
+        volttron_home = dict(required=False, default=expand_all("~/.volttron")),
+        volttron_root = dict(required=False, default=expand_all("~/volttron")),
+        config_file = dict(required=True),
+        phase = dict(choices=InstallPhaseEnum.__members__.keys()),
+        state = dict(choices=InstanceState.__members__.keys()),
+        volttron_host_facts = dict(required=False, type='dict')
+    )
 
-        state=dict(choices=InstanceState.__members__.keys()),
-        volttron_host_facts=dict(required=False, type='dict')
-        # started=dict(default=True, type="bool")
-    ), supports_check_mode=True)
+    module = VolttronInstanceModule(argument_spec=argument_spec, supports_check_mode=True)
 
     logger().debug(f"Passed params:\n{json.dumps(module.params, indent=2)}")
     if module.check_mode:
