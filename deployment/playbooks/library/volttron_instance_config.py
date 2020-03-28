@@ -918,11 +918,7 @@ class VolttronInstanceModule(AnsibleModule):
             elif runtime_status[identity]['status'].startswith('running'):
                 self._agents_status[identity] = dict(state=AgentState.RUNNING.name)
             else:
-                self._agents_status[identity] = \
-                    getattr(AgentState,
-                            runtime_status[identity]['status'].split()[0].upper(),
-                            AgentState.UNKNOWN
-                           ).name
+                self._agents_status[identity] = {'state': AgentState.UNKNOWN.name}
 
 
 def main():

@@ -41,6 +41,13 @@
         # This variable must be passed on for the module to be able to be used
         # if using the vctl deploy script this variable is created via extra_vars
         volttron_host_facts: "{{ volttron_host_facts }}"
+      ignore_errors: yes
+      register: external_connection_result
+    - name: external connection errors
+      when: external_connection_result.failed
+      debug:
+        msg: "{{ external_connection_result.module_stdout.split('\n') }}"
+      failed_when: True
 
     - name: Configure VOLTTRON instance (start agents phase)
       volttron_instance_config:
