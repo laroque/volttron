@@ -69,7 +69,8 @@ class VolttronInstanceModule(AnsibleModule):
         else:
             self._requested_state = InstanceState(self._requested_state)
         # discover the state of the instance as well as the agents that make it up.
-        self.__discover_current_state__()
+        self.__discover_current_state()
+        self.__status_all_agents()
 
     @property
     def phase(self):
@@ -113,12 +114,13 @@ class VolttronInstanceModule(AnsibleModule):
         logger().debug(f"current is:\n{json.dumps(self._host_config_current, indent=2)}\nexpected:\n{json.dumps(self._host_config_expected, indent=2)}")
         diff = DeepDiff(self._host_config_current, self._host_config_expected)
 
-        results = dict(changed=False,
-                       will_change=bool(diff),
-                       state=self._instance_state.name,
-                       current=self._host_config_current,
-                       serverkey=self._serverkey,
-                       agents_state=self._agents_status)
+        results = dict(changed = False,
+                       will_change = bool(diff),
+                       state = self._instance_state.name,
+                       current = self._host_config_current,
+                       serverkey = self._serverkey,
+                       agents_state = self._agents_status,
+                      )
 
         if diff:
             results['expected'] = self._host_config_expected
@@ -145,7 +147,7 @@ class VolttronInstanceModule(AnsibleModule):
     def handle_start_agent_phase(self):
         self.__start_volttron__("handle_start_agent_phase")
 
-        installed_agents = self.__status_all_agents__()
+        installed_agents = self.__status_all_agents()
         problems = []
         for identity, props in installed_agents.items():
             cmd = [self._vctl, "start", props['agent_uuid']]
@@ -156,16 +158,14 @@ class VolttronInstanceModule(AnsibleModule):
 
         if problems:
             self.fail_json(changed=True, msg=problems)
-        self.__discover_current_state__()
+        self.__discover_current_state()
         self.exit_json(changed=True, agents_state=self._agents_status)
 
     def handle_install_agent_phase(self):
 
         self.__start_volttron__("handle_install_agent_phase")
 
-        #self.__status_all_agents__()
-        status_of_all_agents = self.__status_all_agents__()
-        #status_all_agents = self.__status_all_agents() #TODO BHL
+        status_of_all_agents = self.__status_all_agents()
         diff = DeepDiff(self._host_config_current, self._host_config_expected)
         requires_restart = False
         if diff:
@@ -179,7 +179,7 @@ class VolttronInstanceModule(AnsibleModule):
         self.__start_volttron__("install agent phase starting volttron")
 
         logger().warning(f"agents to install (BHL): {self._agents_config.keys()}") ##TODO: BHL
-        logger().warning(f"status_all_agents (BHL): {status_of_all_agents.keys()}") ##TODO:BHL
+        logger().warning(f"status_of_all_agents (BHL): {status_of_all_agents.keys()}") ##TODO:BHL
 
         for identity, spec in self._agents_config.items():
             logger().warning(f"installing agent {identity} - BHL") ##TODO:BHL
@@ -215,7 +215,7 @@ class VolttronInstanceModule(AnsibleModule):
             if rc != 0:
                 self.fail_json(msg=f"Could not stop volttron stdout\n{stdout}\nstderr\n{stderr}")
 
-        self.__discover_current_state__()
+        self.__discover_current_state()
 
         if self._requested_state != self._instance_state:
             self.fail_json(msg=f"Could not move to state ({self._requested_state})")
@@ -279,7 +279,7 @@ class VolttronInstanceModule(AnsibleModule):
         while current_state != expected_state and countdown > 0:
             sleep(1)
             countdown -= 1
-            self.__discover_current_state__()
+            self.__discover_current_state()
             logger().debug("new state is now '{}'".format(self._instance_state))
             if self._instance_state == expected_state:
                 logger().debug("it took roughly <{}> seconds to reach desired state".format(timeout-countdown))
@@ -374,7 +374,7 @@ class VolttronInstanceModule(AnsibleModule):
         # parser.write(open(cfg_loc, 'w'))
         # return changed
 
-    def __discover_current_state__(self):
+    def __discover_current_state(self):
         """
         Determine the state of volttron on target system.  The function determines
         whether or not volttron is running based upon the VOLTTRON_PID file in
@@ -386,6 +386,7 @@ class VolttronInstanceModule(AnsibleModule):
 
         :return:
         """
+        logger().warning("BHL handling status: about to discover current state") ##TODO remove
 
         # region verify correct paths available for the system
         # if the volttron path doesn't exist yet then then we know the user
@@ -417,13 +418,8 @@ class VolttronInstanceModule(AnsibleModule):
                     self._instance_state = InstanceState.STOPPED
             else:
                 self._instance_state = InstanceState.STOPPED
-
         logger().debug(f"_discover_current_state: {self._instance_state}")
         # endregion
-        ##TODO: BHL -this return shouldn't be here like this... what the heck is the rest of this method, did a `def` line get
-        ##       deleted between these blocks?.... Presumably we need this logic somewhere.
-        #return
-        logger().warning("HOW OFTEN AM I BHL HERE")
 
         # Read expected hosts file and translate that into what will go into the main volttron config
         with open(self._host_config_file) as fp:
@@ -437,7 +433,7 @@ class VolttronInstanceModule(AnsibleModule):
 
         # No agent configuration means that we have a platform just sitting there doing nothing,
         # however that is not an error state.
-        self._agents_config = host_cfg_loaded.get('agents', {})
+        self._agents_config = host_cfg_loaded.get('agents')
         if self._agents_config is None:
             self._agents_config = {}
 
@@ -449,17 +445,17 @@ class VolttronInstanceModule(AnsibleModule):
         # The config key will be used to write the new volttron config file
         self._host_config_expected['config'] = {}
 
-        # populate the instance name first based upon /etc/hostname or custom-instance-name
-        # within the config file.
+        # populate the instance name based on instance-name in the config first,
+        # fall back to /etc/hostname otherwise
         instance_name = None
         try:
             with open("/etc/hostname") as fp:
                 instance_name = fp.read().strip()
         except FileNotFoundError:
-            instance_name = self._host_config_expected.get('custom-instance-name', instance_name)
+            pass
+        instance_name = self._host_config_expected.get('instance-name', instance_name)
         if instance_name is None:
-            self.fail_json(msg="Couldn't read /etc/hostname nor was custom-instance-name specified in host file.")
-
+            self.fail_json(msg="Couldn't read /etc/hostname nor was instance-name specified in host file.")
         self._host_config_expected['config']['instance-name'] = instance_name
 
         if 'enable-web-http' in self._host_config_expected and 'enable-web-https' in self._host_config_expected:
@@ -568,7 +564,7 @@ class VolttronInstanceModule(AnsibleModule):
             self._host_config_expected['config'].update(vc_config_specs)
 
         self._host_config_expected['config']['message-bus'] = self._host_config_expected.get('message-bus', 'zmq')
-        self.__discover_agents_status__()
+        self.__discover_agents_status()
 
         # endregion
 
@@ -748,12 +744,13 @@ class VolttronInstanceModule(AnsibleModule):
         # retvalues['result'] = "installed {} agent.".format(params['source'])
         # return is_error, True, retvalues
 
-    def __status_all_agents__(self):
+    def __status_all_agents(self):
         # Will need to be fixed when vctl status --json available.
         cmd = [self._vctl, "--json", "status"]
         cmd_results = subprocess.run(cmd, cwd=self._vroot,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
+        logger().debug(f"BHL status cmd results: {cmd_results.stdout.decode('utf-8')}")
         if cmd_results.returncode == 0:
             if cmd_results.stdout.decode('utf-8') == '':
                 return {}
@@ -851,7 +848,7 @@ class VolttronInstanceModule(AnsibleModule):
             "tag": tag
         }
 
-    def __find_all_agents__(self):
+    def __find_all_agents(self):
         """
         Find all of the agents in the specified `path`.  The path should
         be the VOLTTRON_HOME/agents directory.
@@ -879,7 +876,7 @@ class VolttronInstanceModule(AnsibleModule):
 
         return results
 
-    def __discover_agents_status__(self):
+    def __discover_agents_status(self):
         """
         Uses all found agents (from `find_all_agents` function) to provide an
         agent state key.  The function compares expected agents to the currently
@@ -904,20 +901,28 @@ class VolttronInstanceModule(AnsibleModule):
         :return:
             dictionary identity -> state with pid
         """
-        agents_state = self.__find_all_agents__()
-        runtime_status = self.__status_all_agents__()
+        ##TODO this function does not meet the spec of the docstring, it has no return
+        ##TODO what is the desired agent state interface, we have:
+        ##     __discover_agents_status
+        ##     __status_all_agents
+        ##     __find_all_agents
+
+        runtime_status = self.__status_all_agents()
 
         self._agents_status = {}
         for identity, spec in self._agents_config.items():
-            if identity not in self._agents_status:
-                self._agents_status[identity] = {}
+            self._agents_status[identity] = {}
 
-            if identity not in agents_state:
+            if identity not in runtime_status:
                 self._agents_status[identity] = dict(state=AgentState.NOT_INSTALLED.name)
-            elif 'pid' not in agents_state[identity]:
-                self._agents_status[identity] = dict(state=AgentState.STOPPED.name)
-            else:
+            elif runtime_status[identity]['status'].startswith('running'):
                 self._agents_status[identity] = dict(state=AgentState.RUNNING.name)
+            else:
+                self._agents_status[identity] = \
+                    getattr(AgentState,
+                            runtime_status[identity]['status'].split()[0].upper(),
+                            AgentState.UNKNOWN
+                           ).name
 
 
 def main():
@@ -1444,7 +1449,7 @@ def build_volttron_configfile(volttron_home, host_config_dict:dict):
 #     #         state = AgentState(agents_state[id]['state'])
 #     #         if state == AgentState.NOT_INSTALLED:
 #     #             install_agent(id, agent_spec)
-#     agents_state_after = self.__discover_agents_status__(agents_config_dict)
+#     agents_state_after = self.__discover_agents_status(agents_config_dict)
 #     return agents_state, agents_state_after
 
 
