@@ -131,23 +131,15 @@ class VolttronInstanceModule(AnsibleModule):
         self.exit_json(**results)
 
     def handle_external_connection_phase(self):
-        logger().warning("in handle external connections phase, step 0")
         changed = self._write_multi_platform_file()
-        ##TODO
-        logger().warning("in handle external connections phase, step 1")
 
         if changed:
-            ##TODO
-            logger().warning("in handle external connections phase, step 1.1")
             self.__stop_volttron__("external_connection_phase")
-        ##TODO
-        logger().warning("in handle external connections phase, step 2")
         self.__start_volttron__("external_connection_phase")
-        ##TODO
-        logger().warning("in handle external connections phase, step 3")
         self.exit_json(changed=changed, msg="completed handling external connections")
 
     def handle_start_agent_phase(self):
+        ## TODO what about agents which should be installed but not started (listener)
         self.__start_volttron__("handle_start_agent_phase")
 
         installed_agents = self.__status_all_agents()
@@ -189,10 +181,6 @@ class VolttronInstanceModule(AnsibleModule):
             self._install_agent(identity, spec)
 
         self.exit_json(msg="install agent phase complete")
-        # if self._instance_state == InstanceState.RUNNING:
-        #     self.exit_json(changed=changed, msg="VOLTTRON has started")
-        # else:
-        #     self.fail_json(msg="Unable to start VOLTTRON!")
 
     def handle_update_runtime_state(self):
         # if the configs are different then we need to write the expected to the file
