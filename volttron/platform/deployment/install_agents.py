@@ -77,7 +77,6 @@ def install_requirements(agent_source):
 
     if os.path.exists(req_file):
         _log.info(f"Installing requirements for agent from {req_file}.")
-        ##TODO: is this sufficiently portable?
         python_dir = os.path.dirname(sys.executable)
         pip_exe = os.path.join(python_dir, "pip")
         pip_exe = pip_exe if os.path.exists(pip_exe) else "pip"
@@ -113,7 +112,6 @@ def install_agent_directory(opts, package, agent_config):
         sys.exit(-10)
     ## end of build wheel
 
-    _log.warning("BHL checking if anget exists") ##TODO
     agent_exists = False
     volttron_control = os.path.join(get_volttron_root(), "env/bin/vctl")
     if opts.vip_identity is not None:
@@ -127,13 +125,10 @@ def install_agent_directory(opts, package, agent_config):
             # Note we don't remove the agent here because if we do that will
             # not allow us to update without losing the keys.  The
             # install_agent method either installs or upgrades the agent.
-    _log.warning(f"BHL agent exists check resulted in {agent_exists}") ##TODO
 
     if agent_config is None:
         agent_config = {}
 
-    ## TODO BHL what? why do we write our dict to a file just to read it back
-    # if not a dict then config should be a filename
     if not isinstance(agent_config, dict):
         config_file = agent_config
     else:
