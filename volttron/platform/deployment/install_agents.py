@@ -145,15 +145,18 @@ def install_agent_directory(opts, package, agent_config):
         sys.exit(-10)
 
     # Configure the whl file before installing.
+    #TODO why is this being added to the wheel and not passed to vctl cmds?
     add_files_to_package(opts.package, {'config_file': config_file})
     env = os.environ.copy()
-
 
     _log.warning(f"BHL install: {opts.package}") #TODO BHL
     if agent_exists:
         cmds = [volttron_control, "upgrade", opts.vip_identity, opts.package]
     else:
         cmds = [volttron_control, "install", opts.package]
+    ##TODO if this is baked into the wheel, it doesn't need to be here, right?
+    if config_file:
+        cmds.extend(['-c', config_file])
 
     if opts.tag:
         cmds.extend(["--tag", opts.tag])
