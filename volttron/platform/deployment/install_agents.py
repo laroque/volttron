@@ -149,7 +149,7 @@ def install_agent_directory(opts, package, agent_config):
     env = os.environ.copy()
 
 
-    _log().warning(f"BHL install: {opts.package}") #TODO BHL
+    _log.warning(f"BHL install: {opts.package}") #TODO BHL
     if agent_exists:
         cmds = [volttron_control, "upgrade", opts.vip_identity, opts.package]
     else:
