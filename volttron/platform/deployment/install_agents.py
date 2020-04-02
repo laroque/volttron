@@ -155,7 +155,8 @@ def install_agent_directory(opts, package, agent_config):
     if opts.tag:
         cmds.extend(["--tag", opts.tag])
 
-    _log.warning(f"upgrade by calling:\n{cmds}")
+    ##TODO BHL
+    _log.warning(f"BHL upgrade by calling:\n{cmds}")
     out = execute_command(cmds, env=env, logger=_log,
                           err_prefix="Error installing agent")
 
