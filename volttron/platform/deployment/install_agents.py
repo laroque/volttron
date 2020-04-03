@@ -127,8 +127,10 @@ def install_agent_directory(opts, package, agent_config):
             # install_agent method either installs or upgrades the agent.
 
     if agent_config is None:
-        _log.warning(f"BHL the config for {opts.vip_identity} is None")
+        _log.warning(f"BHL the config for {opts.vip_identity} is None")#TODO
         agent_config = {}
+    else: ##TODO
+        _log.warning(f"BHL the config for {opts.vip_identity} is {agent_config}") #TODO
 
     if not isinstance(agent_config, dict):
         config_file = agent_config
