@@ -543,7 +543,7 @@ class VolttronInstanceModule(AnsibleModule):
         # needs to be last
         cmd.extend([agent_spec['source']])
         logger().debug(f"Commands are {cmd}")
-        logger().debug(f"BHL cmds are {cmd}") ##BHL
+        logger().error(f"BHL cmds are {cmd}") ##BHL
         cmd.extend(['--debug']) ##BHL
 
         ##TODO: BHL - the issue here is that the cmd is not run in a shell so env vars don't expand
