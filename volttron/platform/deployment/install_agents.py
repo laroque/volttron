@@ -131,8 +131,8 @@ def install_agent_directory(opts, package, agent_config):
         agent_config = {}
     else: ##TODO
         _log.warning(f"BHL the config for {opts.vip_identity} is {agent_config}") #TODO
-    with open(f'/tmp/config.{opts.vip_identity}') as afile:
-        afile.write(yaml.safe_dump(agent_config))
+    with open(f'/tmp/config.{opts.vip_identity}') as afile: ##TODO
+        afile.write(yaml.safe_dump(agent_config, 'x')) ##TODO
 
     if not isinstance(agent_config, dict):
         config_file = agent_config
