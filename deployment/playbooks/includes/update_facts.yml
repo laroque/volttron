@@ -7,9 +7,19 @@
   register: my_state
   ignore_errors: yes
 - name: retrieving status print error
-  when: my_state.failed
+  when: my_state.failed and 'module_stdout' in my_state
   debug:
     msg: "{{ my_state.module_stdout.split('\n') }}"
+  failed_when: true
+- name: retrieving status print error
+  when: my_state.failed and 'msg' in my_state
+  debug:
+    msg: "{{ my_state.msg.split('\n') }}"
+  failed_when: true
+- name: retrieving status print error
+  when: my_state.failed
+  debug:
+    msg: "expected output fields not found, full return is: {{my_state}}"
   failed_when: true
 
 - name: Create fact file

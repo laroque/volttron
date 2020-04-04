@@ -38,6 +38,7 @@ class VolttronInstanceModule(AnsibleModule):
         self._vhome = expand_all(self.params['volttron_home'])
         self._vroot = expand_all(self.params['volttron_root'])
         self._host_config_file = expand_all(self.params['config_file'])
+        self._configs_dir = expand_all(self.params['configs_dir']) ##TODO
         self._multiplatform_file = os.path.join(self._vhome, "external_platform_discovery.json")
 
         # These two dictionaries will be populated in the self._discover_current_state method at the
@@ -142,6 +143,7 @@ class VolttronInstanceModule(AnsibleModule):
         ## TODO what about agents which should be installed but not started (listener)
         self.__start_volttron__("handle_start_agent_phase")
 
+        ## TODO shouldn't fail if an agent should exist but is not installed?
         installed_agents = self.__status_all_agents()
         problems = []
         for identity, props in installed_agents.items():
@@ -173,11 +175,12 @@ class VolttronInstanceModule(AnsibleModule):
 
         self.__start_volttron__("install agent phase starting volttron")
 
-        logger().warning(f"agents to install (BHL): {self._agents_config.keys()}") ##TODO: BHL
-        logger().warning(f"status_of_all_agents (BHL): {status_of_all_agents.keys()}") ##TODO:BHL
+        logger().warning(f"BHL agents to install: {self._agents_config.keys()}") ##TODO: BHL
+        logger().warning(f"BHL full config:\n{yaml.dump(self._agents_config)}") ##TODO:BHL
+        logger().warning(f"BHL status_of_all_agents: {status_of_all_agents.keys()}") ##TODO:BHL
 
         for identity, spec in self._agents_config.items():
-            logger().warning(f"installing agent {identity} - BHL") ##TODO:BHL
+            logger().warning(f"BHL installing agent {identity} with spec:\n{spec}") ##TODO:BHL
             self._install_agent(identity, spec)
 
         self.exit_json(msg="install agent phase complete")
@@ -540,6 +543,8 @@ class VolttronInstanceModule(AnsibleModule):
 
         if "priority" in agent_spec:
             cmd.extend(['--priority', str(agent_spec['priority'])])
+        if 'config' in agent_spec:
+            cmd.extend(['--config', agent_spec['config']])
         # needs to be last
         cmd.extend([agent_spec['source']])
         logger().debug(f"Commands are {cmd}")
@@ -548,10 +553,17 @@ class VolttronInstanceModule(AnsibleModule):
 
         ##TODO: BHL - the issue here is that the cmd is not run in a shell so env vars don't expand
         ##            we should be very clear about what is being passed into the env (ie, what is allowed in the yaml)
-        response = subprocess.run(['/bin/bash', '-c', ' '.join(cmd)], cwd=self._vroot,
-                                  env={'VOLTTRON_ROOT': self._vroot, 'VOLTTRON_HOME': self._vhome},
+        logger().debug(f"vroot will be <{self._vroot}>") ##BHL
+        logger().debug(f"vhome will be <{self._vhome}>") ##BHL
+        logger().debug(f'BHL also configs dir <{self._configs_dir}>') ##BHL
+        response = subprocess.run(['/bin/bash', '-c', 'set +x; ' + ' '.join(cmd) + '; set -x'], cwd=self._vroot,
+                                  env={'VOLTTRON_ROOT': self._vroot,
+                                       'VOLTTRON_HOME': self._vhome,
+                                       'CONFIG': self._configs_dir,
+                                      },
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        logger().info(f"install command response was {response.returncode}")
         if response.returncode != 0:
             logger().debug(f"Something failed spectacularly during install for idenitity {identity}")
             logger().debug(f"STDOUT\n{response.stdout}")
@@ -561,7 +573,8 @@ class VolttronInstanceModule(AnsibleModule):
             logger().warning("BHL I don't think I'll get here") ##TODO BHL
             return
         else:
-            logger().warning("BHL installed '{identity}'") ##TODO BHL
+            logger().warning(f"BHL installed '{identity}'") ##TODO BHL
+            logger().info(f"BHL output was: {response.stdout} --- error --- {response.stderr}") ##TODO BHL
 
         logger().debug(f"Installed {identity}")
         logger().debug(f"STDOUT\n{response.stdout}")
@@ -852,7 +865,8 @@ def main():
         config_file = dict(required=True),
         phase = dict(choices=InstallPhaseEnum.__members__.keys()),
         state = dict(choices=InstanceState.__members__.keys()),
-        volttron_host_facts = dict(required=False, type='dict')
+        volttron_host_facts = dict(required=False, type='dict'),
+        configs_dir = {'required':False, 'default':''}, #BHL adding arg w/ default
     )
 
     module = VolttronInstanceModule(argument_spec=argument_spec, supports_check_mode=True)

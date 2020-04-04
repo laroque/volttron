@@ -20,6 +20,7 @@
       volttron_instance_config:
         volttron_home: "{{ volttron_home }}"
         config_file: "{{ host_config }}"
+        configs_dir: "{{ host_configs_dir }}"
         state: "RUNNING"
         phase: "AGENT_INSTALL"
         # This variable must be passed on for the module to be able to be used
