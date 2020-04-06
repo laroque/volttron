@@ -118,6 +118,7 @@ def do_volttron_up(hosts_path, options):
                          extra_vars={'volttron_host_facts': results})
 
     results = pbex.run()
+    _stdout.write(f"BHL executor result is {result}")
 
 
 def get_all_facts_from_all_hosts(options):
