@@ -31,7 +31,7 @@
     - name: agent install error diagnostics
       when: agent_install_result.failed
       debug:
-        msg: "{{ agent_install_result.msg.split('\n') }}"
+        msg: "{{ agent_install_result.msg.split('\\n') }}"
       failed_when: True
 
     - name: Configure VOLTTRON instance (external connection phase)

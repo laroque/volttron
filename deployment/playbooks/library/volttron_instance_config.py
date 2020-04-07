@@ -70,6 +70,7 @@ class VolttronInstanceModule(AnsibleModule):
         else:
             self._requested_state = InstanceState(self._requested_state)
         # discover the state of the instance as well as the agents that make it up.
+        logger().warning(f"about to discover state")
         self.__discover_current_state()
         self.__status_all_agents()
 
@@ -112,7 +113,6 @@ class VolttronInstanceModule(AnsibleModule):
     def handle_status(self):
 
         logger().debug("Inside handle_status")
-        logger().debug("BHL diff")
         logger().debug(f"current is:\n{json.dumps(self._host_config_current, indent=2)}\nexpected:\n{json.dumps(self._host_config_expected, indent=2)}")
         ##TODO the diff logic here isn't working because the two dicts aren't
         ##     populated equivalently, current status is incomplete
@@ -462,10 +462,12 @@ class VolttronInstanceModule(AnsibleModule):
                 fp.write(json.dumps(
                     {'public': encode_key(public), 'secret': encode_key(secret)},
                     indent=2))
-
         with open(os.path.join(self._vhome, "keystore")) as fp:
             keystore = json.loads(fp.read())
-            self._serverkey = keystore['public']
+            if 'public' in keystore:
+                self._serverkey = keystore['public']
+            else:
+                self.fail_json(msg="keystore file exists but does not have required 'public' field")
         logger().debug("HOSTCONFIGEXPECTED:")
         logger().debug(f"{json.dumps(self._host_config_expected, indent=2)}")
         if 'volttron-central-instance' in self._host_config_expected:
@@ -548,37 +550,26 @@ class VolttronInstanceModule(AnsibleModule):
         # needs to be last
         cmd.extend([agent_spec['source']])
         logger().debug(f"Commands are {cmd}")
-        logger().error(f"BHL cmds are {cmd}") ##BHL
-        cmd.extend(['--debug']) ##BHL
+        cmd.extend(['--debug'])
 
         ##TODO: BHL - the issue here is that the cmd is not run in a shell so env vars don't expand
         ##            we should be very clear about what is being passed into the env (ie, what is allowed in the yaml)
         logger().debug(f"vroot will be <{self._vroot}>") ##BHL
         logger().debug(f"vhome will be <{self._vhome}>") ##BHL
-        logger().debug(f'BHL also configs dir <{self._configs_dir}>') ##BHL
-        response = subprocess.run(['/bin/bash', '-c', 'set +x; ' + ' '.join(cmd) + '; set -x'], cwd=self._vroot,
+        response = subprocess.run(['/bin/bash', '-c', ' '.join(cmd) + '; exit $?'],
+                                  cwd=self._vroot,
                                   env={'VOLTTRON_ROOT': self._vroot,
                                        'VOLTTRON_HOME': self._vhome,
                                        'CONFIG': self._configs_dir,
                                       },
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        logger().debug(f"BHL ran cmd {' '.join(cmd)} -> {response.returncode}")
-        logger().debug(f"BHL stdout: {response.stdout}")
-        logger().debug(f"BHL stderr: {response.stderr}")
         logger().info(f"install command response was {response.returncode}")
         if response.returncode != 0:
             logger().debug(f"Something failed spectacularly during install for idenitity {identity}")
             logger().debug(f"STDOUT\n{response.stdout}")
             logger().debug(f"STDERR\n{response.stdout}")
             self.fail_json(msg=f"failed while attempting to install identity '{identity}' with stdout: {response.stdout} and stderr: {response.stderr}'")
-        else:
-            logger().warning(f"BHL installed '{identity}'") ##TODO BHL
-            if "err" in str(response.stderr).lower():
-                logger().error(f"BHL recode was 0 but stderr contains 'err'")
-                self.fail_json(msg=f"command [{' '.join(cmd)}] failed despite returncode of 0\n{response.stderr.decode()}")
-            else:
-                logger().error("BHL no error found!!!!!!!!!!!")
 
         logger().debug(f"Installed {identity}")
         logger().debug(f"STDOUT\n{response.stdout}")
@@ -873,11 +864,13 @@ def main():
     )
 
     module = VolttronInstanceModule(argument_spec=argument_spec, supports_check_mode=True)
+    logger().warning(f"BHL phase should be {module.phase}")
 
     logger().debug(f"Passed params:\n{json.dumps(module.params, indent=2)}")
     if module.check_mode:
         logger().debug("module.check_mode True calling handle_status")
         module.handle_status()
+
 
     logger().debug(f"allow external conn {module.phase.name}")
     if module.phase == InstallPhaseEnum.AGENT_INSTALL:
