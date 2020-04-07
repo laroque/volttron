@@ -253,7 +253,8 @@ def install_agent_directory(opts, package, agent_config):
 def install_agent(opts, publickey=None, secretkey=None, callback=None):
     _stderr.write("BHL foo")
     _stdout.write("BHL bar")
-    sys.exit(10)
+    sys.exit(10) ##TODO BHL
+    raise ValueError("BHL fail")
     sys.stdout.write("BHL stdout write")
     _log.info("BHL log.info")
     _log.error("BHL log.error")
