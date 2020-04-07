@@ -12,6 +12,6 @@
 try:
     from ansible.utils.display import Display
 
-    display = Display(verbosity=3) ##TODO BHL should be back to 1
+    display = Display(verbosity=1)
 except ImportError:
     pass
