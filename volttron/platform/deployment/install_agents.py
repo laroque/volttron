@@ -169,6 +169,11 @@ def install_agent_directory(opts, package, agent_config):
 
     parsed = out.split("\n")
 
+    ##TODO BHL
+    _log.warning(f"BHL output: {out}")
+    _stdout.write(f"BHL stdout: {out}")
+    _stderr.write(f"BHL stderr: {out}")
+
     # If there is not an agent with that identity:
     # 'Could not find agent with VIP IDENTITY "BOO". Installing as new agent
     # Installed /home/volttron/.volttron/packaged/listeneragent-3.2-py2-none-any.whl as 6ccbf8dc-4929-4794-9c8e-3d8c6a121776 listeneragent-3.2'
