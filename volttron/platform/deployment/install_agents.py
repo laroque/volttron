@@ -126,13 +126,15 @@ def install_agent_directory(opts, package, agent_config):
             # not allow us to update without losing the keys.  The
             # install_agent method either installs or upgrades the agent.
 
+    _log.warning(f"BHL ANYTHING") #TODO BHL
     if agent_config is None:
         _log.warning(f"BHL the config for {opts.vip_identity} is None")#TODO
         agent_config = {}
     else: ##TODO
         _log.warning(f"BHL the config for {opts.vip_identity} is {agent_config}") #TODO
-    with open(f'/tmp/config.{opts.vip_identity}') as afile: ##TODO
-        afile.write(yaml.safe_dump(agent_config, 'x')) ##TODO
+    with open(f'/tmp/config.{opts.vip_identity}', 'x') as afile: ##TODO
+        afile.write(yaml.safe_dump(agent_config)) ##TODO
+    ##TODO if this fails, vctl still return 0
 
     if not isinstance(agent_config, dict):
         config_file = agent_config
