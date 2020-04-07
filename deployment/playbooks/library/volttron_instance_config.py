@@ -563,18 +563,22 @@ class VolttronInstanceModule(AnsibleModule):
                                       },
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+        logger().debug(f"BHL ran cmd {' '.join(cmd)} -> {response.returncode}")
+        logger().debug(f"BHL stdout: {response.stdout}")
+        logger().debug(f"BHL stderr: {response.stderr}")
         logger().info(f"install command response was {response.returncode}")
         if response.returncode != 0:
             logger().debug(f"Something failed spectacularly during install for idenitity {identity}")
             logger().debug(f"STDOUT\n{response.stdout}")
             logger().debug(f"STDERR\n{response.stdout}")
-            logger().warning(f"BHL - failed cmd was [{' '.join(cmd)}]") ##TODO: BHL
             self.fail_json(msg=f"failed while attempting to install identity '{identity}' with stdout: {response.stdout} and stderr: {response.stderr}'")
-            logger().warning("BHL I don't think I'll get here") ##TODO BHL
-            return
         else:
             logger().warning(f"BHL installed '{identity}'") ##TODO BHL
-            logger().info(f"BHL output was: {response.stdout} --- error --- {response.stderr}") ##TODO BHL
+            if "err" in str(response.stderr).lower():
+                logger().error(f"BHL recode was 0 but stderr contains 'err'")
+                self.fail_json(msg=f"command [{' '.join(cmd)}] failed despite returncode of 0\n{response.stderr.decode()}")
+            else:
+                logger().error("BHL no error found!!!!!!!!!!!")
 
         logger().debug(f"Installed {identity}")
         logger().debug(f"STDOUT\n{response.stdout}")
@@ -683,7 +687,6 @@ class VolttronInstanceModule(AnsibleModule):
         cmd_results = subprocess.run(cmd, cwd=self._vroot,
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
-        logger().debug(f"BHL status cmd results: {cmd_results.stdout.decode('utf-8')}")
         if cmd_results.returncode == 0:
             if cmd_results.stdout.decode('utf-8') == '':
                 return {}
