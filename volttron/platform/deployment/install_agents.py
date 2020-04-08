@@ -250,6 +250,10 @@ def install_agent_directory(opts, package, agent_config):
 
 
 def install_agent(opts, publickey=None, secretkey=None, callback=None):
+    ##TODO BHL
+    with open("/home/laro693/install_agent", 'a') as lfile:
+        lfile.write(f"install agent: {opts}")
+
     try:
         install_path = opts.install_path
     except AttributeError:
