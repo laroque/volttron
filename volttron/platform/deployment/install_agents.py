@@ -268,6 +268,9 @@ def install_agent(opts, publickey=None, secretkey=None, callback=None):
     tag = opts.tag
     vip_identity = opts.vip_identity
     if opts.vip_address.startswith('ipc://'):
+        ##TODO BHL
+        with open("/home/laro693/install_agent", 'a') as lfile:
+            lfile.write(f"  in if starts with ipc block")
         _log.info("Installing wheel locally without channel subsystem")
         filename = config.expandall(filename)
         agent_uuid = opts.connection.call('install_agent_local',
@@ -280,6 +283,9 @@ def install_agent(opts, publickey=None, secretkey=None, callback=None):
             opts.connection.call('tag_agent', agent_uuid, tag)
 
     else:
+        ##TODO BHL
+        with open("/home/laro693/install_agent", 'a') as lfile:
+            lfile.write(f"  in if not starts with ipc block")
         channel = None
         try:
             _log.debug('Creating channel for sending the agent.')
