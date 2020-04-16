@@ -28,10 +28,17 @@
         volttron_host_facts: "{{ volttron_host_facts }}"
       ignore_errors: yes
       register: agent_install_result
-    - name: agent install error diagnostics
+    - name: agent install module errors
+      when: agent_install_result.failed and "module_stdout" in agent_install_result
+      debug:
+        msg:
+        - "{{ agent_install_result.module_stderr.split('\\n') | default([]) }}"
+        - "{{ agent_install_result.module_stdout.split('\n') | default([]) }}"
+    - name: agent install errors
       when: agent_install_result.failed
       debug:
-        msg: "{{ agent_install_result.msg.split('\\n') }}"
+        msg:
+        - "{{ agent_install_result.msg.split('\\n') | default([]) }}"
       failed_when: True
 
     - name: Configure VOLTTRON instance (external connection phase)

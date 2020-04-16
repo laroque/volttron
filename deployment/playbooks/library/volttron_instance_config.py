@@ -135,7 +135,7 @@ class VolttronInstanceModule(AnsibleModule):
         changed = self._write_multi_platform_file()
 
         if changed:
-            self.__stop_volttron__("external_connection_phase")
+            self.__stop_volttron("external_connection_phase")
         self.__start_volttron__("external_connection_phase")
         self.exit_json(changed=changed, msg="completed handling external connections")
 
@@ -143,15 +143,19 @@ class VolttronInstanceModule(AnsibleModule):
         ## TODO what about agents which should be installed but not started (listener)
         self.__start_volttron__("handle_start_agent_phase")
 
-        ## TODO shouldn't fail if an agent should exist but is not installed?
+        ## TODO shouldn't it fail if an agent should exist but is not installed?
         installed_agents = self.__status_all_agents()
         problems = []
         for identity, props in installed_agents.items():
             cmd = [self._vctl, "start", props['agent_uuid']]
+            logger().warning("BHL about to run start on agent")
             cmd_result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
             if cmd_result.returncode != 0:
                 problems.append(f"Could not start agent {identity}\nstderr:\n{cmd_result.stderr} ")
+            logger().warning("BHL agent started")
+            logger().info(f"BHL start agent stdout: {cmd_result.stdout}")
+            logger().info(f"BHL start agent stderr: {cmd_result.stderr}")
 
         if problems:
             self.fail_json(changed=True, msg=problems)
@@ -171,16 +175,19 @@ class VolttronInstanceModule(AnsibleModule):
 
         if self._instance_state == InstanceState.RUNNING and requires_restart:
             logger().debug("instance is running but requires a restart")
-            self.__stop_volttron__("install agent phase instance requires restart")
+            logger().debug("BHL about to stop platform for restart")
+            self.__stop_volttron("install agent phase instance requires restart")
 
+        ## TODO BHL: do we're already running and don't require restart, does this add delay?
         self.__start_volttron__("install agent phase starting volttron")
 
+        logger().info(f"BHL 'agent_config': {self._agents_config}")
+        logger().info(f"BHL 'expected': {self._host_config_expected}")
+
         logger().warning(f"BHL agents to install: {self._agents_config.keys()}") ##TODO: BHL
-        logger().warning(f"BHL full config:\n{yaml.dump(self._agents_config)}") ##TODO:BHL
-        logger().warning(f"BHL status_of_all_agents: {status_of_all_agents.keys()}") ##TODO:BHL
 
         for identity, spec in self._agents_config.items():
-            logger().warning(f"BHL installing agent {identity} with spec:\n{spec}") ##TODO:BHL
+            logger().warning(f"BHL installing agent {identity} with spec:\nBHL {spec}") ##TODO:BHL
             self._install_agent(identity, spec)
 
         self.exit_json(msg="install agent phase complete")
@@ -191,7 +198,7 @@ class VolttronInstanceModule(AnsibleModule):
 
         if needs_changing:
             self._write_volttron_config(self._host_config_expected['config'])
-            self.__stop_volttron__()
+            self.__stop_volttron()
 
         if self._requested_state == InstanceState.RUNNING and self._instance_state == InstanceState.RUNNING:
             self.exit_json(changed=False, msg="VOLTTRON is running")
@@ -205,7 +212,7 @@ class VolttronInstanceModule(AnsibleModule):
             if rc != 0:
                 self.fail_json(msg=f"Could not start volttron stdout\n{stdout}\nstderr\n{stderr}")
         elif self._requested_state == InstanceState.STOPPED:
-            rc, stdout, stderr = self.__stop_volttron__()
+            rc, stdout, stderr = self.__stop_volttron()
             if rc != 0:
                 self.fail_json(msg=f"Could not stop volttron stdout\n{stdout}\nstderr\n{stderr}")
 
@@ -221,8 +228,9 @@ class VolttronInstanceModule(AnsibleModule):
 
     def __start_volttron__(self, failure_message=''):
 
+        ##TODO BHL: shouldn't we update our understanindg of the current state when this is called?
         if self._instance_state == InstanceState.RUNNING:
-            logger().debug("in start_volttron instance already running")
+            logger().debug("in start_volttron, instance already running")
             return
 
         ##TODO: shouldn't we be setting VOLTTRON_HOME based on ansible facts?
@@ -240,7 +248,7 @@ class VolttronInstanceModule(AnsibleModule):
         if not self._wait_for_state(InstanceState.RUNNING, timeout=30):
             self.fail_json(msg=f"{failure_message}: Failed to start volttron", stdout=open('logfile.log').read())
 
-    def __stop_volttron__(self, failure_message=''):
+    def __stop_volttron(self, failure_message=''):
         logger().debug(f"Stopping volttron instance state is: {self._instance_state}")
         if self._instance_state == InstanceState.STOPPED:
             logger().debug(f'VOLTTRON is {InstanceState.STOPPED.name}')
@@ -248,11 +256,11 @@ class VolttronInstanceModule(AnsibleModule):
 
         cmd = [self._vctl, 'shutdown', '--platform']
 
+        logger().info("BHL about to call shutdown")
         result = subprocess.run(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE,
                                 cwd=self._vroot)
 
-        self._wait_for_state(InstanceState.STOPPED)
         try:
             stdout = result.stdout.decode('utf-8')
         except AttributeError:
@@ -262,8 +270,12 @@ class VolttronInstanceModule(AnsibleModule):
         except AttributeError:
             stderr = result.stderr
 
+        logger().warning(f'BHL restart result: {result}')
         if result.returncode != 0:
-            self.exit_json(msg=f"{failure_message}: Failed to stop volttron", stderr=stderr, stdout=stdout)
+            self.fail_json(msg=f"{failure_message}: Failed to stop volttron", stderr=stderr, stdout=stdout)
+
+        logger().info(f"BHL subprocess done, parsing results\n BHL {result}")
+        self._wait_for_state(InstanceState.STOPPED)
 
     def _wait_for_state(self, expected_state, timeout=10):
         countdown = timeout
@@ -271,6 +283,7 @@ class VolttronInstanceModule(AnsibleModule):
         ##TODO:
         logger().debug("initial state is '{}'; waiting for state '{}'".format(current_state, expected_state))
         while current_state != expected_state and countdown > 0:
+            logger().debug("BHL not in desired state, sleep and try again")
             sleep(1)
             countdown -= 1
             self.__discover_current_state()
@@ -554,8 +567,8 @@ class VolttronInstanceModule(AnsibleModule):
 
         ##TODO: BHL - the issue here is that the cmd is not run in a shell so env vars don't expand
         ##            we should be very clear about what is being passed into the env (ie, what is allowed in the yaml)
-        logger().debug(f"vroot will be <{self._vroot}>") ##BHL
-        logger().debug(f"vhome will be <{self._vhome}>") ##BHL
+        logger().debug(f"BHL vroot will be <{self._vroot}>") ##BHL
+        logger().debug(f"BHL vhome will be <{self._vhome}>") ##BHL
         response = subprocess.run(['/bin/bash', '-c', ' '.join(cmd) + '; exit $?'],
                                   cwd=self._vroot,
                                   env={'VOLTTRON_ROOT': self._vroot,
@@ -564,16 +577,16 @@ class VolttronInstanceModule(AnsibleModule):
                                       },
                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-        logger().info(f"install command response was {response.returncode}")
+        logger().info(f"BHL install command response was {response.returncode}")
+        logger().debug(f"Installed {identity}")
+        logger().debug(f"BHL STDOUT\nBHL - {response.stdout}")
+        logger().debug(f"BHL STDERR\nBHL - {response.stdout}")
+
         if response.returncode != 0:
             logger().debug(f"Something failed spectacularly during install for idenitity {identity}")
             logger().debug(f"STDOUT\n{response.stdout}")
             logger().debug(f"STDERR\n{response.stdout}")
             self.fail_json(msg=f"failed while attempting to install identity '{identity}' with stdout: {response.stdout} and stderr: {response.stderr}'")
-
-        logger().debug(f"Installed {identity}")
-        logger().debug(f"STDOUT\n{response.stdout}")
-        logger().debug(f"STDERR\n{response.stdout}")
 
         #
         # params = module.params
@@ -882,10 +895,10 @@ def main():
     elif module.phase == InstallPhaseEnum.START_AGENTS:
         module.handle_start_agent_phase()
     elif module.phase == InstallPhaseEnum.UNINSTALL:
-        module.__stop_volttron__("uninstall_volttron")
+        module.__stop_volttron("uninstall_volttron")
         module.exit_json(msg="VOLTTRON stopped")
     elif module.phase == InstallPhaseEnum.NONE and module.requested_state == InstanceState.STOPPED:
-        module.__stop_volttron__("stopping volttron phase")
+        module.__stop_volttron("stopping volttron phase")
         module.exit_json(msg="VOLTTRON stopped")
     else:
         module.fail_json(msg=f"Unknown phase {module.phase} {type(module.phase)}specified that should have been known.")
