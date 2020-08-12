@@ -2,7 +2,7 @@
 - name: install VOLTTRON platform
   hosts: all
   roles:
-  - set_defaults
-  - get_volttron_source
-  - ansible_venv
-  - install_platform
+  - volttron.deployment.set_defaults
+  - volttron.deployment.get_volttron_source
+  - volttron.deployment.ansible_venv
+  - volttron.deployment.install_platform

@@ -7,7 +7,7 @@
 - name: install VOLTTRON platform
   hosts: all
   roles:
-  - set_defaults
+  - volttron.deployment.set_defaults
   tasks:
   - template:
       src: venv_execute.j2
