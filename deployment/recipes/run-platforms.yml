@@ -4,8 +4,8 @@
   vars:
     volttron_source_changed: no
   roles:
-  - set-defaults
-  - ansible-venv
+  - set_defaults
+  - ansible_venv
   tasks:
 
     - name: "start or stop the platform (set to {{ platform_state }})"

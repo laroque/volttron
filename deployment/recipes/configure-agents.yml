@@ -2,9 +2,9 @@
 - name: configure agents
   hosts: all
   roles:
-  - set-defaults
-  - ansible-venv
-  - copy-agent-configs
+  - set_defaults
+  - ansible_venv
+  - copy_agent_configs
   tasks:
 
   - name: install agents
