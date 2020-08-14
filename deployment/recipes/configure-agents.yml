@@ -2,9 +2,9 @@
 - name: configure agents
   hosts: all
   roles:
-  - set-defaults
-  - ansible-venv
-  - copy-agent-configs
+  - volttron.deployment.set_defaults
+  - volttron.deployment.ansible_venv
+  - volttron.deployment.copy_agent_configs
   tasks:
 
   - name: install agents
