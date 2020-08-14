@@ -1,11 +1,7 @@
 ---
 - name: base system install
   hosts: all
-  #vars:
-    # Ansible will use this path on remote hosts to run the interpreter with.
-   #ansible_python_interpreter: /usr/bin/python3
   roles:
-  - volttron.deployment.set_defaults
   - volttron.deployment.system_dependencies
   tasks:
 
