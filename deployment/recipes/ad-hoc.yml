@@ -7,25 +7,4 @@
 - name: install VOLTTRON platform
   hosts: all
   roles:
-  - volttron.deployment.set_defaults
-  tasks:
-  - template:
-      src: venv_execute.j2
-      dest: "{{ volttron_venv }}/bin/venv_execute"
-      mode: '0755'
-  - name: execute shell command
-    shell:
-      cmd: "{{ volttron_venv }}/bin/venv_execute {{ command | mandatory }}"
-    environment:
-      VOLTTRON_ROOT: "{{ volttron_root }}"
-      VOLTTRON_HOME: "{{ volttron_home }}"
-    ignore_errors: True
-    register: cmd_results
-  - name: results
-    debug:
-      msg:
-      - "passed command: [{{ command }}]"
-      - "return code: {{ cmd_results.rc }}"
-      - "command: [{{ cmd_results.cmd }}]"
-      - "standard err:\n{{ cmd_results.stderr }}"
-      - "standard out:\n{{ cmd_results.stdout }}"
+  - volttron.deployment.ad_hoc
